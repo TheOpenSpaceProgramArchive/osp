@@ -1,8 +1,14 @@
 #pragma once
-class file_util
+
+#include <string>
+#include <fstream>
+#include <iostream>
+
+static class file_util
 {
 public:
-	file_util();
-	~file_util();
+
+	static std::string load_file(std::string path);
+
 };
 

@@ -1,12 +1,10 @@
 #include "file_util.h"
 
-
-
-file_util::file_util()
+std::string file_util::load_file(std::string path)
 {
-}
+	std::ifstream t(path);
+	std::string str((std::istreambuf_iterator<char>(t)),
+		std::istreambuf_iterator<char>());
 
-
-file_util::~file_util()
-{
+	return str;
 }

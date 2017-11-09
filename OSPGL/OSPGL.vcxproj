@@ -121,6 +121,7 @@
   <ItemGroup>
     <ClCompile Include="dep\glad\glad.c" />
     <ClCompile Include="dep\glm\detail\glm.cpp" />
+    <ClCompile Include="src\render\renderlow\mesh.cpp" />
     <ClCompile Include="src\util\file_util.cpp" />
     <ClCompile Include="src\render\renderlow\shader.cpp" />
     <ClCompile Include="src\orbital\space_body.cpp" />
@@ -312,12 +313,11 @@
     <ClInclude Include="dep\spdlog\sinks\wincolor_sink.h" />
     <ClInclude Include="dep\spdlog\spdlog.h" />
     <ClInclude Include="dep\spdlog\tweakme.h" />
+    <ClInclude Include="src\render\renderlow\mesh.h" />
+    <ClInclude Include="src\util\defines.h" />
     <ClInclude Include="src\util\file_util.h" />
     <ClInclude Include="src\render\renderlow\shader.h" />
     <ClInclude Include="src\orbital\space_body.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="output.log" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl" />
@@ -434,6 +434,8 @@
     <None Include="dep\glm\gtx\vector_angle.inl" />
     <None Include="dep\glm\gtx\vector_query.inl" />
     <None Include="dep\glm\gtx\wrap.inl" />
+    <None Include="res\shaders\test.fs" />
+    <None Include="res\shaders\test.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
