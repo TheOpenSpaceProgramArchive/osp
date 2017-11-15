@@ -2,23 +2,60 @@
 
 
 
-glm::dvec3 space_body::pos_by_anomaly(double anomaly)
+glm::dvec3 space_body::pos_by_mean(double mean)
 {
-	return glm::dvec3();
+	double aeccentricity = std::abs(eccentricity);
+
+	if (aeccentricity >= 1.0)
+	{
+		// Solve for this case too as escape trajectories SHOULD be possible
+
+		if (!logged)
+		{
+			spdlog::get("OSP")->error("Eccentricity too high ({}). Can't solve! (TODO)", eccentricity);
+			logged = true;
+		}
+		return { 0, 0, 0 };
+	}
+	else
+	{
+		double ecc = get_eccentric_anomaly(mean);
+
+		int iterations = 4;
+
+		if (aeccentricity > 0.8 && aeccentricity < 0.92)
+		{
+			iterations = 8;
+		}
+		else if (aeccentricity >= 0.92 && aeccentricity < 0.95)
+		{
+			iterations = 24;
+		}
+		else if (aeccentricity >= 0.95 && aeccentricity < 0.98)
+		{
+			iterations = 48;
+		}
+		else if (aeccentricity >= 0.98)
+		{
+			iterations = 200;
+		}
+
+		double phi = get_true_anomaly(mean, iterations);
+		double r = get_r_length(phi);
+
+		glm::dvec3 out;
+		out.x = r * cos(phi);
+		out.y = r * sin(phi);
+
+		return out;
+	}
 }
 
 glm::dvec3 space_body::pos_by_time(double t)
 {
 	double mean = get_mean_anomaly(t);
-	double ecc = get_eccentric_anomaly(mean);
-	double phi = get_true_anomaly(mean);
-	double r = get_r_length(phi);
-
-	glm::dvec3 out;
-	out.x = r * cos(phi);
-	out.y = r * sin(phi);
-
-	return out;
+	
+	return pos_by_mean(mean);
 }
 
 double space_body::get_orbital_period()
@@ -82,6 +119,15 @@ double space_body::get_mean_anomaly(double t)
 double space_body::get_true_anomaly(double mean_anomaly, int iterations)
 {
 	return 2 * atan(sqrt((1 + eccentricity) / (1 - eccentricity)) * tan(get_eccentric_anomaly(mean_anomaly, iterations) / 2));
+}
+
+double space_body::get_altitude(double t)
+{
+	double mean = get_mean_anomaly(t);
+	double phi = get_true_anomaly(mean);
+
+	return get_r_length(phi);
+
 }
 
 double space_body::get_r_length(double true_anomaly)

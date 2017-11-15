@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -35,6 +36,8 @@ class space_body
 {
 public:
 
+	bool logged = false;
+
 	space_body* parent = NULL;
 	
 	// Mass of the body, must be given in kg
@@ -48,7 +51,8 @@ public:
 	// The given argument is the angular distance from the pericenter if the body
 	// was in a circular orbit of same period as the actual orbit.
 	// 360 is a full orbit
-	glm::dvec3 pos_by_anomaly(double anomaly);
+	// (Takes mean anomaly)
+	glm::dvec3 pos_by_mean(double anomaly);
 
 	// t is the time in seconds since passing the periapsis
 	glm::dvec3 pos_by_time(double t);
@@ -69,6 +73,9 @@ public:
 
 	// Gets true anomaly given mean_anomaly using get_eccentric_anomaly
 	double get_true_anomaly(double mean_anomaly, int iterations = 4);
+
+	// Gets altitude given time
+	double get_altitude(double t);
 
 	double get_r_length(double true_anomaly);
 

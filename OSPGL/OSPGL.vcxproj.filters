@@ -36,6 +36,12 @@
     <ClCompile Include="src\render\renderlow\mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\renderlow\basic_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderlow\transform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -606,6 +612,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\render\renderlow\mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\basic_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

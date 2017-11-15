@@ -31,7 +31,7 @@ void mesh::upload()
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		{
-			glBufferData(GL_ARRAY_BUFFER, sizeof(data), data.data(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data), data.data(), GL_STATIC_DRAW);
 
 			// position
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
