@@ -14,6 +14,10 @@
 #include "render/renderlow/mesh.h"
 #include "render/renderlow/transform.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, space_body* earth);
 
@@ -116,7 +120,7 @@ int main()
 	log->info("# Time X Y");
 
 	// Uncomment for wireframe mode
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// Vsync
 	glfwSwapInterval(1);
@@ -134,8 +138,22 @@ int main()
 		tform.pos = earth.pos_by_time(t);
 		tform.pos /= 1.496e+11;
 		tform.pos /= 4;
+		tform.rot = glm::quat(0, 0, 1, 1);
 
 		lines.vertices.clear();
+
+		glm::mat4 view;
+		view = glm::translate(view, glm::vec3(0.0f, 0.f, -2.0f));
+
+		glm::mat4 proj;
+		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f);
+
+
+		test.setmat4("proj", proj);
+		test.setmat4("view", view);
+
+
+
 		// Generate vertices from orbit
 		for (double a = 0; a < 2 * 3.1415; a += 0.05)
 		{
@@ -166,11 +184,11 @@ int main()
 		log->info("Earth X {} Y {} Z {} (R {}) E {}", tform.pos.x, tform.pos.y, tform.pos.z, earth.get_altitude(t), earth.eccentricity);
 
 		glUseProgram(test.program);
-		test.setmat4("transform", tform.build_matrix());
+		test.setmat4("model", tform.build_matrix());
 		glBindVertexArray(triangle.vao);
 		glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
 
-		test.setmat4("transform", lform.build_matrix());
+		test.setmat4("model", lform.build_matrix());
 		glBindVertexArray(lines.vao);
 		glDrawArrays(GL_LINES, 0, lines.vertices.size());
 

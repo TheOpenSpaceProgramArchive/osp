@@ -119,9 +119,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\render\renderlow\basic_model.cpp" />
     <ClCompile Include="dep\glad\glad.c" />
     <ClCompile Include="dep\glm\detail\glm.cpp" />
+    <ClCompile Include="src\render\renderlow\drawables\dmodel.cpp" />
     <ClCompile Include="src\render\renderlow\mesh.cpp" />
     <ClCompile Include="src\util\file_util.cpp" />
     <ClCompile Include="src\render\renderlow\shader.cpp" />
@@ -130,7 +130,6 @@
     <ClCompile Include="src\render\renderlow\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\render\renderlow\basic_model.h" />
     <ClInclude Include="dep\glad\glad.h" />
     <ClInclude Include="dep\glad\KHR.h" />
     <ClInclude Include="dep\glm\common.hpp" />
@@ -316,6 +315,8 @@
     <ClInclude Include="dep\spdlog\sinks\wincolor_sink.h" />
     <ClInclude Include="dep\spdlog\spdlog.h" />
     <ClInclude Include="dep\spdlog\tweakme.h" />
+    <ClInclude Include="src\render\renderlow\drawables\dmodel.h" />
+    <ClInclude Include="src\render\renderlow\drawable.h" />
     <ClInclude Include="src\render\renderlow\mesh.h" />
     <ClInclude Include="src\util\defines.h" />
     <ClInclude Include="src\util\file_util.h" />

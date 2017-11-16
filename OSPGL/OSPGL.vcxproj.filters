@@ -36,10 +36,10 @@
     <ClCompile Include="src\render\renderlow\mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\renderlow\basic_model.cpp">
+    <ClCompile Include="src\render\renderlow\transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\renderlow\transform.cpp">
+    <ClCompile Include="src\render\renderlow\drawables\dmodel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -614,10 +614,13 @@
     <ClInclude Include="src\render\renderlow\mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderlow\basic_model.h">
+    <ClInclude Include="src\render\renderlow\transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderlow\transform.h">
+    <ClInclude Include="src\render\renderlow\drawable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\drawables\dmodel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
