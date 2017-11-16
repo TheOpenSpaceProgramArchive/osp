@@ -6,7 +6,7 @@ void mesh::build_array()
 {
 	// For now simply place the positions
 	data.clear();
-	data.resize(vertices.size() * 3);
+	data.resize(vertices.size() * 6);
 
 	size_t j = 0;
 
@@ -16,7 +16,11 @@ void mesh::build_array()
 		data[j + 1] = vertices[i].pos.y;
 		data[j + 2] = vertices[i].pos.z;
 
-		j += 3;
+		data[j + 3] = vertices[i].col.r;
+		data[j + 4] = vertices[i].col.g;
+		data[j + 5] = vertices[i].col.b;
+
+		j += 6;
 	}
 }
 
@@ -34,8 +38,11 @@ void mesh::upload()
 			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data), data.data(), GL_STATIC_DRAW);
 
 			// position
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(0);
+			// color
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+			glEnableVertexAttribArray(1);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}

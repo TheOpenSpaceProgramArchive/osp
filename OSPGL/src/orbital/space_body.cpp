@@ -142,10 +142,14 @@ double space_body::get_true_anomaly(double mean_anomaly, int iterations)
 double space_body::get_altitude(double t)
 {
 	double mean = get_mean_anomaly(t);
+	return get_altitude_mean(mean);
+}
+
+double space_body::get_altitude_mean(double mean)
+{
 	double phi = get_true_anomaly(mean);
 
 	return get_r_length(phi);
-
 }
 
 double space_body::get_r_length(double true_anomaly)

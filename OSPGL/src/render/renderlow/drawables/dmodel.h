@@ -14,8 +14,9 @@
 	Every dmodel compatible shader must take:
 
 	Layouts:
-		vertex position (location = 0)
-	
+		vec3 vertex position (location = 0)
+		vec3 vertex color (location = 1)
+
 	Uniforms:		
 		uniform mat4 model;
 		uniform mat4 view;

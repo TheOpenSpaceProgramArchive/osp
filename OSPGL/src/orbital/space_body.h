@@ -78,6 +78,9 @@ public:
 	// Gets altitude given time
 	double get_altitude(double t);
 
+	// Gets altitude given mean anomaly
+	double get_altitude_mean(double mean);
+
 	double get_r_length(double true_anomaly);
 
 	// Gets a point in the orbit given the time since epoch

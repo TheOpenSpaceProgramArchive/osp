@@ -165,10 +165,13 @@ int main()
 			vert.pos /= 1.496e+11;
 			vert.pos /= 4;
 
+			//vert.col.r = a / (2 * 3.1415);
+			vert.col.g = earth.get_altitude_mean(a) / (2 * earth.smajor_axis) ;
 
 			if (prev.pos.x == -123456789)
 			{
 				prev.pos = vert.pos;
+				prev.col = vert.col;
 			}
 
 
@@ -233,6 +236,16 @@ void process_input(GLFWwindow *window, space_body* earth)
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		earth->asc_node += 0.4;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		earth->eccentricity -= 0.004;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
+		earth->eccentricity += 0.004;
 	}
 }
 
