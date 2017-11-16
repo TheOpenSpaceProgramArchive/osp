@@ -21,7 +21,7 @@ class drawable
 public:
 
 
-	virtual void draw()
+	virtual void draw(glm::mat4 view, glm::mat4 proj)
 	{
 		spdlog::get("OSP")->warn("Drawable base 'draw' called! This is not meant to happen.");
 	}

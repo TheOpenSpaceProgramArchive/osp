@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
+#include <glm/gtx/rotate_vector.hpp>
 
 #ifndef PI
 #define PI 3.14159265358979323846

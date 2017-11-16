@@ -94,6 +94,7 @@ int main()
 
 
 	shader test = shader("res/shaders/test.vs", "res/shaders/test.fs");
+	g_shader = &test;
 
 	double t = 40;
 
@@ -143,7 +144,7 @@ int main()
 		lines.vertices.clear();
 
 		glm::mat4 view;
-		view = glm::translate(view, glm::vec3(0.0f, 0.f, -2.0f));
+		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
 
 		glm::mat4 proj;
 		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f);
@@ -216,12 +217,22 @@ void process_input(GLFWwindow *window, space_body* earth)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		earth->eccentricity -= 0.004;
+		earth->inclination -= 0.4;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		earth->eccentricity += 0.004;
+		earth->inclination += 0.4;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		earth->asc_node -= 0.4;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		earth->asc_node += 0.4;
 	}
 }
 

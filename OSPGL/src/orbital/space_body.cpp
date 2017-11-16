@@ -45,7 +45,25 @@ glm::dvec3 space_body::pos_by_mean(double mean)
 
 		glm::dvec3 out;
 		out.x = r * cos(phi);
-		out.y = r * sin(phi);
+		out.z = r * sin(phi);
+
+
+		/*	Now rotate to fit inclination and long_asc_node
+			Inclination is simply applied by rotating 'inclination' degrees
+			the orbit, given the longitude of the ascending node as the
+			axis of rotation
+		 */
+
+		// First lets get the rotation axis. It's simply the x-z vector as
+		// specified by the asc_node angle (We have to convert to radians)
+		glm::dvec3 rot;
+		rot.x = cos(glm::radians(asc_node));
+		rot.z = sin(glm::radians(asc_node));
+
+		// Now rotate with help from glm
+
+		out = glm::rotate(out, glm::radians(inclination), rot);
+
 
 		return out;
 	}

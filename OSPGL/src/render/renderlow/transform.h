@@ -16,6 +16,8 @@ class transform
 {
 public:
 
+	transform* parent = NULL;
+
 	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::vec3 scl = glm::vec3(1, 1, 1);
 	glm::quat rot;
