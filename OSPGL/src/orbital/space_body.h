@@ -46,6 +46,9 @@ public:
 	// Polar (north) vector of the planet. Used to get the equatorial plane
 	glm::dvec3 polar;
 
+	// Radius of the sphere of influence in meters
+	double soi;
+
 	// Orbit properties, only defined on bodies with a parent
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis;
 
@@ -65,6 +68,8 @@ public:
 
 	double get_apoapsis_radius();
 
+	double get_ascnode_mean();
+
 	// Obtains eccentric anomaly using recursive method
 	// 4 iterations seem good enough
 	double get_eccentric_anomaly(double mean_anomaly, int iterations = 4);
@@ -74,6 +79,8 @@ public:
 
 	// Gets true anomaly given mean_anomaly using get_eccentric_anomaly
 	double get_true_anomaly(double mean_anomaly, int iterations = 4);
+
+	double get_true_anomaly_hyperbolic(double mean_anomaly, int iterations = 4);
 
 	// Gets altitude given time
 	double get_altitude(double t);

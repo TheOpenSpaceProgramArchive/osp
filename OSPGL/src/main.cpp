@@ -156,7 +156,7 @@ int main()
 
 
 		// Generate vertices from orbit
-		for (double a = 0; a < 2 * 3.1415; a += 0.05)
+		for (double a = 0; a < 2 * PI; a += 0.05)
 		{
 			vertex vert;
 			vert.pos = earth.pos_by_mean(a);
@@ -165,8 +165,23 @@ int main()
 			vert.pos /= 1.496e+11;
 			vert.pos /= 4;
 
-			//vert.col.r = a / (2 * 3.1415);
-			vert.col.g = earth.get_altitude_mean(a) / (2 * earth.smajor_axis) ;
+			if (a <= 0.1)
+			{
+				vert.col = { 1.0, 0.0, 1.0 };
+			}
+			else if (a <= PI + 0.1 && a >= PI - 0.1)
+			{
+				vert.col = { 1.0, 1.0, 0.0 };
+			}
+			else if (a <= glm::radians(earth.asc_node) + 0.1 && a >= glm::radians(earth.asc_node) - 0.1)
+			{
+				vert.col = { 1.0, 1.0, 1.0 };
+			}
+			else
+			{
+				//vert.col.r = a / (2 * 3.1415);
+				vert.col.g = earth.get_altitude_mean(a) / (2 * earth.smajor_axis);
+			}
 
 			if (prev.pos.x == -123456789)
 			{
@@ -246,6 +261,16 @@ void process_input(GLFWwindow *window, space_body* earth)
 	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 	{
 		earth->eccentricity += 0.004;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+	{
+		earth->arg_periapsis -= 0.4;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+	{
+		earth->arg_periapsis += 0.4;
 	}
 }
 

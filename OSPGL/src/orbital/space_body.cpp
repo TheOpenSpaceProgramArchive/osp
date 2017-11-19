@@ -10,11 +10,10 @@ glm::dvec3 space_body::pos_by_mean(double mean)
 	{
 		// Solve for this case too as escape trajectories SHOULD be possible
 
-		if (!logged)
-		{
-			spdlog::get("OSP")->error("Eccentricity too high ({}). Can't solve! (TODO)", eccentricity);
-			logged = true;
-		}
+		double semi_latus = smajor_axis * (1 - std::pow(eccentricity, 2));
+		double true_anomaly = get_true_anomaly_hyperbolic(mean);
+		double radius = semi_latus / (1 + eccentricity * cos(true_anomaly));
+
 		return { 0, 0, 0 };
 	}
 	else
@@ -46,6 +45,12 @@ glm::dvec3 space_body::pos_by_mean(double mean)
 		glm::dvec3 out;
 		out.x = r * cos(phi);
 		out.z = r * sin(phi);
+
+
+		// Rotate to handle the argument of periapsis
+		// Basically a rotation along the y axis
+
+		out = glm::rotateY(out, glm::radians(arg_periapsis));
 
 
 		/*	Now rotate to fit inclination and long_asc_node
@@ -112,6 +117,7 @@ double space_body::get_apoapsis_radius()
 	}
 }
 
+
 double space_body::get_eccentric_anomaly(double mean_anomaly, int iterations)
 {
 	double temp_result = mean_anomaly;
@@ -134,9 +140,15 @@ double space_body::get_mean_anomaly(double t)
 	return ((2 * PI) / get_orbital_period()) * t;
 }
 
+
 double space_body::get_true_anomaly(double mean_anomaly, int iterations)
 {
 	return 2 * atan(sqrt((1 + eccentricity) / (1 - eccentricity)) * tan(get_eccentric_anomaly(mean_anomaly, iterations) / 2));
+}
+
+double space_body::get_true_anomaly_hyperbolic(double mean_anomaly, int iterations)
+{
+	return 0.0;
 }
 
 double space_body::get_altitude(double t)
