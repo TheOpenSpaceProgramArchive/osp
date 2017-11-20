@@ -8,6 +8,7 @@ struct vertex
 {
 	glm::vec3 pos;
 	glm::vec3 col;
+	glm::vec2 uv;
 };
 
 
@@ -45,7 +46,7 @@ public:
 	// Uploads the data to the GPU, making VAO and VBO valid
 	void upload();
 
-	void clear_buffers();
+	void gen_buffers();
 
 	mesh();
 	~mesh();

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/geometric.hpp>
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -10,6 +11,22 @@
 #ifndef G
 #define G 0.000000000066742 
 #endif
+
+/*
+	Represents the state of a thing moving using
+	newtonian dynamics.
+*/
+struct newton_state
+{
+	// Position of the body in 3D space
+	glm::dvec3 pos;
+	// Direction of the body (Normalized vector)
+	glm::dvec3 dir;
+	// Delta change (dir * vel)
+	glm::dvec3 delta;
+	// Velocity of the body. Must be m/s following IS
+	double vel;
+};
 
 /*
 	Space Bodies are non-actively simulated (hence fixed),
@@ -52,6 +69,14 @@ public:
 	// Orbit properties, only defined on bodies with a parent
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis;
 
+
+
+	newton_state state_by_mean(double anomaly, double precision = 0.0000001);
+
+	newton_state state_by_time(double t, double precision = 0.0000001);
+
+	void set_state(newton_state state);
+
 	// The given argument is the angular distance from the pericenter if the body
 	// was in a circular orbit of same period as the actual orbit.
 	// 360 is a full orbit
@@ -60,6 +85,10 @@ public:
 
 	// t is the time in seconds since passing the periapsis
 	glm::dvec3 pos_by_time(double t);
+
+	glm::dvec3 dir_by_mean(double mean, double precision = 0.0000001);
+
+	double vel_by_radius(double r);
 
 	// Obtains the time it takes for a full orbit to be completed
 	double get_orbital_period();

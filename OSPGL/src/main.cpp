@@ -18,6 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "render/renderlow/drawables/dbillboard.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, space_body* earth);
 
@@ -27,6 +29,8 @@ const unsigned int SCR_HEIGHT = 800;
 
 
 namespace spd = spdlog;
+
+shader* g_shader = NULL;
 
 auto create_logger()
 {
@@ -79,7 +83,8 @@ int main()
 	space_body earth = space_body();
 	earth.parent = &sun;
 	earth.smajor_axis = 1.496e+11;
-	earth.eccentricity = 0;
+	earth.eccentricity = 0.0023;
+	earth.inclination = 0.004;
 	earth.mass = 5.972 * std::pow(10, 24);
 
 	
@@ -96,10 +101,13 @@ int main()
 	shader test = shader("res/shaders/test.vs", "res/shaders/test.fs");
 	g_shader = &test;
 
+	shader planet = shader("res/shaders/planet.vs", "res/shaders/planet.fs");
+
 	double t = 40;
 
 	mesh triangle = mesh();
 	mesh lines = mesh();
+	mesh vector = mesh();
 	
 	vertex prev;
 	prev.pos.x = -123456789;
@@ -123,8 +131,19 @@ int main()
 	// Uncomment for wireframe mode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// Vsync
 	glfwSwapInterval(1);
+
+	dbillboard bboard = dbillboard();
+	bboard.shader = &planet;
+	bboard.tform.pos = { 0, 0, 0 };
+	bboard.tform.scl = { 0.5, 0.5, 0.5 };
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -133,9 +152,9 @@ int main()
 
 
 		// render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 		tform.pos = earth.pos_by_time(t);
 		tform.pos /= 1.496e+11;
 		tform.pos /= 4;
@@ -144,15 +163,17 @@ int main()
 		lines.vertices.clear();
 
 		glm::mat4 view;
-		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
+
+		//view = glm::translate(glm::vec3(sin(t / 10000000), 0, cos(t / 10000000)));
+
+		view = glm::lookAt(glm::vec3(sin(t/ 10000000), sin(t / 10000000), cos(t/ 10000000)) , glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 		glm::mat4 proj;
-		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.1f, 100.0f);
+		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.05f, 100.0f);
 
 
 		test.setmat4("proj", proj);
 		test.setmat4("view", view);
-
 
 
 		// Generate vertices from orbit
@@ -200,16 +221,33 @@ int main()
 		lines.build_array();
 		lines.upload();
 
-		log->info("Earth X {} Y {} Z {} (R {}) E {}", tform.pos.x, tform.pos.y, tform.pos.z, earth.get_altitude(t), earth.eccentricity);
 
+		newton_state st = earth.state_by_time(t);
+
+		// Build vec
+		vector.vertices.clear();
+		vector.vertices.push_back({ tform.pos });
+		vector.vertices.push_back({ tform.pos + ((glm::vec3)(st.delta / (double)30000)) });
+		vector.build_array();
+		vector.upload();
+
+		/*log->info("Earth AP: {} PE: {} E: {} I {} AN: {}", earth.get_apoapsis_radius(), earth.get_periapsis_radius(), 
+			earth.eccentricity, earth.inclination, earth.asc_node);*/
+		
 		glUseProgram(test.program);
 		test.setmat4("model", tform.build_matrix());
 		glBindVertexArray(triangle.vao);
 		glDrawArrays(GL_TRIANGLES, 0, triangle.vertices.size());
 
 		test.setmat4("model", lform.build_matrix());
+		glBindVertexArray(vector.vao);
+		glDrawArrays(GL_LINES, 0, vector.vertices.size());
+
+		test.setmat4("model", lform.build_matrix());
 		glBindVertexArray(lines.vao);
 		glDrawArrays(GL_LINES, 0, lines.vertices.size());
+		
+		bboard.draw(view, proj);
 
 		// Finish
 		glfwSwapBuffers(window);
@@ -272,6 +310,13 @@ void process_input(GLFWwindow *window, space_body* earth)
 	{
 		earth->arg_periapsis += 0.4;
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+	{
+		newton_state st = earth->state_by_mean(50);
+		earth->set_state(st);
+	}
+
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

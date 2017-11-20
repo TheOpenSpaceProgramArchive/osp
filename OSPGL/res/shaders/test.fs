@@ -3,6 +3,7 @@ out vec4 FragColor;
 
 
 in vec3 vColor;
+in vec2 vTex;
 
 void main()
 {

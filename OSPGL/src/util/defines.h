@@ -22,4 +22,4 @@ typedef unsigned int uint;
 	go haywire.
 */
 
-static shader* g_shader;
+extern shader* g_shader;
