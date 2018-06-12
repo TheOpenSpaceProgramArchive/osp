@@ -1,6 +1,6 @@
 ## OSP
 
-This repo hopes to become a space exploration game along the lines of Squad's Kerbal Space Program.
+This repo hopes to become a space exploration game along the lines of Squad's Kerbal Space Program; as of today it's a place to experiment implementing different features in C++/OpenGL.
 
 
 ## Features (Those marked out are already implemented)
