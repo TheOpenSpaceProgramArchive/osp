@@ -2,13 +2,13 @@
 
 #include "space_body.h"
 
-class space_system
+class SpaceSystem
 {
 public:
 
-	std::vector<space_body> bodies;
+	std::vector<SpaceBody> bodies;
 
-	space_system();
-	~space_system();
+	SpaceSystem();
+	~SpaceSystem();
 };
 

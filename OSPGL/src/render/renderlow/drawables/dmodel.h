@@ -24,22 +24,22 @@
 
 
 */
-class dmodel : public drawable
+class DModel : public Drawable
 {
 public:
 
-	mesh* mh;
+	Mesh* mh;
 
-	transform tform;
+	Transform tform;
 
-	shader* sh = NULL;
+	Shader* sh = NULL;
 
 	uint draw_type = GL_TRIANGLES;
 
 	virtual void draw(glm::mat4 view, glm::mat4 proj) override;
 
-	dmodel(mesh* mh);
-	dmodel(mesh* mh, shader* sh, uint draw_type = GL_TRIANGLES);
-	~dmodel();
+	DModel(Mesh* mh);
+	DModel(Mesh* mh, Shader* sh, uint draw_type = GL_TRIANGLES);
+	~DModel();
 };
 

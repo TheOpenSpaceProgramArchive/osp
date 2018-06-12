@@ -12,11 +12,11 @@
 	Uses a quaternion to store rotations but gives
 	a lot of utility functions.
 */
-class transform
+class Transform
 {
 public:
 
-	transform* parent = NULL;
+	Transform* parent = NULL;
 
 	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::vec3 scl = glm::vec3(1, 1, 1);
@@ -27,7 +27,7 @@ public:
 
 	glm::mat4 build_matrix();
 
-	transform();
-	~transform();
+	Transform();
+	~Transform();
 };
 

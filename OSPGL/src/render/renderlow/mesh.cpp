@@ -2,7 +2,7 @@
 
 
 
-void mesh::build_array()
+void Mesh::build_array()
 {
 	// For now simply place the positions
 	data.clear();
@@ -27,7 +27,7 @@ void mesh::build_array()
 	}
 }
 
-void mesh::upload()
+void Mesh::upload()
 {
 	gen_buffers();
 
@@ -53,7 +53,7 @@ void mesh::upload()
 
 }
 
-void mesh::gen_buffers()
+void Mesh::gen_buffers()
 {
 	if (vao == 0)
 	{
@@ -66,11 +66,11 @@ void mesh::gen_buffers()
 }
 
 
-mesh::mesh()
+Mesh::Mesh()
 {
 }
 
 
-mesh::~mesh()
+Mesh::~Mesh()
 {
 }

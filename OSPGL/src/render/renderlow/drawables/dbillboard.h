@@ -4,18 +4,18 @@
 #include "../shader.h"
 #include "../transform.h"
 
-class dbillboard : public drawable
+class DBillboard : public Drawable
 {
 public:
 
-	transform tform;
+	Transform tform;
 
-	mesh square;
-	shader* shader;
+	Mesh square;
+	Shader* Shader;
 
 	virtual void draw(glm::mat4 view, glm::mat4 proj);
 
-	dbillboard();
-	~dbillboard();
+	DBillboard();
+	~DBillboard();
 };
 

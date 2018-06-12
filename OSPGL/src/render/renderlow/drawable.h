@@ -16,7 +16,7 @@
 
 */
 
-class drawable
+class Drawable
 {
 public:
 
@@ -26,8 +26,8 @@ public:
 		spdlog::get("OSP")->warn("Drawable base 'draw' called! This is not meant to happen.");
 	}
 
-	drawable(){}
+	Drawable(){}
 
-	~drawable() {}
+	~Drawable() {}
 };
 

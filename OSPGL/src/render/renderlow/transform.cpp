@@ -2,7 +2,7 @@
 
 
 
-glm::mat4 transform::build_matrix()
+glm::mat4 Transform::build_matrix()
 {
 	glm::mat4 parent_mat;
 	if (parent != NULL)
@@ -21,11 +21,11 @@ glm::mat4 transform::build_matrix()
 	return mat;
 }
 
-transform::transform()
+Transform::Transform()
 {
 }
 
 
-transform::~transform()
+Transform::~Transform()
 {
 }

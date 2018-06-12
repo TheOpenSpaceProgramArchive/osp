@@ -2,11 +2,11 @@
 
 
 
-space_system::space_system()
+SpaceSystem::SpaceSystem()
 {
 }
 
 
-space_system::~space_system()
+SpaceSystem::~SpaceSystem()
 {
 }

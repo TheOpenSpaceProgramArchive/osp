@@ -1,6 +1,6 @@
 #version 330 core
 
-const vec3 sunDir_c = vec3(0.1, 0.6, 0.3);
+const vec3 sunDir_c = vec3(1, 0, 0);
 const vec3 ground = vec3(0.1, 0.3, 0.6);
 in mat4 viewmat;
 in vec3 viewDir;
@@ -19,8 +19,8 @@ vec3 sphereRawNormal(float dist, vec2 uv)
 {
     // Generate normal without taking view direction into account
     vec3 BN;
-    BN.x = (sin((uv.x + 0.5) * PI / 2.0) - 0.5) * 2.0;
-    BN.y = (sin((uv.y + 0.5) * PI / 2.0) - 0.5) * 2.0;
+    BN.x = (sin((uv.x + 0.4) * PI / 2.0) - 0.5) * 2.0;
+    BN.y = (sin((uv.y + 0.4) * PI / 2.0) - 0.5) * 2.0;
     // This is the height of the sphere
     BN.z = 1.0 - sin(dist * dist * dist);
     return BN;
@@ -74,17 +74,19 @@ void main()
 		float depth = 1.0 - sin(dist * dist * dist);
 
 		// Adds a bit of visual depth to the billboard sphere.
-		//gl_FragDepth = gl_FragCoord.z - (depth / (gl_FragCoord.z));
+		gl_FragDepth = gl_FragCoord.z - (depth / 100);
     }
     else if(dist < 3.0)
 	{
 		vec3 N = sphereNormal(sphereRawNormal(dist, uv));
         vec3 L = light(N, sunDir_c);
-		L = L + atmo(dist, L, N, 0.2) * 4;
+		L = atmo(dist, L, N, 0.33) * 4;
 
-		float fade = 1.0 - (dist * dist * dist * 0.88);
+		float fade = 1.0 - (dist * dist * dist * 0.83);
 
 		FragColor = vec4(L, fade);
+
+		gl_FragDepth = gl_FragCoord.z;
 	}
 	else
     {

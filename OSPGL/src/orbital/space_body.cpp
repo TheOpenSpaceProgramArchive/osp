@@ -6,9 +6,9 @@ float mag(glm::dvec3 vec)
 	return std::sqrt(std::pow(vec.x, 2) + std::pow(vec.y, 2) + std::pow(vec.z, 2));
 }
 
-newton_state space_body::state_by_mean(double anomaly, double precision)
+NewtonState SpaceBody::state_by_mean(double anomaly, double precision)
 {
-	newton_state out;
+	NewtonState out;
 
 	out.pos = pos_by_mean(anomaly);
 	out.dir = dir_by_mean(anomaly);
@@ -18,14 +18,14 @@ newton_state space_body::state_by_mean(double anomaly, double precision)
 	return out;
 }
 
-newton_state space_body::state_by_time(double t, double precision)
+NewtonState SpaceBody::state_by_time(double t, double precision)
 {
 	double mean = get_mean_anomaly(t);
 
 	return state_by_mean(mean, precision);
 }
 
-void space_body::set_state(newton_state state)
+void SpaceBody::set_state(NewtonState state)
 {
 
 	// Decent method but is pretty innacurate on extreme cases
@@ -59,7 +59,7 @@ void space_body::set_state(newton_state state)
 	asc_node = glm::degrees(atan2(ang_momentum_v.x, -ang_momentum_v.z));
 }
 
-glm::dvec3 space_body::pos_by_mean(double mean)
+glm::dvec3 SpaceBody::pos_by_mean(double mean)
 {
 	double aeccentricity = std::abs(eccentricity);
 
@@ -131,14 +131,14 @@ glm::dvec3 space_body::pos_by_mean(double mean)
 	}
 }
 
-glm::dvec3 space_body::pos_by_time(double t)
+glm::dvec3 SpaceBody::pos_by_time(double t)
 {
 	double mean = get_mean_anomaly(t);
 	
 	return pos_by_mean(mean);
 }
 
-glm::dvec3 space_body::dir_by_mean(double mean, double precision)
+glm::dvec3 SpaceBody::dir_by_mean(double mean, double precision)
 {
 	glm::dvec3 pos_a = pos_by_mean(mean);
 	glm::dvec3 pos_b = pos_by_mean(mean + precision);
@@ -149,13 +149,13 @@ glm::dvec3 space_body::dir_by_mean(double mean, double precision)
 	return out;
 }
 
-double space_body::vel_by_radius(double r)
+double SpaceBody::vel_by_radius(double r)
 {
 	double v_sq = G * parent->mass * ((2.0 / r) - (1.0 / smajor_axis));
 	return std::sqrt(v_sq);
 }
 
-double space_body::get_orbital_period()
+double SpaceBody::get_orbital_period()
 {
 	if (parent)
 	{
@@ -167,7 +167,7 @@ double space_body::get_orbital_period()
 	}
 }
 
-double space_body::get_periapsis_radius()
+double SpaceBody::get_periapsis_radius()
 {
 	if (parent)
 	{
@@ -179,7 +179,7 @@ double space_body::get_periapsis_radius()
 	}
 }
 
-double space_body::get_apoapsis_radius()
+double SpaceBody::get_apoapsis_radius()
 {
 	if (parent)
 	{
@@ -192,7 +192,7 @@ double space_body::get_apoapsis_radius()
 }
 
 
-double space_body::get_eccentric_anomaly(double mean_anomaly, int iterations)
+double SpaceBody::get_eccentric_anomaly(double mean_anomaly, int iterations)
 {
 	double temp_result = mean_anomaly;
 
@@ -209,36 +209,36 @@ double space_body::get_eccentric_anomaly(double mean_anomaly, int iterations)
 	return temp_result;
 }
 
-double space_body::get_mean_anomaly(double t)
+double SpaceBody::get_mean_anomaly(double t)
 {
 	return ((2.0 * PI) / get_orbital_period()) * t;
 }
 
 
-double space_body::get_true_anomaly(double mean_anomaly, int iterations)
+double SpaceBody::get_true_anomaly(double mean_anomaly, int iterations)
 {
 	return 2.0 * atan(sqrt((1.0 + eccentricity) / (1.0 - eccentricity)) * tan(get_eccentric_anomaly(mean_anomaly, iterations) / 2.0));
 }
 
-double space_body::get_true_anomaly_hyperbolic(double mean_anomaly, int iterations)
+double SpaceBody::get_true_anomaly_hyperbolic(double mean_anomaly, int iterations)
 {
 	return 0.0;
 }
 
-double space_body::get_altitude(double t)
+double SpaceBody::get_altitude(double t)
 {
 	double mean = get_mean_anomaly(t);
 	return get_altitude_mean(mean);
 }
 
-double space_body::get_altitude_mean(double mean)
+double SpaceBody::get_altitude_mean(double mean)
 {
 	double phi = get_true_anomaly(mean);
 
 	return get_r_length(phi) / 2.0;
 }
 
-double space_body::get_r_length(double true_anomaly)
+double SpaceBody::get_r_length(double true_anomaly)
 {
 	double nominator = smajor_axis * 2.0 * (1.0 - pow(eccentricity, 2));
 	double denominator = 1.0 + eccentricity * cos(true_anomaly);
@@ -248,11 +248,11 @@ double space_body::get_r_length(double true_anomaly)
 
 
 
-space_body::space_body()
+SpaceBody::SpaceBody()
 {
 }
 
 
-space_body::~space_body()
+SpaceBody::~SpaceBody()
 {
 }

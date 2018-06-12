@@ -21,7 +21,7 @@
 #include "render/renderlow/drawables/dbillboard.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void process_input(GLFWwindow *window, space_body* earth);
+void process_input(GLFWwindow *window, SpaceBody* earth);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -30,7 +30,7 @@ const unsigned int SCR_HEIGHT = 800;
 
 namespace spd = spdlog;
 
-shader* g_shader = NULL;
+Shader* g_shader = NULL;
 
 auto create_logger()
 {
@@ -77,15 +77,15 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 
-	space_body sun = space_body();
-	sun.mass = 1.9891 * std::pow(10, 30);
-
-	space_body earth = space_body();
-	earth.parent = &sun;
-	earth.smajor_axis = 1.496e+11;
-	earth.eccentricity = 0.0023;
-	earth.inclination = 0.004;
+	SpaceBody earth = SpaceBody();
 	earth.mass = 5.972 * std::pow(10, 24);
+
+	SpaceBody vessel = SpaceBody();
+	vessel.parent = &earth;
+	vessel.smajor_axis = 6775 * 1000;
+	vessel.eccentricity = 0.0023;
+	vessel.inclination = 0.004;
+	vessel.mass = 100;
 
 	
 	// Load OpenGL function pointers
@@ -98,24 +98,24 @@ int main()
 	}
 
 
-	shader test = shader("res/shaders/test.vs", "res/shaders/test.fs");
+	Shader test = Shader("res/shaders/test.vs", "res/shaders/test.fs");
 	g_shader = &test;
 
-	shader planet = shader("res/shaders/planet.vs", "res/shaders/planet.fs");
+	Shader planet = Shader("res/shaders/planet.vs", "res/shaders/planet.fs");
 
 	double t = 40;
 
-	mesh triangle = mesh();
-	mesh lines = mesh();
-	mesh vector = mesh();
+	Mesh triangle = Mesh();
+	Mesh lines = Mesh();
+	Mesh vector = Mesh();
 	
-	vertex prev;
+	Vertex prev;
 	prev.pos.x = -123456789;
 
-	transform lform;
+	Transform lform;
 	lform.build_matrix();
 	
-	transform tform;
+	Transform tform;
 	tform.build_matrix();
 
 	triangle.vertices.push_back({ glm::vec3(0, 0, 0) }); // top
@@ -140,23 +140,25 @@ int main()
 	// Vsync
 	glfwSwapInterval(1);
 
-	dbillboard bboard = dbillboard();
-	bboard.shader = &planet;
+	DBillboard bboard = DBillboard();
+	bboard.Shader = &planet;
 	bboard.tform.pos = { 0, 0, 0 };
-	bboard.tform.scl = { 0.5, 0.5, 0.5 };
+	bboard.tform.scl = { 2.6, 2.6, 2.6 };
+
+	log->info("Orbital Period {}s", vessel.get_orbital_period());
 
 	while (!glfwWindowShouldClose(window))
 	{
 		// update
-		process_input(window, &earth);
+		process_input(window, &vessel);
 
 
 		// render
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		tform.pos = earth.pos_by_time(t);
-		tform.pos /= 1.496e+11;
+		tform.pos = vessel.pos_by_time(t);
+		tform.pos /= 200 * 1000;
 		tform.pos /= 4;
 		tform.rot = glm::quat(0, 0, 1, 1);
 
@@ -166,7 +168,7 @@ int main()
 
 		//view = glm::translate(glm::vec3(sin(t / 10000000), 0, cos(t / 10000000)));
 
-		view = glm::lookAt(glm::vec3(sin(t/ 10000000), sin(t / 10000000), cos(t/ 10000000)) , glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		view = glm::lookAt(glm::vec3(0.001f, 3, 4) , glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 		glm::mat4 proj;
 		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.05f, 100.0f);
@@ -179,12 +181,11 @@ int main()
 		// Generate vertices from orbit
 		for (double a = 0; a < 2 * PI; a += 0.05)
 		{
-			vertex vert;
-			vert.pos = earth.pos_by_mean(a);
+			Vertex vert;
+			vert.pos = vessel.pos_by_mean(a);
 
 			// Transform into screen space
-			vert.pos /= 1.496e+11;
-			vert.pos /= 4;
+			vert.pos /= 6000 * 1000;
 
 			if (a <= 0.1)
 			{
@@ -194,14 +195,14 @@ int main()
 			{
 				vert.col = { 1.0, 1.0, 0.0 };
 			}
-			else if (a <= glm::radians(earth.asc_node) + 0.1 && a >= glm::radians(earth.asc_node) - 0.1)
+			else if (a <= glm::radians(vessel.asc_node) + 0.1 && a >= glm::radians(vessel.asc_node) - 0.1)
 			{
 				vert.col = { 1.0, 1.0, 1.0 };
 			}
 			else
 			{
 				//vert.col.r = a / (2 * 3.1415);
-				vert.col.g = earth.get_altitude_mean(a) / (2 * earth.smajor_axis);
+				vert.col.g = vessel.get_altitude_mean(a) / (2 * vessel.smajor_axis);
 			}
 
 			if (prev.pos.x == -123456789)
@@ -222,7 +223,7 @@ int main()
 		lines.upload();
 
 
-		newton_state st = earth.state_by_time(t);
+		NewtonState st = vessel.state_by_time(t);
 
 		// Build vec
 		vector.vertices.clear();
@@ -231,8 +232,8 @@ int main()
 		vector.build_array();
 		vector.upload();
 
-		/*log->info("Earth AP: {} PE: {} E: {} I {} AN: {}", earth.get_apoapsis_radius(), earth.get_periapsis_radius(), 
-			earth.eccentricity, earth.inclination, earth.asc_node);*/
+		//log->info("Earth AP: {} PE: {} E: {} I {} AN: {}", vessel.get_apoapsis_radius(), vessel.get_periapsis_radius(),
+		//vessel.eccentricity, vessel.inclination, vessel.asc_node);
 		
 		glUseProgram(test.program);
 		test.setmat4("model", tform.build_matrix());
@@ -253,7 +254,7 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		t += 100000;
+		t += 1;
 	}
 
 	log->info("Terminating OSP");
@@ -266,7 +267,7 @@ int main()
 }
 
 
-void process_input(GLFWwindow *window, space_body* earth)
+void process_input(GLFWwindow *window, SpaceBody* earth)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -313,7 +314,7 @@ void process_input(GLFWwindow *window, space_body* earth)
 
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 	{
-		newton_state st = earth->state_by_mean(50);
+		NewtonState st = earth->state_by_mean(50);
 		earth->set_state(st);
 	}
 

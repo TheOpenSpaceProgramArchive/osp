@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include "../../util/defines.h"
 
-struct vertex
+struct Vertex
 {
 	glm::vec3 pos;
 	glm::vec3 col;
@@ -25,7 +25,7 @@ struct vertex
 */
 
 
-class mesh
+class Mesh
 {
 private:
 
@@ -38,7 +38,7 @@ public:
 	uint vao = 0, vbo = 0;
 
 
-	std::vector<vertex> vertices;
+	std::vector<Vertex> vertices;
 
 	// Builds the low-level GL compatible array
 	void build_array();
@@ -48,7 +48,7 @@ public:
 
 	void gen_buffers();
 
-	mesh();
-	~mesh();
+	Mesh();
+	~Mesh();
 };
 

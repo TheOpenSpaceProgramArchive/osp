@@ -8,7 +8,7 @@
 #include <iostream>
 #include <rang.h>
 
-class shader;
+class Shader;
 
 namespace spd = spdlog;
 
@@ -22,4 +22,4 @@ typedef unsigned int uint;
 	go haywire.
 */
 
-extern shader* g_shader;
+extern Shader* g_shader;

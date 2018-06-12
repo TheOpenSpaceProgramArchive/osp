@@ -17,7 +17,7 @@
 
 
 */
-class shader
+class Shader
 {
 public:
 
@@ -25,7 +25,7 @@ public:
 
 	logger log;
 
-	void load(std::string vertex, std::string fragment);
+	void load(std::string Vertex, std::string fragment);
 
 	void use();
 
@@ -39,8 +39,8 @@ public:
 
 	void setmat4(std::string name, glm::mat4 mat);
 
-	shader(std::string vertex, std::string fragment);
-	shader();
-	~shader();
+	Shader(std::string Vertex, std::string fragment);
+	Shader();
+	~Shader();
 };
 

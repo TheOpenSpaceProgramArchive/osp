@@ -2,7 +2,7 @@
 
 
 
-void dmodel::draw(glm::mat4 view, glm::mat4 proj)
+void DModel::draw(glm::mat4 view, glm::mat4 proj)
 {
 	glm::mat4 tform_mat = tform.build_matrix();
 
@@ -20,13 +20,13 @@ void dmodel::draw(glm::mat4 view, glm::mat4 proj)
 	
 }
 
-dmodel::dmodel(mesh* mh)
+DModel::DModel(Mesh* mh)
 {
-	dmodel(mh, NULL);
+	DModel(mh, NULL);
 }
 
 
-dmodel::dmodel(mesh* mh, shader* sh, uint draw_type)
+DModel::DModel(Mesh* mh, Shader* sh, uint draw_type)
 {
 	this->mh = mh;
 	this->draw_type = draw_type;
@@ -42,6 +42,6 @@ dmodel::dmodel(mesh* mh, shader* sh, uint draw_type)
 
 }
 
-dmodel::~dmodel()
+DModel::~DModel()
 {
 }

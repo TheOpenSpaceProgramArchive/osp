@@ -9,14 +9,14 @@
 #endif
 
 #ifndef G
-#define G 0.000000000066742 
+#define G (6.67 * std::pow(10, -11))
 #endif
 
 /*
 	Represents the state of a thing moving using
 	newtonian dynamics.
 */
-struct newton_state
+struct NewtonState
 {
 	// Position of the body in 3D space
 	glm::dvec3 pos;
@@ -50,13 +50,13 @@ struct newton_state
 	Read: https://en.wikipedia.org/wiki/Orbital_elements for info 
 		about the math stuff
 */
-class space_body
+class SpaceBody
 {
 public:
 
 	bool logged = false;
 
-	space_body* parent = NULL;
+	SpaceBody* parent = NULL;
 	
 	// Mass of the body, must be given in kg
 	double mass;
@@ -71,11 +71,11 @@ public:
 
 
 
-	newton_state state_by_mean(double anomaly, double precision = 0.0000001);
+	NewtonState state_by_mean(double anomaly, double precision = 0.0000001);
 
-	newton_state state_by_time(double t, double precision = 0.0000001);
+	NewtonState state_by_time(double t, double precision = 0.0000001);
 
-	void set_state(newton_state state);
+	void set_state(NewtonState state);
 
 	// The given argument is the angular distance from the pericenter if the body
 	// was in a circular orbit of same period as the actual orbit.
@@ -120,7 +120,7 @@ public:
 	double get_r_length(double true_anomaly);
 
 	// Gets a point in the orbit given the time since epoch
-	space_body();
-	~space_body();
+	SpaceBody();
+	~SpaceBody();
 };
 

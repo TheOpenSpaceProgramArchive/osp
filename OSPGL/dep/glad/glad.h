@@ -1909,13 +1909,13 @@ extern "C" {
 	typedef void (APIENTRYP PFNGLSTENCILMASKSEPARATEPROC)(GLenum face, GLuint mask);
 	GLAPI PFNGLSTENCILMASKSEPARATEPROC glad_glStencilMaskSeparate;
 #define glStencilMaskSeparate glad_glStencilMaskSeparate
-	typedef void (APIENTRYP PFNGLATTACHSHADERPROC)(GLuint program, GLuint shader);
+	typedef void (APIENTRYP PFNGLATTACHSHADERPROC)(GLuint program, GLuint Shader);
 	GLAPI PFNGLATTACHSHADERPROC glad_glAttachShader;
 #define glAttachShader glad_glAttachShader
 	typedef void (APIENTRYP PFNGLBINDATTRIBLOCATIONPROC)(GLuint program, GLuint index, const GLchar *name);
 	GLAPI PFNGLBINDATTRIBLOCATIONPROC glad_glBindAttribLocation;
 #define glBindAttribLocation glad_glBindAttribLocation
-	typedef void (APIENTRYP PFNGLCOMPILESHADERPROC)(GLuint shader);
+	typedef void (APIENTRYP PFNGLCOMPILESHADERPROC)(GLuint Shader);
 	GLAPI PFNGLCOMPILESHADERPROC glad_glCompileShader;
 #define glCompileShader glad_glCompileShader
 	typedef GLuint(APIENTRYP PFNGLCREATEPROGRAMPROC)();
@@ -1927,10 +1927,10 @@ extern "C" {
 	typedef void (APIENTRYP PFNGLDELETEPROGRAMPROC)(GLuint program);
 	GLAPI PFNGLDELETEPROGRAMPROC glad_glDeleteProgram;
 #define glDeleteProgram glad_glDeleteProgram
-	typedef void (APIENTRYP PFNGLDELETESHADERPROC)(GLuint shader);
+	typedef void (APIENTRYP PFNGLDELETESHADERPROC)(GLuint Shader);
 	GLAPI PFNGLDELETESHADERPROC glad_glDeleteShader;
 #define glDeleteShader glad_glDeleteShader
-	typedef void (APIENTRYP PFNGLDETACHSHADERPROC)(GLuint program, GLuint shader);
+	typedef void (APIENTRYP PFNGLDETACHSHADERPROC)(GLuint program, GLuint Shader);
 	GLAPI PFNGLDETACHSHADERPROC glad_glDetachShader;
 #define glDetachShader glad_glDetachShader
 	typedef void (APIENTRYP PFNGLDISABLEVERTEXATTRIBARRAYPROC)(GLuint index);
@@ -1957,13 +1957,13 @@ extern "C" {
 	typedef void (APIENTRYP PFNGLGETPROGRAMINFOLOGPROC)(GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 	GLAPI PFNGLGETPROGRAMINFOLOGPROC glad_glGetProgramInfoLog;
 #define glGetProgramInfoLog glad_glGetProgramInfoLog
-	typedef void (APIENTRYP PFNGLGETSHADERIVPROC)(GLuint shader, GLenum pname, GLint *params);
+	typedef void (APIENTRYP PFNGLGETSHADERIVPROC)(GLuint Shader, GLenum pname, GLint *params);
 	GLAPI PFNGLGETSHADERIVPROC glad_glGetShaderiv;
 #define glGetShaderiv glad_glGetShaderiv
-	typedef void (APIENTRYP PFNGLGETSHADERINFOLOGPROC)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+	typedef void (APIENTRYP PFNGLGETSHADERINFOLOGPROC)(GLuint Shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 	GLAPI PFNGLGETSHADERINFOLOGPROC glad_glGetShaderInfoLog;
 #define glGetShaderInfoLog glad_glGetShaderInfoLog
-	typedef void (APIENTRYP PFNGLGETSHADERSOURCEPROC)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *source);
+	typedef void (APIENTRYP PFNGLGETSHADERSOURCEPROC)(GLuint Shader, GLsizei bufSize, GLsizei *length, GLchar *source);
 	GLAPI PFNGLGETSHADERSOURCEPROC glad_glGetShaderSource;
 #define glGetShaderSource glad_glGetShaderSource
 	typedef GLint(APIENTRYP PFNGLGETUNIFORMLOCATIONPROC)(GLuint program, const GLchar *name);
@@ -1990,13 +1990,13 @@ extern "C" {
 	typedef GLboolean(APIENTRYP PFNGLISPROGRAMPROC)(GLuint program);
 	GLAPI PFNGLISPROGRAMPROC glad_glIsProgram;
 #define glIsProgram glad_glIsProgram
-	typedef GLboolean(APIENTRYP PFNGLISSHADERPROC)(GLuint shader);
+	typedef GLboolean(APIENTRYP PFNGLISSHADERPROC)(GLuint Shader);
 	GLAPI PFNGLISSHADERPROC glad_glIsShader;
 #define glIsShader glad_glIsShader
 	typedef void (APIENTRYP PFNGLLINKPROGRAMPROC)(GLuint program);
 	GLAPI PFNGLLINKPROGRAMPROC glad_glLinkProgram;
 #define glLinkProgram glad_glLinkProgram
-	typedef void (APIENTRYP PFNGLSHADERSOURCEPROC)(GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+	typedef void (APIENTRYP PFNGLSHADERSOURCEPROC)(GLuint Shader, GLsizei count, const GLchar *const*string, const GLint *length);
 	GLAPI PFNGLSHADERSOURCEPROC glad_glShaderSource;
 #define glShaderSource glad_glShaderSource
 	typedef void (APIENTRYP PFNGLUSEPROGRAMPROC)(GLuint program);
@@ -7549,7 +7549,7 @@ extern "C" {
 #ifndef GL_ARB_gl_spirv
 #define GL_ARB_gl_spirv 1
 	GLAPI int GLAD_GL_ARB_gl_spirv;
-	typedef void (APIENTRYP PFNGLSPECIALIZESHADERARBPROC)(GLuint shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue);
+	typedef void (APIENTRYP PFNGLSPECIALIZESHADERARBPROC)(GLuint Shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue);
 	GLAPI PFNGLSPECIALIZESHADERARBPROC glad_glSpecializeShaderARB;
 #define glSpecializeShaderARB glad_glSpecializeShaderARB
 #endif
@@ -8681,7 +8681,7 @@ extern "C" {
 	typedef void (APIENTRYP PFNGLDELETENAMEDSTRINGARBPROC)(GLint namelen, const GLchar *name);
 	GLAPI PFNGLDELETENAMEDSTRINGARBPROC glad_glDeleteNamedStringARB;
 #define glDeleteNamedStringARB glad_glDeleteNamedStringARB
-	typedef void (APIENTRYP PFNGLCOMPILESHADERINCLUDEARBPROC)(GLuint shader, GLsizei count, const GLchar *const*path, const GLint *length);
+	typedef void (APIENTRYP PFNGLCOMPILESHADERINCLUDEARBPROC)(GLuint Shader, GLsizei count, const GLchar *const*path, const GLint *length);
 	GLAPI PFNGLCOMPILESHADERINCLUDEARBPROC glad_glCompileShaderIncludeARB;
 #define glCompileShaderIncludeARB glad_glCompileShaderIncludeARB
 	typedef GLboolean(APIENTRYP PFNGLISNAMEDSTRINGARBPROC)(GLint namelen, const GLchar *name);
@@ -13633,7 +13633,7 @@ extern "C" {
 	typedef void (APIENTRYP PFNGLREQUESTRESIDENTPROGRAMSNVPROC)(GLsizei n, const GLuint *programs);
 	GLAPI PFNGLREQUESTRESIDENTPROGRAMSNVPROC glad_glRequestResidentProgramsNV;
 #define glRequestResidentProgramsNV glad_glRequestResidentProgramsNV
-	typedef void (APIENTRYP PFNGLTRACKMATRIXNVPROC)(GLenum target, GLuint address, GLenum matrix, GLenum transform);
+	typedef void (APIENTRYP PFNGLTRACKMATRIXNVPROC)(GLenum target, GLuint address, GLenum matrix, GLenum Transform);
 	GLAPI PFNGLTRACKMATRIXNVPROC glad_glTrackMatrixNV;
 #define glTrackMatrixNV glad_glTrackMatrixNV
 	typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERNVPROC)(GLuint index, GLint fsize, GLenum type, GLsizei stride, const void *pointer);

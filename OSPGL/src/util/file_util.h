@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-class file_util
+class FileUtil
 {
 public:
 
