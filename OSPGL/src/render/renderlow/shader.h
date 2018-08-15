@@ -23,7 +23,7 @@ public:
 
 	int program;
 
-	logger log;
+	Logger log;
 
 	void load(std::string Vertex, std::string fragment);
 

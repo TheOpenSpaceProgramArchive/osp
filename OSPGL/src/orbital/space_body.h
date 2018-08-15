@@ -67,57 +67,15 @@ public:
 	double soi;
 
 	// Orbit properties, only defined on bodies with a parent
-	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis;
+	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
 
-
-
-	NewtonState state_by_mean(double anomaly, double precision = 0.0000001);
-
-	NewtonState state_by_time(double t, double precision = 0.0000001);
-
-	void set_state(NewtonState state);
-
-	// The given argument is the angular distance from the pericenter if the body
-	// was in a circular orbit of same period as the actual orbit.
-	// 360 is a full orbit
-	// (Takes mean anomaly)
-	glm::dvec3 pos_by_mean(double anomaly);
-
-	// t is the time in seconds since passing the periapsis
-	glm::dvec3 pos_by_time(double t);
-
-	glm::dvec3 dir_by_mean(double mean, double precision = 0.0000001);
-
-	double vel_by_radius(double r);
-
-	// Obtains the time it takes for a full orbit to be completed
-	double get_orbital_period();
-
-	double get_periapsis_radius();
-
-	double get_apoapsis_radius();
-
-	double get_ascnode_mean();
-
-	// Obtains eccentric anomaly using recursive method
-	// 4 iterations seem good enough
-	double get_eccentric_anomaly(double mean_anomaly, int iterations = 4);
-
-	// Gets mean anomaly given time
-	double get_mean_anomaly(double t);
-
-	// Gets true anomaly given mean_anomaly using get_eccentric_anomaly
-	double get_true_anomaly(double mean_anomaly, int iterations = 4);
-
-	double get_true_anomaly_hyperbolic(double mean_anomaly, int iterations = 4);
-
-	// Gets altitude given time
-	double get_altitude(double t);
-
-	// Gets altitude given mean anomaly
-	double get_altitude_mean(double mean);
-
-	double get_r_length(double true_anomaly);
+	NewtonState to_state();
+	double mean_to_eccentric(double mean, double tol);
+	double mean_to_true(double mean_anomaly, double tol = 1.0e-14);
+	double time_to_mean(double time);
+	double mean_to_time(double mean);
+	double true_to_eccentric();
+	double eccentric_to_mean(double eccentric);
 
 	// Gets a point in the orbit given the time since epoch
 	SpaceBody();

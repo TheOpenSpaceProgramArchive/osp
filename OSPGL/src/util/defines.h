@@ -12,7 +12,7 @@ class Shader;
 
 namespace spd = spdlog;
 
-typedef std::shared_ptr<spd::logger> logger;
+typedef std::shared_ptr<spd::logger> Logger;
 
 typedef unsigned int uint;
 

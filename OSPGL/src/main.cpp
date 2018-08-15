@@ -1,3 +1,7 @@
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -32,6 +36,7 @@ namespace spd = spdlog;
 
 Shader* g_shader = NULL;
 
+
 auto create_logger()
 {
 	std::vector<spdlog::sink_ptr>* sinks = new std::vector<spdlog::sink_ptr>();
@@ -52,7 +57,7 @@ auto create_logger()
 int main()
 {
 	
-	logger log = create_logger();
+	Logger log = create_logger();
 
 	log->info("Initializing OSP");
 
@@ -96,6 +101,13 @@ int main()
 		log->critical("Could not initialize GLAD, program terminating!");
 		return -1;
 	}
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	// Setup style
+	ImGui::StyleColorsDark();
 
 
 	Shader test = Shader("res/shaders/test.vs", "res/shaders/test.fs");
@@ -145,21 +157,23 @@ int main()
 	bboard.tform.pos = { 0, 0, 0 };
 	bboard.tform.scl = { 2.6, 2.6, 2.6 };
 
-	log->info("Orbital Period {}s", vessel.get_orbital_period());
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// update
 		process_input(window, &vessel);
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		// render
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		tform.pos = vessel.pos_by_time(t);
-		tform.pos /= 200 * 1000;
-		tform.pos /= 4;
+		vessel.true_anomaly = vessel.mean_to_true(vessel.time_to_mean(t));
+		NewtonState st = vessel.to_state();
+		tform.pos = st.pos;
+		tform.pos /= 6000 * 100;
 		tform.rot = glm::quat(0, 0, 1, 1);
 
 		lines.vertices.clear();
@@ -168,7 +182,7 @@ int main()
 
 		//view = glm::translate(glm::vec3(sin(t / 10000000), 0, cos(t / 10000000)));
 
-		view = glm::lookAt(glm::vec3(0.001f, 3, 4) , glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		view = glm::lookAt(glm::vec3(0.001f, 7, 70) , glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 		glm::mat4 proj;
 		proj = glm::perspective(glm::radians(55.0f), (float)(SCR_WIDTH / SCR_HEIGHT), 0.05f, 100.0f);
@@ -181,29 +195,16 @@ int main()
 		// Generate vertices from orbit
 		for (double a = 0; a < 2 * PI; a += 0.05)
 		{
+			vessel.true_anomaly = a;
+
 			Vertex vert;
-			vert.pos = vessel.pos_by_mean(a);
+			NewtonState state = vessel.to_state();
+			vert.pos = state.pos;
 
-			// Transform into screen space
-			vert.pos /= 6000 * 1000;
+			// Transform into scaled space
+			vert.pos /= 6000 * 100;
 
-			if (a <= 0.1)
-			{
-				vert.col = { 1.0, 0.0, 1.0 };
-			}
-			else if (a <= PI + 0.1 && a >= PI - 0.1)
-			{
-				vert.col = { 1.0, 1.0, 0.0 };
-			}
-			else if (a <= glm::radians(vessel.asc_node) + 0.1 && a >= glm::radians(vessel.asc_node) - 0.1)
-			{
-				vert.col = { 1.0, 1.0, 1.0 };
-			}
-			else
-			{
-				//vert.col.r = a / (2 * 3.1415);
-				vert.col.g = vessel.get_altitude_mean(a) / (2 * vessel.smajor_axis);
-			}
+			vert.col = { 1.0, 0.0, 1.0 };
 
 			if (prev.pos.x == -123456789)
 			{
@@ -223,7 +224,8 @@ int main()
 		lines.upload();
 
 
-		NewtonState st = vessel.state_by_time(t);
+		vessel.true_anomaly = vessel.mean_to_true(vessel.time_to_mean(t));
+		st = vessel.to_state();
 
 		// Build vec
 		vector.vertices.clear();
@@ -232,8 +234,7 @@ int main()
 		vector.build_array();
 		vector.upload();
 
-		//log->info("Earth AP: {} PE: {} E: {} I {} AN: {}", vessel.get_apoapsis_radius(), vessel.get_periapsis_radius(),
-		//vessel.eccentricity, vessel.inclination, vessel.asc_node);
+		log->info("Vessel SMA: {} E: {} I {} AN: {}", vessel.smajor_axis, vessel.eccentricity, vessel.inclination, vessel.asc_node);
 		
 		glUseProgram(test.program);
 		test.setmat4("model", tform.build_matrix());
@@ -249,6 +250,9 @@ int main()
 		glDrawArrays(GL_LINES, 0, lines.vertices.size());
 		
 		bboard.draw(view, proj);
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Finish
 		glfwSwapBuffers(window);
@@ -274,22 +278,22 @@ void process_input(GLFWwindow *window, SpaceBody* earth)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		earth->inclination -= 0.4;
+		earth->inclination -= 0.04;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		earth->inclination += 0.4;
+		earth->inclination += 0.04;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		earth->asc_node -= 0.4;
+		earth->asc_node -= 0.04;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		earth->asc_node += 0.4;
+		earth->asc_node += 0.04;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
@@ -310,12 +314,6 @@ void process_input(GLFWwindow *window, SpaceBody* earth)
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
 	{
 		earth->arg_periapsis += 0.4;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-	{
-		NewtonState st = earth->state_by_mean(50);
-		earth->set_state(st);
 	}
 
 }

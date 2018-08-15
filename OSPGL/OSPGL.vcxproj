@@ -119,6 +119,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dep\stb\impl_stb.cpp" />
+    <ClCompile Include="src\render\renderlow\image.cpp" />
+    <ClCompile Include="src\render\renderlow\drawables\dcubesphere.cpp" />
+    <ClCompile Include="dep\imgui\imgui.cpp" />
+    <ClCompile Include="dep\imgui\imgui_draw.cpp" />
+    <ClCompile Include="dep\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="dep\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\render\rendernear\RenderBody.cpp" />
     <ClCompile Include="src\render\renderlow\drawables\dbillboard.cpp" />
     <ClCompile Include="dep\glad\glad.c" />
     <ClCompile Include="dep\glm\detail\glm.cpp" />
@@ -132,6 +140,18 @@
     <ClCompile Include="src\render\renderlow\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dep\stb\stb_image.h" />
+    <ClInclude Include="src\render\renderlow\image.h" />
+    <ClInclude Include="src\render\renderlow\drawables\dcubesphere.h" />
+    <ClInclude Include="dep\imgui\imconfig.h" />
+    <ClInclude Include="dep\imgui\imgui.h" />
+    <ClInclude Include="dep\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="dep\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="dep\imgui\imgui_internal.h" />
+    <ClInclude Include="dep\imgui\stb_rect_pack.h" />
+    <ClInclude Include="dep\imgui\stb_textedit.h" />
+    <ClInclude Include="dep\imgui\stb_truetype.h" />
+    <ClInclude Include="src\render\rendernear\RenderBody.h" />
     <ClInclude Include="src\render\renderlow\drawables\dbillboard.h" />
     <ClInclude Include="dep\glad\glad.h" />
     <ClInclude Include="dep\glad\KHR.h" />

@@ -1,252 +1,270 @@
 #include "space_body.h"
 
-
-float mag(glm::dvec3 vec)
+struct PosPack
 {
-	return std::sqrt(std::pow(vec.x, 2) + std::pow(vec.y, 2) + std::pow(vec.z, 2));
+	glm::dvec3 pos;
+	double r;
+};
+
+static PosPack to_pos(double mass, SpaceBody* o)
+{
+	PosPack out;
+
+	// Calculate radius (height)
+	double r = (o->smajor_axis * (1.0 - (o->eccentricity * o->eccentricity))) / (1 + o->eccentricity * cos(o->true_anomaly));
+
+	if (r < 0 && o->eccentricity >= 1.0)
+	{
+		return out;
+	}
+
+	// Adjust for other parameters
+
+	out.pos.x = cos(o->true_anomaly) * r;
+	out.pos.z = sin(o->true_anomaly) * r;
+
+	// Arg.of.Periapsis
+	out.pos = glm::rotateY(out.pos, o->arg_periapsis);
+	// Inclination 
+	out.pos = glm::rotateX(out.pos, o->inclination);
+	// Ascending node
+	out.pos = glm::rotateY(out.pos, o->asc_node);
+
+	out.r = r;
+
+	return out;
 }
 
-NewtonState SpaceBody::state_by_mean(double anomaly, double precision)
+
+
+
+NewtonState SpaceBody::to_state()
 {
 	NewtonState out;
 
-	out.pos = pos_by_mean(anomaly);
-	out.dir = dir_by_mean(anomaly);
-	out.vel = vel_by_radius(get_altitude_mean(anomaly));
-	out.delta = out.vel * out.dir;
+	// Sanity checks
+	if (eccentricity < 0.0)
+	{
+		eccentricity = -eccentricity;
+	}
+	if (eccentricity >= 0.99999 && eccentricity <= 1.00001)
+	{
+		eccentricity += 0.01;
+	}
+
+	if (eccentricity < 1.0 && smajor_axis < 0)
+	{
+		smajor_axis = -smajor_axis;
+	}
+
+	if (eccentricity >= 1.0 && smajor_axis > 0)
+	{
+		smajor_axis = -smajor_axis;
+	}
+
+
+
+	PosPack cur = to_pos(mass + parent->mass, this);
+
+	out.pos = cur.pos;
+	true_anomaly += 1e-11;
+	glm::dvec3 next = to_pos(mass + parent->mass, this).pos;
+	true_anomaly -= 1e-11;
+
+	double vel = sqrt(G * (mass + parent->mass) * ((2.0 / cur.r) - (1.0 / smajor_axis)));
+
+	out.dir = glm::normalize(next - out.pos);
+	out.vel = vel;
+	out.delta = out.dir * out.vel;
 
 	return out;
 }
 
-NewtonState SpaceBody::state_by_time(double t, double precision)
+// alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
+static double starting_value(double ecc, double mean)
 {
-	double mean = get_mean_anomaly(t);
+	double t34 = ecc * ecc;
+	double t35 = ecc * t34;
+	double t33 = cos(mean);
 
-	return state_by_mean(mean, precision);
+
+	return mean + ((-1.0 / 2.0) * t35 + ecc + (t34 + (3.0 / 2.0) * t33 * t35) * t33) * sin(mean);
 }
 
-void SpaceBody::set_state(NewtonState state)
+static double eps3(double ecc, double mean, double x)
 {
-
-	// Decent method but is pretty innacurate on extreme cases
-
-	state.pos /= 2;
-
-	double mu = parent->mass * G;
-
-	double rad = mag(state.pos);
-	double vel = state.vel;
-
-	
-	// Specific Angular momentum (h)
-	glm::dvec3 ang_momentum_v = glm::cross(state.pos, state.delta);
-
-	double ang_momentum = mag(ang_momentum_v);
-
-	// Specific Energy
-	double s_energy = (std::pow(vel, 2) / 2.0) - (mu / rad);
-
-	// Semi Major Axis
-	smajor_axis = -mu / (2.0 * s_energy);
-
-	// Eccentricity
-	eccentricity = std::sqrt(1.0 - (std::pow(ang_momentum, 2) / (smajor_axis * mu)));
-
-	// Inclination (As it's given in 0->180 we have to substract it from 180)
-	inclination = 180 - glm::degrees(acos(ang_momentum_v.y / ang_momentum));
-
-	// Asc Node
-	asc_node = glm::degrees(atan2(ang_momentum_v.x, -ang_momentum_v.z));
+	double t1 = cos(x);
+	double t2 = -1 + ecc * t1;
+	double t3 = sin(x);
+	double t4 = ecc * t3;
+	double t5 = -x + t4 + mean;
+	double t6 = t5 / ((1.0 / 2.0) * t5 * (t4 / t2) + t2);
+	return t5 / (((1.0 / 2.0) * t3 - (1.0 / 6.0) * t1 * t6) * ecc * t6 + t2);
 }
 
-glm::dvec3 SpaceBody::pos_by_mean(double mean)
-{
-	double aeccentricity = std::abs(eccentricity);
 
-	if (aeccentricity >= 1.0)
+double SpaceBody::true_to_eccentric()
+{
+	double upper = sqrt(1 - eccentricity * eccentricity) * sin(true_anomaly);
+	double lower = eccentricity + cos(true_anomaly);
+
+	return atan(upper / lower);
+}
+
+double SpaceBody::eccentric_to_mean(double eccentric)
+{
+	// Mean = eccentric - e * sin(eccentric), per the kepler equation
+	return eccentric - eccentricity * sin(eccentric);
+}
+
+double SpaceBody::time_to_mean(double time)
+{
+	double sm = std::abs(smajor_axis);
+	if (sm == 0)
 	{
-		// Solve for this case too as escape trajectories SHOULD be possible
-
-		double semi_latus = smajor_axis * (1 - std::pow(eccentricity, 2));
-		double true_anomaly = get_true_anomaly_hyperbolic(mean);
-		double radius = semi_latus / (1 + eccentricity * cos(true_anomaly));
-
-		return { 0, 0, 0 };
+		return 0;
 	}
-	else
+
+	double n = sqrt((G * (mass + parent->mass)) / (sm * sm * sm));
+	return n * time;
+}
+
+double SpaceBody::mean_to_time(double mean)
+{
+	double sm = std::abs(smajor_axis);
+	if (sm == 0)
 	{
-		double ecc = get_eccentric_anomaly(mean);
+		return 0;
+	}
 
-		int iterations = 4;
+	double n = sqrt((G * (mass + parent->mass)) / (sm * sm * sm));
 
-		if (aeccentricity > 0.8 && aeccentricity < 0.92)
+	// mean = n * time, time = n / mean
+	return n / mean;
+}
+
+double SpaceBody::mean_to_eccentric(double mean, double tol)
+{
+	if (eccentricity < 1)
+	{
+		double out;
+
+		double mnorm = fmod(mean, 2.0 * PI);
+		double e0 = starting_value(eccentricity, mnorm);
+		double de = tol + 1;
+		double count = 0;
+		while (de > tol)
 		{
-			iterations = 8;
+			out = e0 - eps3(eccentricity, mnorm, e0);
+			de = abs(out - e0);
+			e0 = out;
+			count++;
+			if (count >= 100)
+			{
+				return 0; // FATAL: Many iterations
+			}
 		}
-		else if (aeccentricity >= 0.92 && aeccentricity < 0.95)
-		{
-			iterations = 24;
-		}
-		else if (aeccentricity >= 0.95 && aeccentricity < 0.98)
-		{
-			iterations = 48;
-		}
-		else if (aeccentricity >= 0.98)
-		{
-			iterations = 200;
-		}
-
-		double phi = get_true_anomaly(mean, iterations);
-		double r = get_r_length(phi);
-
-		glm::dvec3 out;
-		out.x = r * cos(phi);
-		out.z = r * sin(phi);
-
-
-		// Rotate to handle the argument of periapsis
-		// Basically a rotation along the y axis
-
-		out = glm::rotateY(out, glm::radians(arg_periapsis));
-
-
-		/*	Now rotate to fit inclination and long_asc_node
-			Inclination is simply applied by rotating 'inclination' degrees
-			the orbit, given the longitude of the ascending node as the
-			axis of rotation
-		 */
-
-		// First lets get the rotation axis. It's simply the x-z vector as
-		// specified by the asc_node angle (We have to convert to radians)
-		glm::dvec3 rot;
-		rot.x = cos(glm::radians(asc_node));
-		rot.z = sin(glm::radians(asc_node));
-
-		// Now rotate with help from glm
-
-		out = glm::rotate(out, glm::radians(inclination), rot);
-
 
 		return out;
 	}
-}
-
-glm::dvec3 SpaceBody::pos_by_time(double t)
-{
-	double mean = get_mean_anomaly(t);
-	
-	return pos_by_mean(mean);
-}
-
-glm::dvec3 SpaceBody::dir_by_mean(double mean, double precision)
-{
-	glm::dvec3 pos_a = pos_by_mean(mean);
-	glm::dvec3 pos_b = pos_by_mean(mean + precision);
-	
-	glm::dvec3 out = pos_b - pos_a;
-	out = glm::normalize(out);
-
-	return out;
-}
-
-double SpaceBody::vel_by_radius(double r)
-{
-	double v_sq = G * parent->mass * ((2.0 / r) - (1.0 / smajor_axis));
-	return std::sqrt(v_sq);
-}
-
-double SpaceBody::get_orbital_period()
-{
-	if (parent)
+	else
 	{
-		return 2.0 * PI * std::sqrt(std::pow(smajor_axis, 3) / (G * parent->mass));
+		// mean = ecc * sinh(eccentric) - eccentric
+		// SLOW SLOW, VERY SLOW method (for now):
+		double step = 0.5;
+		uint32_t count = 0;
+
+		bool done = false;
+		double r = 0;
+
+		bool prev_inc = true;
+
+		while (!done)
+		{
+			double rhs = eccentricity * sinh(r) - r;
+
+			if (std::abs(mean - rhs) < 0.00001)
+			{
+				return r;
+			}
+
+			if (rhs < mean)
+			{
+				r += step;
+				if (!prev_inc)
+				{
+					step /= 4.0;
+				}
+				prev_inc = true;
+			}
+			else
+			{
+				r -= step;
+				if (prev_inc)
+				{
+					step /= 4.0;
+				}
+				prev_inc = false;
+			}
+
+			count++;
+
+		}
+
+		r = r;
+
+		return r;
+
+	}
+}
+
+
+
+double SpaceBody::mean_to_true(double mean_anomaly, double tol)
+{
+	double eccentric = mean_to_eccentric(mean_anomaly, tol);
+	double half = eccentric / 2.0;
+
+	if (eccentricity < 1.0)
+	{
+		return 2 * atan2(sqrt(1 + eccentricity) * sin(half), sqrt(1 - eccentricity) * cos(half));
 	}
 	else
 	{
-		return INFINITY;
+		return 2 * atan(sqrt((eccentricity + 1) / (eccentricity - 1)) * tanh(eccentric / 2.0));
 	}
 }
 
-double SpaceBody::get_periapsis_radius()
+// TODO (Not working properly)
+/*
+double Orbit::from_state(EulerState state, double mass)
 {
-	if (parent)
-	{
-		return smajor_axis * (1.0 - eccentricity);
-	}
-	else
-	{
-		return 0;
-	}
+
+	glm::dvec3 hvec = glm::cross(state.pos, state.vel);
+	double h = glm::length(hvec);
+	double r = glm::length(state.pos);
+	double v = glm::length(state.vel);
+	double mu = G * mass;
+
+	double energy = ((v * v) / 2.0) - (mu / r);
+
+	smajor_axis = -(mu / (2.0 * energy));
+
+	eccentricity = sqrt(1 - ((h * h) / (smajor_axis * mu)));
+
+	inclination = std::abs(acos(hvec.y / h) - PI);
+
+	//asc_node = std::abs(atan2(hvec.x, -hvec.z));
+	double p = smajor_axis * (1.0 - eccentricity * eccentricity);
+
+	true_anomaly = atan2(sqrt(p / mu) * glm::dot(state.pos, state.pos), p - r);
+
+	double peri_plus_true = atan2(state.pos.y / sin(inclination), state.pos.x * cos(asc_node) + state.pos.z * sin(asc_node));
+	//arg_of_periapsis = peri_plus_true - true_anomaly;
+
+	return 0;
 }
-
-double SpaceBody::get_apoapsis_radius()
-{
-	if (parent)
-	{
-		return smajor_axis * (1.0 + eccentricity);
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-
-double SpaceBody::get_eccentric_anomaly(double mean_anomaly, int iterations)
-{
-	double temp_result = mean_anomaly;
-
-	double numerator;
-
-	for (int i = 0; i < iterations; i++)
-	{
-		numerator = mean_anomaly + eccentricity * sin(temp_result)
-			- eccentricity * temp_result * cos(temp_result);
-
-		temp_result = numerator / (1.0 - eccentricity * cos(temp_result));
-	}
-
-	return temp_result;
-}
-
-double SpaceBody::get_mean_anomaly(double t)
-{
-	return ((2.0 * PI) / get_orbital_period()) * t;
-}
-
-
-double SpaceBody::get_true_anomaly(double mean_anomaly, int iterations)
-{
-	return 2.0 * atan(sqrt((1.0 + eccentricity) / (1.0 - eccentricity)) * tan(get_eccentric_anomaly(mean_anomaly, iterations) / 2.0));
-}
-
-double SpaceBody::get_true_anomaly_hyperbolic(double mean_anomaly, int iterations)
-{
-	return 0.0;
-}
-
-double SpaceBody::get_altitude(double t)
-{
-	double mean = get_mean_anomaly(t);
-	return get_altitude_mean(mean);
-}
-
-double SpaceBody::get_altitude_mean(double mean)
-{
-	double phi = get_true_anomaly(mean);
-
-	return get_r_length(phi) / 2.0;
-}
-
-double SpaceBody::get_r_length(double true_anomaly)
-{
-	double nominator = smajor_axis * 2.0 * (1.0 - pow(eccentricity, 2));
-	double denominator = 1.0 + eccentricity * cos(true_anomaly);
-
-	return nominator / denominator;
-}
-
-
+*/
 
 SpaceBody::SpaceBody()
 {
