@@ -26,7 +26,7 @@ void Image::load_from_file(std::string path)
 
 	pixels.reserve(width * height);
 
-	for (size_t i = 0; i < width * height; i+=3)
+	for (size_t i = 0; i < width * height * 4; i+=4)
 	{
 		Pixel n;
 		n.r = data[i];
@@ -35,6 +35,21 @@ void Image::load_from_file(std::string path)
 		n.a = data[i + 3];
 		pixels.push_back(n);
 	}
+}
+
+Pixel Image::get_pixel(float x, float y)
+{
+	size_t rx = x * (width - 1);
+	size_t ry = y * (height - 1);
+	return get_pixel(rx, ry);
+}
+
+Pixel Image::get_pixel(size_t x, size_t y)
+{
+	assert(x < width);
+	assert(y < height);
+	size_t i = y * width + x;
+	return pixels[i];
 }
 
 Image::Image()

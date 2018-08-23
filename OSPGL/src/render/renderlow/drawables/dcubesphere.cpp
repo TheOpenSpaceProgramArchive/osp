@@ -1,16 +1,34 @@
 #include "dcubesphere.h"
 
 
-std::vector<glm::vec3> DCubeSphere::make_cube_face(size_t detail, glm::mat4 tform)
+std::vector<CubeSpherePoint> DCubeSphere::make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv)
 {
-	std::vector<glm::vec3> out;
-
+	std::vector<CubeSpherePoint> out;
+	//
 	float step = 1.0 / (float)detail;
 
 	for (size_t x = 0; x <= detail; x++)
 	{
 		for (size_t y = 0; y <= detail; y++)
 		{
+			Pixel p;
+			if (inv == 1)
+			{
+				p = img->get_pixel(1.0f - ((float)x / (float)detail), 1.0f - ((float)y / (float)detail));
+			}
+			else if(inv == 0)
+			{
+				p = img->get_pixel((float)x / (float)detail, 1.0f - ((float)y / (float)detail));
+			}
+			else if (inv == 2)
+			{
+				p = img->get_pixel((float)x / (float)detail, ((float)y / (float)detail));
+			}
+
+			float h = ((float)p.r / 255.0f);
+			h *= heightmap_power;
+			h += 1.0f;
+
 			glm::vec4 vertr;
 			float rx = (float)(x * 2);
 			float ry = (float)(y * 2);
@@ -19,7 +37,7 @@ std::vector<glm::vec3> DCubeSphere::make_cube_face(size_t detail, glm::mat4 tfor
 			vertr.w = 1.0f;
 			vertr = tform * vertr;
 			glm::vec3 vert = glm::vec3(vertr.x, vertr.y, vertr.z);
-			out.push_back(vert);
+			out.push_back(CubeSpherePoint(vert, h));
 		}
 	}
 
@@ -27,29 +45,38 @@ std::vector<glm::vec3> DCubeSphere::make_cube_face(size_t detail, glm::mat4 tfor
 }
 
 
-void DCubeSphere::bend_cube_face(std::vector<glm::vec3>* points)
+void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping)
 {
 	for (size_t i = 0; i < points->size(); i++)
 	{
-		/*glm::vec3 p = glm::normalize(points->at(i));
-		(*points)[i] = p;*/
+		glm::vec3 n = points->at(i).p;
+		if (adv_mapping)
+		{
+			float x2 = n.x * n.x;
+			float y2 = n.y * n.y;
+			float z2 = n.z * n.z;
 
-		glm::vec3 p = points->at(i);
-		float x2 = p.x * p.x;
-		float y2 = p.y * p.y;
-		float z2 = p.z * p.z;
+			n.x = n.x * sqrt(1.f - y2 / 2.f - z2 / 2.f + y2 * z2 / 3.f);
+			n.y = n.y * sqrt(1.f - x2 / 2.f - z2 / 2.f + x2 * z2 / 3.f);
+			n.z = n.z * sqrt(1.f - x2 / 2.f - y2 / 2.f + x2 * y2 / 3.f);
+		}
+		else
+		{
+			n = glm::normalize(points->at(i).p);
+		}
 
-		p.x = p.x * sqrt(1.f - y2 / 2.f - z2 / 2.f + y2 * z2 / 3.f);
-		p.y = p.y * sqrt(1.f - x2 / 2.f - z2 / 2.f + x2 * z2 / 3.f);
-		p.z = p.z * sqrt(1.f - x2 / 2.f - y2 / 2.f + x2 * y2 / 3.f);
 
-		(*points)[i] = p;
+		// Apply height
+		glm::vec3 p = n * points->at(i).h;
+
+		(*points)[i].p = p;
+		(*points)[i].n = n;
 	}
 }
 
-void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target)
+void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv)
 {
-	size_t detail = 10;
+	size_t detail = 64;
 
 	glm::mat4 tform = glm::mat4();
 	tform = glm::translate(tform, trans);
@@ -57,8 +84,8 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target)
 	{
 		tform = tform * glm::rotate(glm::radians(90.0f), rot);
 	}
-	auto verts = make_cube_face(detail, tform);
-	bend_cube_face(&verts);
+	auto verts = make_cube_face(detail, tform, img, inv);
+	bend_cube_face(&verts, false);
 
 	/*for (size_t i = 0; i < verts.size(); i++)
 	{
@@ -70,22 +97,23 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target)
 	for (size_t i = 0; i < verts.size() - (detail + 1); i++)
 	{
 		Vertex v;
-		v.col = verts[i];
+		float val = (verts[i].h - 1.0f) * (1.0f / heightmap_power);
+		v.col = glm::vec3(val, val, val);
 
 		if ((i + 1) % (detail + 1) != 0)
 		{
 			// We are not a rightmost-vertex, do triangles
-			v.pos = verts[i];
+			v.pos = verts[i].p;
 			target->vertices.push_back(v);
-			v.pos = verts[i + 1];
+			v.pos = verts[i + 1].p;
 			target->vertices.push_back(v);
-			v.pos = verts[i + detail + 1];
+			v.pos = verts[i + detail + 1].p;
 			target->vertices.push_back(v);
-			v.pos = verts[i + 1];
+			v.pos = verts[i + 1].p;
 			target->vertices.push_back(v);
-			v.pos = verts[i + detail + 2];
+			v.pos = verts[i + detail + 2].p;
 			target->vertices.push_back(v);
-			v.pos = verts[i + detail + 1];
+			v.pos = verts[i + detail + 1].p;
 			target->vertices.push_back(v);
 		}
 	}
@@ -96,12 +124,14 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target)
 
 void DCubeSphere::generate_base()
 {
-	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh);
-	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh);
-	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh);
-	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh);
-	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh);
-	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh);
+	assert(cubemap.size() != 0);
+
+	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0);
+	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2);
+	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0);
+	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1);
+	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0);
+	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1);
 }
 
 void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
@@ -152,6 +182,28 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 	glDrawArrays(GL_LINES, 0, axis.vertices.size());
 }
 
+
+void DCubeSphere::load_cubemap(std::string base_path)
+{
+	if (base_path[base_path.size() - 1] != '/')
+	{
+		base_path += '/';
+	}
+
+	Image px = Image::from_file(base_path + "px.png");
+	cubemap.push_back(px);
+	Image nx = Image::from_file(base_path + "nx.png");
+	cubemap.push_back(nx);
+	Image py = Image::from_file(base_path + "py.png");
+	cubemap.push_back(py);
+	Image ny = Image::from_file(base_path + "ny.png");
+	cubemap.push_back(ny);
+	Image pz = Image::from_file(base_path + "pz.png");
+	cubemap.push_back(pz);
+	Image nz = Image::from_file(base_path + "nz.png");
+	cubemap.push_back(nz);
+
+}
 
 DCubeSphere::DCubeSphere()
 {

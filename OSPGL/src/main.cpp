@@ -79,9 +79,7 @@ int main()
 	}
 
 	glfwMakeContextCurrent(window);
-	// Load callbacks
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	
+
 	// Load OpenGL function pointers
 
 	log->info("Initializing GLAD");
@@ -90,6 +88,9 @@ int main()
 		log->critical("Could not initialize GLAD, program terminating!");
 		return -1;
 	}
+
+	// Load callbacks
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -121,7 +122,9 @@ int main()
 	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
 
 	DCubeSphere csphere;
+	csphere.load_cubemap("res/cmaps/moon");
 	csphere.generate_base();
+
 
 	const GLubyte *ver = glGetString(GL_VERSION);
 	log->info("OpenGL version: {}", ver);
@@ -145,7 +148,7 @@ int main()
 		//ImGui::Render();
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		view = glm::lookAt(glm::vec3(sin(t) * 5.0f, 3.0f, cos(t) * 5.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		view = glm::lookAt(glm::vec3(sin(t) * 1.8f, sin(t / 5.0f) * 2.0f, cos(t) * 1.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 		t += 0.01;
 

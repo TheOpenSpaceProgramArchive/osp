@@ -7,10 +7,6 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 
-struct CubeSphereMap
-{
-
-};
 
 struct CubeSphereNode
 {
@@ -25,6 +21,19 @@ struct CubeSphereNode
 	Mesh mesh;
 };
 
+struct CubeSpherePoint
+{
+	glm::vec3 p;
+	glm::vec3 n;
+	float h;
+
+	CubeSpherePoint(glm::vec3 np, float nh)
+	{
+		p = np; //< hmm
+		h = nh;
+	}
+};
+
 class DCubeSphere : public Drawable
 {
 private:
@@ -32,11 +41,16 @@ private:
 
 public:
 
+	float heightmap_power = 0.05f;
+
+	// In this order: px,nx,py,ny,pz,nz ALWAYS
+	std::vector<Image> cubemap;
+
 	// Generates points from 0->1, as many in each side as detail gives
-	// and they are transformed by tform
-	std::vector<glm::vec3> make_cube_face(size_t detail, glm::mat4 tform);
+	// and they are transformed by tform TODO: Add bounds to img
+	std::vector<CubeSpherePoint> make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv);
 	// Bends points (from 0->1) from the origin (0, 0) to keep radius (1)
-	void bend_cube_face(std::vector<glm::vec3>* points);
+	void bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping);
 
 	CubeSphereNode rootx, rootmx, rooty, rootmy, rootz, rootmz;
 
@@ -50,7 +64,10 @@ public:
 
 	virtual void draw(glm::mat4 view, glm::mat4 proj) override;
 
-	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target);
+	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv);
+
+	// Loads a cubemap given base path assuming the textures are named as expected (see top)
+	void load_cubemap(std::string base_path);
 
 	DCubeSphere();
 	~DCubeSphere();

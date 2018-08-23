@@ -1046,4 +1046,27 @@
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\cmaps\earth\nx.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\cmaps\earth\ny.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\cmaps\earth\nz.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\cmaps\earth\px.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\cmaps\earth\py.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\cmaps\earth\pz.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\cmaps\CREDITS.txt" />
+  </ItemGroup>
 </Project>

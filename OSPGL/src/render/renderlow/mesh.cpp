@@ -35,7 +35,7 @@ void Mesh::upload()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		{
-			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data), data.data(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
 
 			// position
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -73,4 +73,14 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
+	if (vao != 0)
+	{
+		glDeleteVertexArrays(1, &vao);
+	}
+
+	if (vbo != 0)
+	{
+		glDeleteBuffers(1, &vbo);
+	}
 }
+

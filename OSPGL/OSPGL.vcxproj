@@ -470,6 +470,17 @@
     <None Include="res\shaders\test.fs" />
     <None Include="res\shaders\test.vs" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\cmaps\earth\nx.png" />
+    <Image Include="res\cmaps\earth\ny.png" />
+    <Image Include="res\cmaps\earth\nz.png" />
+    <Image Include="res\cmaps\earth\px.png" />
+    <Image Include="res\cmaps\earth\py.png" />
+    <Image Include="res\cmaps\earth\pz.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\cmaps\CREDITS.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

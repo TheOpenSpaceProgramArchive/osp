@@ -21,6 +21,11 @@ public:
 	static Image from_file(std::string path);
 	void load_from_file(std::string path);
 
+	// Normalized coordinates
+	Pixel get_pixel(float x, float y);
+	// Real coordinates
+	Pixel get_pixel(size_t x, size_t y);
+
 	Image();
 	~Image();
 };
