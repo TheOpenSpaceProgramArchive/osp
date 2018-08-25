@@ -2,7 +2,7 @@
 
 
 std::vector<CubeSpherePoint> DCubeSphere::make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv, 
-	glm::vec4 our_bounds, glm::vec4 child_bounds)
+	glm::vec4 our_bounds, glm::vec4 child_bounds, float hpower)
 {
 	std::vector<CubeSpherePoint> out;
 	float step = 1.0 / (float)detail;
@@ -34,7 +34,7 @@ std::vector<CubeSpherePoint> DCubeSphere::make_cube_face(size_t detail, glm::mat
 				}
 
 				float h = ((float)p.r / 255.0f);
-				h *= heightmap_power;
+				h *= hpower;
 				h += 1.0f;
 
 				glm::vec4 vertr;
@@ -93,9 +93,9 @@ void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_
 }
 
 void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv, 
-	glm::vec4 our_bounds, glm::vec4 child_bounds)
+	glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal)
 {
-	size_t detail = 64;
+	size_t detail = 256;
 
 	glm::mat4 tform = glm::mat4();
 	tform = glm::translate(tform, trans);
@@ -103,7 +103,7 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Im
 	{
 		tform = tform * glm::rotate(glm::radians(90.0f), rot);
 	}
-	auto verts = make_cube_face(detail, tform, img, inv, our_bounds, child_bounds);
+	auto verts = make_cube_face(detail, tform, img, inv, our_bounds, child_bounds, heightmap_power);
 	bend_cube_face(&verts, false);
 
 	/*for (size_t i = 0; i < verts.size(); i++)
@@ -146,6 +146,8 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Im
 		}
 	}
 
+	target->generate_normals(true, flip_normal);
+
 	target->build_array();
 	target->upload();
 }
@@ -157,12 +159,12 @@ void DCubeSphere::generate_base()
 	glm::vec4 full = glm::vec4(0.0, 0.0, 1.0, 1.0);
 	glm::vec4 null = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
-	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null);
-	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null);
-	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null);
-	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null);
-	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null);
-	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null);
+	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true);
+	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false);
+	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null, true);
+	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null, false);
+	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null, true);
+	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null, false);
 }
 
 void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
@@ -175,18 +177,12 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 	g_shader->setmat4("proj", proj);
 
 	// Draw
-	glBindVertexArray(rootx.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rootx.mesh.vertices.size());
-	glBindVertexArray(rooty.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rooty.mesh.vertices.size());
-	glBindVertexArray(rootz.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rootz.mesh.vertices.size());
-	glBindVertexArray(rootmx.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rootmx.mesh.vertices.size());
-	glBindVertexArray(rootmy.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rootmy.mesh.vertices.size());
-	glBindVertexArray(rootmz.mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, rootmz.mesh.vertices.size());
+	rootx.draw_recursive();
+	rooty.draw_recursive();
+	rootz.draw_recursive();
+	rootmx.draw_recursive();
+	rootmy.draw_recursive();
+	rootmz.draw_recursive();
 
 	Mesh axis;
 	Vertex v;
@@ -248,4 +244,15 @@ DCubeSphere::DCubeSphere()
 
 DCubeSphere::~DCubeSphere()
 {
+}
+
+void CubeSphereNode::draw_recursive()
+{
+	glBindVertexArray(mesh.vao);
+	glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
+
+	if (child != NULL)
+	{
+		child->draw_recursive();
+	}
 }

@@ -11,11 +11,15 @@ uniform mat4 proj;
 
 out vec3 vColor;
 out vec2 vTex;
+out vec3 vNormal;
+out vec3 vPos;  
 
 void main()
 {
 	vColor = aCol;
-		vTex = aTex;
+	vTex = aTex;
+	vNormal = aNrm;
+	vPos = vec3(model * vec4(aPos, 1.0));
 	gl_Position = proj * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 
 } 

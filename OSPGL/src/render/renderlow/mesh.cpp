@@ -20,9 +20,9 @@ void Mesh::build_array()
 		data[j + 4] = vertices[i].col.g;
 		data[j + 5] = vertices[i].col.b;
 
-		data[j + 6] = vertices[i].col.r;
-		data[j + 7] = vertices[i].col.g;
-		data[j + 8] = vertices[i].col.b;
+		data[j + 6] = vertices[i].nrm.r;
+		data[j + 7] = vertices[i].nrm.g;
+		data[j + 8] = vertices[i].nrm.b;
 
 		data[j + 9] = vertices[i].uv.x;
 		data[j + 10] = vertices[i].uv.y;
@@ -31,23 +31,45 @@ void Mesh::build_array()
 	}
 }
 
-void Mesh::generate_normals(bool smooth)
+void Mesh::generate_normals(bool smooth, bool flip)
 {
 	if (smooth)
 	{
-		for (size_t i = 0; i < vertices.size(); i++)
-		{
-			vertices[i].nrm = glm::vec3(0, 0, 0);
-		}
+		std::map<glm::vec3, glm::vec3, GlmVec3Compare> unique_verts;
 
-		for (size_t i = 0; i < vertices.size(); i += 3)
+		for (size_t i = 0; i < vertices.size(); i+=3)
 		{
 			Vertex* a = &vertices[i];
 			Vertex* b = &vertices[i + 1];
 			Vertex* c = &vertices[i + 2];
 
-			glm::vec3 n = glm::normalize(glm::cross(b->pos - a->pos, c->pos - a->pos));
-			a->nrm += n; b->nrm += n; c->nrm += n;
+			glm::vec3 n = glm::cross(b->pos - a->pos, c->pos - a->pos);
+
+			if (unique_verts.count(a->pos) == 0)
+			{
+				unique_verts[a->pos] = glm::vec3(0, 0, 0);
+			}
+			if (unique_verts.count(b->pos) == 0)
+			{
+				unique_verts[b->pos] = glm::vec3(0, 0, 0);
+			}
+			if (unique_verts.count(c->pos) == 0)
+			{
+				unique_verts[c->pos] = glm::vec3(0, 0, 0);
+			}
+
+			unique_verts[a->pos] += n;
+			unique_verts[b->pos] += n;
+			unique_verts[c->pos] += n;
+		}
+
+		for (size_t i = 0; i < vertices.size(); i++)
+		{
+			vertices[i].nrm = glm::normalize(unique_verts[vertices[i].pos]);
+			if (flip)
+			{
+				vertices[i].nrm = -vertices[i].nrm;
+			}
 		}
 
 	}
@@ -60,6 +82,11 @@ void Mesh::generate_normals(bool smooth)
 			Vertex* c = &vertices[i + 2];
 
 			glm::vec3 n = glm::normalize(glm::cross(b->pos - a->pos, c->pos - a->pos));
+			if(flip)
+			{
+				n = -n;
+			}
+
 			a->nrm = n; b->nrm = n; c->nrm = n;
 		}
 	}

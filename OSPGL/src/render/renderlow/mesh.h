@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "../../util/defines.h"
 
+
 struct Vertex
 {
 	glm::vec3 pos;
@@ -50,9 +51,19 @@ public:
 	void gen_buffers();
 
 	// Assumes triangles in order
-	void generate_normals(bool smooth = true);
+	void generate_normals(bool smooth = true, bool flip = false);
 
 	Mesh();
 	~Mesh();
 };
 
+struct GlmVec3Compare
+{
+
+	bool operator()(const glm::vec3& lhs, const glm::vec3& rhs) const
+	{
+		return lhs.x < rhs.x
+			|| (lhs.x == rhs.x && (lhs.y < rhs.y
+				|| (lhs.y == rhs.y && lhs.z < rhs.z)));
+	}
+};

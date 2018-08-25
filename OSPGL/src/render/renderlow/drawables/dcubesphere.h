@@ -24,6 +24,11 @@ struct CubeSphereNode
 	CubeSphereNode* parent;
 
 	Mesh mesh;
+
+	// Calls this function on all children
+	// Keep in mind it purely sends the OpenGL draw command
+	// you need to setup-shaders outside
+	void draw_recursive();
 };
 
 struct CubeSpherePoint
@@ -55,13 +60,13 @@ public:
 
 	// Generates points from 0->1, as many in each side as detail gives
 	// and they are transformed by tform TODO: Add bounds to img
-	std::vector<CubeSpherePoint> make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv, 
-		glm::vec4 our_bounds, glm::vec4 child_bounds);
+	static std::vector<CubeSpherePoint> make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv, 
+		glm::vec4 our_bounds, glm::vec4 child_bounds, float hpower);
 	// Bends points (from 0->1) from the origin (0, 0) to keep radius (1)
-	void bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping);
+	static void bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping);
 
 	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv,
-		glm::vec4 our_bounds, glm::vec4 child_bounds);
+		glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal);
 
 	CubeSphereNode rootx, rootmx, rooty, rootmy, rootz, rootmz;
 
