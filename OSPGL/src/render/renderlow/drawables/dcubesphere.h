@@ -10,13 +10,18 @@
 
 struct CubeSphereNode
 {
-	glm::vec3 rel_pos;
-	size_t level;
+	// In this order: (px, nx, py, ny, pz, nz)
+	uint8_t face;
 
-	// The less detailed parent
+	// The bounds of this node (0->1 on the cubesphere face)
+	// (x,y) = (min_x,min_y) | (z,w) = (max_x,max_y)
+	glm::vec4 bounds;
+	size_t detail;
+
+	// NULL if we don't have a subdivision
+	CubeSphereNode* child;
+	// NULL if we are a parent node
 	CubeSphereNode* parent;
-	// More detailed children
-	CubeSphereNode *tl, *tr, *bl, *br;
 
 	Mesh mesh;
 };
@@ -46,11 +51,17 @@ public:
 	// In this order: px,nx,py,ny,pz,nz ALWAYS
 	std::vector<Image> cubemap;
 
+	void generate(CubeSphereNode* target);
+
 	// Generates points from 0->1, as many in each side as detail gives
 	// and they are transformed by tform TODO: Add bounds to img
-	std::vector<CubeSpherePoint> make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv);
+	std::vector<CubeSpherePoint> make_cube_face(size_t detail, glm::mat4 tform, Image* img, size_t inv, 
+		glm::vec4 our_bounds, glm::vec4 child_bounds);
 	// Bends points (from 0->1) from the origin (0, 0) to keep radius (1)
 	void bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping);
+
+	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv,
+		glm::vec4 our_bounds, glm::vec4 child_bounds);
 
 	CubeSphereNode rootx, rootmx, rooty, rootmy, rootz, rootmz;
 
@@ -64,7 +75,7 @@ public:
 
 	virtual void draw(glm::mat4 view, glm::mat4 proj) override;
 
-	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv);
+
 
 	// Loads a cubemap given base path assuming the textures are named as expected (see top)
 	void load_cubemap(std::string base_path);

@@ -8,6 +8,7 @@ struct Vertex
 {
 	glm::vec3 pos;
 	glm::vec3 col;
+	glm::vec3 nrm;
 	glm::vec2 uv;
 };
 
@@ -47,6 +48,9 @@ public:
 	void upload();
 
 	void gen_buffers();
+
+	// Assumes triangles in order
+	void generate_normals(bool smooth = true);
 
 	Mesh();
 	~Mesh();
