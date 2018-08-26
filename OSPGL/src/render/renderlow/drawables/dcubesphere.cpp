@@ -50,7 +50,7 @@ std::vector<CubeSpherePoint> DCubeSphere::make_cube_face(size_t detail, glm::mat
 			else
 			{
 				glm::vec3 vert = glm::vec3(0, 0, 0);
-				out.push_back(CubeSpherePoint(vert, 0.0f));
+				out.push_back(CubeSpherePoint(vert, -100.0f));
 			}
 		}
 	}
@@ -59,29 +59,32 @@ std::vector<CubeSpherePoint> DCubeSphere::make_cube_face(size_t detail, glm::mat
 }
 
 
-void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_mapping)
+void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, float adv_map_mult)
 {
 	for (size_t i = 0; i < points->size(); i++)
 	{
 		glm::vec3 n = points->at(i).p;
+		float dist_to_edge = glm::length(n) * adv_map_mult;
+		dist_to_edge = dist_to_edge * dist_to_edge;
+		dist_to_edge = std::min(1.0f, dist_to_edge);
+
 		if (n != glm::vec3(0, 0, 0))
 		{
+			glm::vec3 adv_n = n;
+			glm::vec3 nor_n = n;
 
-			if (adv_mapping)
-			{
-				float x2 = n.x * n.x;
-				float y2 = n.y * n.y;
-				float z2 = n.z * n.z;
+			float x2 = adv_n.x * adv_n.x;
+			float y2 = adv_n.y * adv_n.y;
+			float z2 = adv_n.z * adv_n.z;
 
-				n.x = n.x * sqrt(1.f - y2 / 2.f - z2 / 2.f + y2 * z2 / 3.f);
-				n.y = n.y * sqrt(1.f - x2 / 2.f - z2 / 2.f + x2 * z2 / 3.f);
-				n.z = n.z * sqrt(1.f - x2 / 2.f - y2 / 2.f + x2 * y2 / 3.f);
-			}
-			else
-			{
-				n = glm::normalize(points->at(i).p);
-			}
+			adv_n.x = adv_n.x * sqrtf(1.f - (y2 / 2.f) - (z2 / 2.f) + ((y2 * z2) / 3.f));
+			adv_n.y = adv_n.y * sqrtf(1.f - (x2 / 2.f) - (z2 / 2.f) + ((x2 * z2) / 3.f));
+			adv_n.z = adv_n.z * sqrtf(1.f - (x2 / 2.f) - (y2 / 2.f) + ((x2 * y2) / 3.f));
+			nor_n = glm::normalize(points->at(i).p);
 
+			glm::vec3 n = glm::lerp(nor_n, adv_n, dist_to_edge);
+			//(*points)[i].h = (dist_to_edge * 0.05f) + 1.0f;
+			//glm::vec3 n = nor_n;
 
 			// Apply height
 			glm::vec3 p = n * points->at(i).h;
@@ -95,7 +98,7 @@ void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, bool adv_
 void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv, 
 	glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal)
 {
-	size_t detail = 256;
+	size_t detail = 64;
 
 	glm::mat4 tform = glm::mat4();
 	tform = glm::translate(tform, trans);
@@ -104,7 +107,7 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Im
 		tform = tform * glm::rotate(glm::radians(90.0f), rot);
 	}
 	auto verts = make_cube_face(detail, tform, img, inv, our_bounds, child_bounds, heightmap_power);
-	bend_cube_face(&verts, false);
+	bend_cube_face(&verts, 0.333f);
 
 	/*for (size_t i = 0; i < verts.size(); i++)
 	{
@@ -122,8 +125,8 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Im
 		
 		if ((i + 1) % (detail + 1) != 0)
 		{
-			if (verts[i].h <= 0.005 || verts[i + 1].h <= 0.005 || 
-				verts[i + detail + 1].h <= 0.005 || verts[i + detail + 2].h <= 0.005)
+			if (verts[i].h <= -0.5 || verts[i + 1].h <= -0.5 ||
+				verts[i + detail + 1].h <= -0.5 || verts[i + detail + 2].h <= -0.5)
 			{
 				// Do nothing or maybe add a little "gap" vertex
 			}
@@ -157,7 +160,7 @@ void DCubeSphere::generate_base()
 	assert(cubemap.size() != 0);
 
 	glm::vec4 full = glm::vec4(0.0, 0.0, 1.0, 1.0);
-	glm::vec4 null = glm::vec4(0.0, 0.0, 0.0, 0.0);
+	glm::vec4 null = glm::vec4(-1.0, -1.0, -1.0, -1.0);
 
 	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true);
 	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false);
@@ -184,6 +187,7 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 	rootmy.draw_recursive();
 	rootmz.draw_recursive();
 
+	// Draw debug axis
 	Mesh axis;
 	Vertex v;
 	v.pos = glm::vec3(0, 0, 0);
@@ -210,6 +214,20 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 }
 
 
+void DCubeSphere::update()
+{
+	if (require_upload.size() > 0 && !worker_lock)
+	{
+		for (size_t i = 0; i < require_upload.size(); i++)
+		{
+			require_upload[i]->mesh.build_array();
+			require_upload[i]->mesh.upload();
+		}
+
+		require_upload.clear();
+	}
+}
+
 void DCubeSphere::load_cubemap(std::string base_path)
 {
 	if (base_path[base_path.size() - 1] != '/')
@@ -234,16 +252,72 @@ void DCubeSphere::load_cubemap(std::string base_path)
 
 void DCubeSphere::generate(CubeSphereNode* target)
 {
+	if (cubemap.size() == 0)
+	{
+		spdlog::get("OSP")->error("Cubemap not loaded and tried to generate!");
+	}
 
+	glm::vec3 trans, rot;
+	Image* img = NULL;
+	bool flip_normal;
+	glm::vec4 child_bounds = glm::vec4(-1.0, -1.0, -1.0, -1.0);
+	size_t inv = 0;
+
+	if (target->child != NULL)
+	{
+		child_bounds = target->child->bounds;
+	}
+
+	// Obtain hard-coded values for the different faces
+	if (target->face == CubeSphereNode::PX) 
+	{ 
+		trans = glm::vec3(1, 0, 0); rot = glm::vec3(0, 1, 0); img = &cubemap[0]; flip_normal = true; inv = 0;
+	}
+	else if (target->face == CubeSphereNode::PY)
+	{
+		trans = glm::vec3(0, 1, 0); rot = glm::vec3(1, 0, 0); img = &cubemap[2]; flip_normal = false; inv = 2;
+	}
+	else if (target->face == CubeSphereNode::PZ)
+	{
+		trans = glm::vec3(0, 0, 1); rot = glm::vec3(0, 0, 0); img = &cubemap[4]; flip_normal = true; inv = 0;
+	}
+	else if (target->face == CubeSphereNode::NX)
+	{
+		trans = glm::vec3(-1, 0, 0); rot = glm::vec3(0, 1, 0); img = &cubemap[1]; flip_normal = false; inv = 1;
+	}
+	else if (target->face == CubeSphereNode::NY)
+	{
+		trans = glm::vec3(0, -1, 0); rot = glm::vec3(1, 0, 0); img = &cubemap[3]; flip_normal = true; inv = 0;
+	}
+	else if (target->face == CubeSphereNode::NZ)
+	{
+		trans = glm::vec3(0, 0, -1); rot = glm::vec3(0, 0, 0); img = &cubemap[5]; flip_normal = false; inv = 1;
+	}
+
+	generate_face(trans, rot, &target->mesh, img, inv, target->bounds, child_bounds, flip_normal);
+}
+
+void DCubeSphere::launch_worker()
+{
+	worker_run = true;
+	worker = std::thread(cubesphere_worker, this);
 }
 
 DCubeSphere::DCubeSphere()
 {
+	rootx.dirty = true; rootx.face = CubeSphereNode::PX;
+	rooty.dirty = true; rooty.face = CubeSphereNode::PY;
+	rootz.dirty = true; rootz.face = CubeSphereNode::PZ;
+	rootmx.dirty = true; rootmx.face = CubeSphereNode::NX;
+	rootmy.dirty = true; rootmy.face = CubeSphereNode::NY;
+	rootmz.dirty = true; rootmz.face = CubeSphereNode::NZ;
 }
 
 
 DCubeSphere::~DCubeSphere()
 {
+	worker_run = false;
+	worker.join();
 }
 
 void CubeSphereNode::draw_recursive()
@@ -254,5 +328,167 @@ void CubeSphereNode::draw_recursive()
 	if (child != NULL)
 	{
 		child->draw_recursive();
+	}
+}
+
+void CubeSphereNode::apply_viewpoint(glm::vec3 p, size_t min_detail)
+{
+	// Closest point on the unit sphere to p
+	glm::vec3 closest = glm::normalize(p);
+	if (
+		(closest.x >= 0.0f && face == NX) ||
+		(closest.x <= 0.0f && face == PX) || 
+		(closest.y >= 0.0f && face == NY) ||
+		(closest.y <= 0.0f && face == PY) || 
+		(closest.z >= 0.0f && face == NZ) ||
+		(closest.z <= 0.0f && face == PZ)
+		)
+	{
+		// Oppposite side, reduce quality to minimum
+		// delete children
+		if (detail != min_detail)
+		{
+			detail = min_detail;
+			dirty = true;
+		}
+		
+		collapse();
+	}
+	else
+	{
+		// Find reasonably sized and positioned quad
+		float dist = glm::length(p);
+		if (dist >= 30.0f)
+		{
+			// 30 times our radius, minimal quality
+			if (detail != min_detail)
+			{
+				detail = min_detail;
+				dirty = true;
+			}
+
+			collapse();
+		}
+		else if (dist >= 15.0f)
+		{
+			// 15 times our radius, medium quality
+			if (detail != min_detail * 2)
+			{
+				detail = min_detail * 2;
+				dirty = true;
+			}
+
+			collapse();
+		}
+		else if (dist >= 5.0f)
+		{
+			// 5 times our radius, decent quality
+			if (detail != min_detail * 3)
+			{
+				detail = min_detail * 3;
+				dirty = true;
+			}
+
+			collapse();
+		}
+		else
+		{
+			// We need LOD-ing now, but base quality is
+			if (detail != min_detail * 3)
+			{
+				detail = min_detail * 3;
+				dirty = true;
+			}
+
+			generate_children(p, closest);
+		}
+	}
+
+}
+
+void CubeSphereNode::generate_children(glm::vec3 p, glm::vec3 surf_p)
+{
+	float dist = glm::length(p);
+
+}
+
+void CubeSphereNode::collapse()
+{
+	if (child != NULL)
+	{
+		dirty = true;
+
+		child->collapse();
+		delete child;
+		child = NULL;
+	}
+}
+
+CubeSphereNode* DCubeSphere::get_dirty()
+{
+	CubeSphereNode* rx = rootx.get_dirty();
+	if (rx != NULL)
+	{
+		return rx;
+	}
+	CubeSphereNode* ry = rooty.get_dirty();
+	if (ry != NULL)
+	{
+		return ry;
+	}
+	CubeSphereNode* rz = rootz.get_dirty();
+	if (rz != NULL)
+	{
+		return rz;
+	}
+	CubeSphereNode* rmx = rootmx.get_dirty();
+	if (rmx != NULL)
+	{
+		return rmx;
+	}
+	CubeSphereNode* rmy = rootmy.get_dirty();
+	if (rmy != NULL)
+	{
+		return rmy;
+	}
+	CubeSphereNode* rmz = rootmz.get_dirty();
+	if (rmz != NULL)
+	{
+		return rmz;
+	}
+
+	return NULL;
+}
+
+
+CubeSphereNode* CubeSphereNode::get_dirty()
+{
+	if (this->dirty)
+	{
+		this->dirty = false;
+		return this;
+	}
+
+	if (child == NULL)
+	{
+		return NULL;
+	}
+	else
+	{
+		return child->get_dirty();
+	}
+}
+
+void cubesphere_worker(DCubeSphere* owner)
+{
+	while (owner->worker_run)
+	{
+		CubeSphereNode* node = owner->get_dirty();
+
+		if (node != NULL)
+		{
+			owner->generate(node);
+			owner->require_upload.push_back(node);
+		}
 	}
 }

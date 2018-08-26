@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <rang.h>
+#include <chrono>
 
 #include "orbital/space_body.h"
 
@@ -123,7 +124,8 @@ int main()
 
 	DCubeSphere csphere;
 	csphere.load_cubemap("res/cmaps/moon");
-	csphere.generate_base();
+	csphere.launch_worker();
+
 
 
 	const GLubyte *ver = glGetString(GL_VERSION);
@@ -137,6 +139,7 @@ int main()
 		//ImGui_ImplGlfw_NewFrame();
 		//ImGui::NewFrame();
 
+		csphere.update();
 
 		// render
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
