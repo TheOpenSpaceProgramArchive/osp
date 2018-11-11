@@ -26,6 +26,8 @@
 #include "render/renderlow/drawables/dbillboard.h"
 #include "render/renderlow/drawables/dcubesphere.h"
 #include "render/renderlow/debug_draw.h"
+#include "orbital/newton_body.h"
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -127,11 +129,6 @@ int main()
 	view = glm::lookAt(glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
 
-	DCubeSphere csphere;
-	csphere.load_cubemap("res/cmaps/moon");
-	csphere.launch_worker();
-
-
 
 	const GLubyte *ver = glGetString(GL_VERSION);
 	log->info("OpenGL version: {}", ver);
@@ -142,25 +139,49 @@ int main()
 
 	DebugDraw debug_draw;
 
+	SpaceSystem system;
+	SpaceBody earth;
+	earth.mass = 5.97 * 10e24;
+	SpaceBody moon;
+	moon.mass = 7.32 * 10e22;
+	moon.smajor_axis = 384399000;
+	moon.eccentricity = 0.0549;
+	moon.arg_periapsis = 114;
+	moon.asc_node = -11;
+	moon.inclination = 5.012;
+	moon.parent = &earth;
+
+	system.bodies.push_back(&earth);
+	system.bodies.push_back(&moon);
+
+	NewtonBody newton;
+	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
+	newton.state.delta = glm::dvec3(0, 0, 1400);
+
+
 	while (!glfwWindowShouldClose(window))
 	{
-		v_point = glm::vec3(sin(t) * 6.8f, sin(t / 3.0f) * 3.0f, cos(t) * 1.8f);
-
+		//v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
+		v_point = glm::vec3(0.1f, 4.0f, 0.1f);
 		//ImGui_ImplOpenGL3_NewFrame();
 		//ImGui_ImplGlfw_NewFrame();
 		//ImGui::NewFrame();
 
-		csphere.update(v_point);
-
+		moon.true_anomaly = t;
 		// render
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-		csphere.draw(view, proj);
 
-		debug_draw.add_cross(glm::vec3(10.0f, 0.0f, 0.0f), 100.0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-		debug_draw.add_line(glm::vec3(0, 0, 0), glm::vec3(20, 100, 1), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-		debug_draw.add_point(glm::vec3(10.0f, 0.0, 0.0f), glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), 25.0f);
+		newton.state = newton.solve(system, NewtonBody::SolverMethod::EULER, 8, 1000);
+
+		log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
+
+		debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
+		debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
+		debug_draw.add_cross(newton.state.pos / 10e7, 0.03f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		debug_draw.add_point(newton.state.pos / 10e7, glm::vec4(0.7f, 0.2f, 0.2f, 1.0f), 2.0f, 4.0f);
+
+		debug_draw.update(0.01f);
 		debug_draw.draw(view, proj);
 
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);

@@ -24,8 +24,9 @@ NewtonState NewtonBody::solve_euler(SpaceSystem system, int loops, float dt)
 	NewtonState copy = state;
 	for (size_t i = 0; i < loops; i++)
 	{
-		glm::dvec3 force = system.computeForce(state.pos) * realDelta;
+		glm::dvec3 force = system.computeForce(copy.pos) * realDelta;
 		copy.add_force(force);
+		copy.pos += copy.delta * realDelta;
 	}
 
 	return copy;

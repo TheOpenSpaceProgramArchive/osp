@@ -24,11 +24,11 @@ static PosPack to_pos(double mass, SpaceBody* o)
 	out.pos.z = sin(o->true_anomaly) * r;
 
 	// Arg.of.Periapsis
-	out.pos = glm::rotateY(out.pos, o->arg_periapsis);
+	out.pos = glm::rotateY(out.pos, glm::radians(o->arg_periapsis));
 	// Inclination 
-	out.pos = glm::rotateX(out.pos, o->inclination);
+	out.pos = glm::rotateX(out.pos, glm::radians(o->inclination));
 	// Ascending node
-	out.pos = glm::rotateY(out.pos, o->asc_node);
+	out.pos = glm::rotateY(out.pos, glm::radians(o->asc_node));
 
 	out.r = r;
 
@@ -42,6 +42,12 @@ NewtonState SpaceBody::to_state()
 {
 	NewtonState out;
 
+	if (parent == NULL)
+	{
+		NewtonState st;
+		st.pos = glm::vec3(0, 0, 0);
+		return st;
+	}
 	// Sanity checks
 	if (eccentricity < 0.0)
 	{

@@ -12,7 +12,7 @@ class SpaceSystem
 {
 public:
 
-	std::vector<SpaceBody> bodies;
+	std::vector<SpaceBody*> bodies;
 
 	// Computes instantaneous gravitational force at a given point
 	// Mass of second object is assumed to be extremely small compared to the

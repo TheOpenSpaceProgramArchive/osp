@@ -113,7 +113,17 @@ void DebugDraw::draw(glm::mat4 view, glm::mat4 proj)
 		glPointSize(it->point_size);
 
 		glBindVertexArray(it->vao);
-		shader->setvec4("color", it->color);
+		if (it->time <= 1.0f && it->time != 0.0f)
+		{
+			glm::dvec4 col = it->color;
+			col.a *= it->time;
+			shader->setvec4("color", col);
+		}
+		else
+		{
+			shader->setvec4("color", it->color);
+		}
+		
 		glDrawArrays(it->draw_mode, 0, vertCount);
 
 		if (it->time <= 0.0f)
@@ -125,6 +135,17 @@ void DebugDraw::draw(glm::mat4 view, glm::mat4 proj)
 		else
 		{
 			it++;
+		}
+	}
+}
+
+void DebugDraw::update(float dt)
+{
+	for (size_t i = 0; i < commands.size(); i++)
+	{
+		if (commands[i].time != 0.0f)
+		{
+			commands[i].time -= dt;
 		}
 	}
 }
