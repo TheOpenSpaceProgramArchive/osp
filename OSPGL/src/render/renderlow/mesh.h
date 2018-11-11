@@ -45,13 +45,17 @@ public:
 	// Builds the low-level GL compatible array
 	void build_array();
 	
-	// Uploads the data to the GPU, making VAO and VBO valid
-	void upload();
+	// Uploads the data to the GPU, making VAO and VBO valid,
+	// and if they already are valid it will update the data on the GPU
+	void upload(bool dynamic = false);
 
-	void gen_buffers();
+	// Returns true if they already existed
+	bool gen_buffers();
 
 	// Assumes triangles in order
 	void generate_normals(bool smooth = true, bool flip = false);
+
+	void destroy();
 
 	Mesh();
 	~Mesh();

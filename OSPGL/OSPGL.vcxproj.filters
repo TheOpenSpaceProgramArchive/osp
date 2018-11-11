@@ -72,6 +72,12 @@
     <ClCompile Include="src\render\renderlow\image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\orbital\newton_body.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderlow\debug_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -695,6 +701,12 @@
     <ClInclude Include="src\render\renderlow\image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\orbital\newton_body.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\debug_draw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl">
@@ -1045,6 +1057,8 @@
     <None Include="res\shaders\sphere.vs" />
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
+    <None Include="res\shaders\debug.fs" />
+    <None Include="res\shaders\debug.vs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\cmaps\earth\nx.png">

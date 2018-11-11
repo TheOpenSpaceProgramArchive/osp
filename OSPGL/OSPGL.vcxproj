@@ -119,7 +119,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\render\renderlow\debug_draw.cpp" />
     <ClCompile Include="dep\stb\impl_stb.cpp" />
+    <ClCompile Include="src\orbital\newton_body.cpp" />
     <ClCompile Include="src\render\renderlow\image.cpp" />
     <ClCompile Include="src\render\renderlow\drawables\dcubesphere.cpp" />
     <ClCompile Include="dep\imgui\imgui.cpp" />
@@ -140,7 +142,9 @@
     <ClCompile Include="src\render\renderlow\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\render\renderlow\debug_draw.h" />
     <ClInclude Include="dep\stb\stb_image.h" />
+    <ClInclude Include="src\orbital\newton_body.h" />
     <ClInclude Include="src\render\renderlow\image.h" />
     <ClInclude Include="src\render\renderlow\drawables\dcubesphere.h" />
     <ClInclude Include="dep\imgui\imconfig.h" />
@@ -463,6 +467,8 @@
     <None Include="dep\glm\gtx\vector_angle.inl" />
     <None Include="dep\glm\gtx\vector_query.inl" />
     <None Include="dep\glm\gtx\wrap.inl" />
+    <None Include="res\shaders\debug.fs" />
+    <None Include="res\shaders\debug.vs" />
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
     <None Include="res\shaders\sphere.fs" />

@@ -96,9 +96,8 @@ void DCubeSphere::bend_cube_face(std::vector<CubeSpherePoint>* points, float adv
 }
 
 void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv, 
-	glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal)
+	glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal, size_t detail)
 {
-	size_t detail = 64;
 
 	glm::mat4 tform = glm::mat4();
 	tform = glm::translate(tform, trans);
@@ -149,7 +148,7 @@ void DCubeSphere::generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Im
 		}
 	}
 
-	target->generate_normals(true, flip_normal);
+	target->generate_normals(false, flip_normal);
 
 	target->build_array();
 	target->upload();
@@ -162,12 +161,12 @@ void DCubeSphere::generate_base()
 	glm::vec4 full = glm::vec4(0.0, 0.0, 1.0, 1.0);
 	glm::vec4 null = glm::vec4(-1.0, -1.0, -1.0, -1.0);
 
-	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true);
-	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false);
-	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null, true);
-	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null, false);
-	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null, true);
-	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null, false);
+	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true, 96);
+	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false, 96);
+	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null, true, 96);
+	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null, false, 96);
+	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null, true, 96);
+	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null, false, 96);
 }
 
 void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
@@ -214,17 +213,32 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 }
 
 
-void DCubeSphere::update()
+void DCubeSphere::update(glm::vec3 p)
 {
-	if (require_upload.size() > 0 && !worker_lock)
+
+	if (require_upload.size() > 0)
 	{
 		for (size_t i = 0; i < require_upload.size(); i++)
 		{
-			require_upload[i]->mesh.build_array();
-			require_upload[i]->mesh.upload();
+			if (!require_upload[i]->being_worked)
+			{
+				require_upload[i]->mesh.upload(true);
+			}
 		}
 
 		require_upload.clear();
+	}
+
+	update_count++;
+	if (update_count >= 10)
+	{
+		rootx.apply_viewpoint(p);
+		rooty.apply_viewpoint(p);
+		rootz.apply_viewpoint(p);
+		rootmx.apply_viewpoint(p);
+		rootmy.apply_viewpoint(p);
+		rootmz.apply_viewpoint(p);
+		update_count = 0;
 	}
 }
 
@@ -252,6 +266,10 @@ void DCubeSphere::load_cubemap(std::string base_path)
 
 void DCubeSphere::generate(CubeSphereNode* target)
 {
+	target->being_worked = true;
+
+	target->mesh.vertices.clear();
+
 	if (cubemap.size() == 0)
 	{
 		spdlog::get("OSP")->error("Cubemap not loaded and tried to generate!");
@@ -294,7 +312,11 @@ void DCubeSphere::generate(CubeSphereNode* target)
 		trans = glm::vec3(0, 0, -1); rot = glm::vec3(0, 0, 0); img = &cubemap[5]; flip_normal = false; inv = 1;
 	}
 
-	generate_face(trans, rot, &target->mesh, img, inv, target->bounds, child_bounds, flip_normal);
+	generate_face(trans, rot, &target->mesh, img, inv, target->bounds, child_bounds, flip_normal, target->detail);
+
+	target->mesh.build_array();
+
+	target->being_worked = false;
 }
 
 void DCubeSphere::launch_worker()
@@ -358,7 +380,7 @@ void CubeSphereNode::apply_viewpoint(glm::vec3 p, size_t min_detail)
 	{
 		// Find reasonably sized and positioned quad
 		float dist = glm::length(p);
-		if (dist >= 30.0f)
+		if (dist >= 6.0f)
 		{
 			// 30 times our radius, minimal quality
 			if (detail != min_detail)
@@ -369,7 +391,7 @@ void CubeSphereNode::apply_viewpoint(glm::vec3 p, size_t min_detail)
 
 			collapse();
 		}
-		else if (dist >= 15.0f)
+		else if (dist >= 4.0f)
 		{
 			// 15 times our radius, medium quality
 			if (detail != min_detail * 2)
@@ -380,7 +402,7 @@ void CubeSphereNode::apply_viewpoint(glm::vec3 p, size_t min_detail)
 
 			collapse();
 		}
-		else if (dist >= 5.0f)
+		else if (dist >= 2.0f)
 		{
 			// 5 times our radius, decent quality
 			if (detail != min_detail * 3)
@@ -488,7 +510,25 @@ void cubesphere_worker(DCubeSphere* owner)
 		if (node != NULL)
 		{
 			owner->generate(node);
-			owner->require_upload.push_back(node);
+			
+
+
+			bool found = false;
+			for (size_t i = 0; i < owner->require_upload.size(); i++)
+			{
+				if (owner->require_upload[i] == node)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if(!found)
+			{ 
+				owner->require_upload.push_back(node);
+			}
 		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }

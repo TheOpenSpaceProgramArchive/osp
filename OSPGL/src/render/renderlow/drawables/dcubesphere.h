@@ -10,6 +10,8 @@
 
 struct CubeSphereNode
 {
+	bool being_worked = false;
+
 	bool dirty = false;
 
 	enum Face
@@ -71,14 +73,16 @@ struct CubeSpherePoint
 class DCubeSphere : public Drawable
 {
 private:
-
+	// Used for softening LOD generation
+	size_t update_count;
 
 public:
+
+
 
 	// Updated by the worker
 	std::vector<CubeSphereNode*> require_upload;
 	bool worker_run;
-	bool worker_lock;
 	std::thread worker;
 
 	float heightmap_power = 0.05f;
@@ -96,7 +100,7 @@ public:
 	static void bend_cube_face(std::vector<CubeSpherePoint>* points, float adv_mult = 0.333f);
 
 	void generate_face(glm::vec3 trans, glm::vec3 rot, Mesh* target, Image* img, size_t inv,
-		glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal);
+		glm::vec4 our_bounds, glm::vec4 child_bounds, bool flip_normal, size_t detail);
 
 	CubeSphereNode* get_dirty();
 
@@ -117,7 +121,11 @@ public:
 	// Needs to be called every frame, pools the worker to see
 	// if anything requires OpenGL updates
 	// Also updates the cube sphere nodes data as the camera moves
-	void update();
+	// P is given in correcteed coordinates, aka, mapping the planet
+	// to the normalized coordinates, and mapping that point too.
+	// (Dividing the coordinate system by the planet's radius, and 
+	// centering it on the planet)
+	void update(glm::vec3 p);
 
 	// Loads a cubemap given base path assuming the textures are named as expected (see top)
 	void load_cubemap(std::string base_path);

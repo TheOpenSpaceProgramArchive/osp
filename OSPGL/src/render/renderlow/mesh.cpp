@@ -1,6 +1,19 @@
 #include "mesh.h"
 
+void Mesh::destroy()
+{
+	vertices.clear();
 
+	if (vao != 0)
+	{
+		glDeleteVertexArrays(1, &vao);
+	}
+
+	if (vbo != 0)
+	{
+		glDeleteBuffers(1, &vbo);
+	}
+}
 
 void Mesh::build_array()
 {
@@ -92,28 +105,39 @@ void Mesh::generate_normals(bool smooth, bool flip)
 	}
 }
 
-void Mesh::upload()
+void Mesh::upload(bool dynamic)
 {
-	gen_buffers();
+	bool existed = gen_buffers();
 
 	glBindVertexArray(vao);
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		{
-			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
+			if (dynamic)
+			{
+				glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data[0]), data.data(), GL_DYNAMIC_DRAW);
+			}
+			else
+			{
+				glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
+			}
+			
 
-			// position
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-			glEnableVertexAttribArray(0);
-			// color
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-			glEnableVertexAttribArray(1);
-			// normal
-			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-			glEnableVertexAttribArray(2);
-			// tex
-			glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-			glEnableVertexAttribArray(3);
+			if (!existed)
+			{
+				// position
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+				glEnableVertexAttribArray(0);
+				// color
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+				glEnableVertexAttribArray(1);
+				// normal
+				glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+				glEnableVertexAttribArray(2);
+				// tex
+				glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+				glEnableVertexAttribArray(3);
+			}
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -121,16 +145,29 @@ void Mesh::upload()
 
 }
 
-void Mesh::gen_buffers()
+bool Mesh::gen_buffers()
 {
+	bool ret = false;
+
 	if (vao == 0)
 	{
 		glGenVertexArrays(1, &vao);
 	}
+	else
+	{
+		ret = true;
+	}
+
 	if (vbo == 0)
 	{
 		glGenBuffers(1, &vbo);
 	}
+	else
+	{
+		ret = true;
+	}
+
+	return ret;
 }
 
 
@@ -141,14 +178,6 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
-	if (vao != 0)
-	{
-		glDeleteVertexArrays(1, &vao);
-	}
-
-	if (vbo != 0)
-	{
-		glDeleteBuffers(1, &vbo);
-	}
+	destroy();
 }
 

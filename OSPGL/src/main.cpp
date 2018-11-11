@@ -25,6 +25,7 @@
 
 #include "render/renderlow/drawables/dbillboard.h"
 #include "render/renderlow/drawables/dcubesphere.h"
+#include "render/renderlow/debug_draw.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -37,6 +38,7 @@ const unsigned int SCR_HEIGHT = 800;
 namespace spd = spdlog;
 
 Shader* g_shader = NULL;
+Shader* d_shader = NULL;
 
 
 auto create_logger()
@@ -104,6 +106,9 @@ int main()
 	Shader test = Shader("res/shaders/test.vs", "res/shaders/test.fs");
 	g_shader = &test;
 
+	Shader debugShader = Shader("res/shaders/debug.vs", "res/shaders/debug.fs");
+	d_shader = &debugShader;
+
 	// Uncomment for wireframe mode
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -133,13 +138,19 @@ int main()
 
 	float t = 0.0f;
 
+	glm::vec3 v_point;
+
+	DebugDraw debug_draw;
+
 	while (!glfwWindowShouldClose(window))
 	{
+		v_point = glm::vec3(sin(t) * 6.8f, sin(t / 3.0f) * 3.0f, cos(t) * 1.8f);
+
 		//ImGui_ImplOpenGL3_NewFrame();
 		//ImGui_ImplGlfw_NewFrame();
 		//ImGui::NewFrame();
 
-		csphere.update();
+		csphere.update(v_point);
 
 		// render
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -147,11 +158,18 @@ int main()
 	
 		csphere.draw(view, proj);
 
+		debug_draw.add_cross(glm::vec3(10.0f, 0.0f, 0.0f), 100.0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+		debug_draw.add_line(glm::vec3(0, 0, 0), glm::vec3(20, 100, 1), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+		debug_draw.add_point(glm::vec3(10.0f, 0.0, 0.0f), glm::vec4(1.0f, 0.5f, 0.5f, 1.0f), 25.0f);
+		debug_draw.draw(view, proj);
+
+		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
+
 		// Finish
 		//ImGui::Render();
 		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		view = glm::lookAt(glm::vec3(sin(t) * 1.8f, sin(t / 5.0f) * 2.0f, cos(t) * 1.8f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		view = glm::lookAt(v_point, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
 		t += 0.01;
 

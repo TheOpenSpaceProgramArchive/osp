@@ -26,6 +26,13 @@ struct NewtonState
 	glm::dvec3 delta;
 	// Velocity of the body. Must be m/s following IS
 	double vel;
+
+	void add_force(glm::dvec3 force)
+	{
+		delta += force;
+		dir = glm::normalize(delta);
+		vel = glm::length(delta);
+	}
 };
 
 /*
