@@ -39,6 +39,7 @@ public:
 
 	uint vao = 0, vbo = 0;
 
+	int vertex_count;
 
 	std::vector<Vertex> vertices;
 

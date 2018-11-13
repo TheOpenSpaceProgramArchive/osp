@@ -345,7 +345,7 @@ DCubeSphere::~DCubeSphere()
 void CubeSphereNode::draw_recursive()
 {
 	glBindVertexArray(mesh.vao);
-	glDrawArrays(GL_TRIANGLES, 0, mesh.vertices.size());
+	glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
 
 	if (child != NULL)
 	{

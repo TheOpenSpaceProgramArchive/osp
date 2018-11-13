@@ -126,6 +126,8 @@ void DebugDraw::draw(glm::mat4 view, glm::mat4 proj)
 		
 		glDrawArrays(it->draw_mode, 0, vertCount);
 
+		glBindVertexArray(0);
+
 		if (it->time <= 0.0f)
 		{
 			glDeleteVertexArrays(1, &it->vao);

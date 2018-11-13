@@ -18,6 +18,7 @@ void Mesh::destroy()
 void Mesh::build_array()
 {
 	// For now simply place the positions
+	vertex_count = vertices.size();
 	data.clear();
 	data.resize(vertices.size() * 11);
 

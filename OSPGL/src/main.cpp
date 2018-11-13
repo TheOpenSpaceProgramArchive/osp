@@ -28,6 +28,8 @@
 #include "render/renderlow/debug_draw.h"
 #include "orbital/newton_body.h"
 
+#include "game/ui/orbit_view.h"
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -145,7 +147,7 @@ int main()
 	SpaceBody moon;
 	moon.mass = 7.32 * 10e22;
 	moon.smajor_axis = 384399000;
-	moon.eccentricity = 0.0549;
+	moon.eccentricity = 0.4549;
 	moon.arg_periapsis = 114;
 	moon.asc_node = -11;
 	moon.inclination = 5.012;
@@ -158,23 +160,28 @@ int main()
 	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
 	newton.state.delta = glm::dvec3(0, 0, 1400);
 
+	OrbitView orbit_view = OrbitView(&system);
+
+
+
 
 	while (!glfwWindowShouldClose(window))
 	{
-		//v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
-		v_point = glm::vec3(0.1f, 4.0f, 0.1f);
-		//ImGui_ImplOpenGL3_NewFrame();
-		//ImGui_ImplGlfw_NewFrame();
-		//ImGui::NewFrame();
+		v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
+		//v_point = glm::vec3(0.1f, 4.0f, 0.1f);
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		moon.true_anomaly = t;
 		// render
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.1f, 0.0f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 		newton.state = newton.solve(system, NewtonBody::SolverMethod::EULER, 8, 1000);
 
-		log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
+		//log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
 
 		debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
 		debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
@@ -184,11 +191,16 @@ int main()
 		debug_draw.update(0.01f);
 		debug_draw.draw(view, proj);
 
+
+
+		orbit_view.draw(view, proj);
+
+
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
 		// Finish
-		//ImGui::Render();
-		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		view = glm::lookAt(v_point, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 

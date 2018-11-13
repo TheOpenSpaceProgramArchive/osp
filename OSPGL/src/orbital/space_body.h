@@ -77,12 +77,14 @@ public:
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
 
 	NewtonState to_state();
+	NewtonState state_from_mean(double mean);
 	double mean_to_eccentric(double mean, double tol);
 	double mean_to_true(double mean_anomaly, double tol = 1.0e-14);
 	double time_to_mean(double time);
 	double mean_to_time(double mean);
 	double true_to_eccentric();
 	double eccentric_to_mean(double eccentric);
+
 
 	// Gets a point in the orbit given the time since epoch
 	SpaceBody();

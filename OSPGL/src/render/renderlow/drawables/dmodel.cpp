@@ -4,6 +4,11 @@
 
 void DModel::draw(glm::mat4 view, glm::mat4 proj)
 {
+	if (sh == NULL)
+	{
+		this->sh = g_shader;
+	}
+
 	glm::mat4 tform_mat = tform.build_matrix();
 
 	// Use shader
@@ -15,18 +20,18 @@ void DModel::draw(glm::mat4 view, glm::mat4 proj)
 	sh->setmat4("proj", proj);
 
 	// Draw
-	glBindVertexArray(mh->vao);
-	glDrawArrays(draw_type, 0, mh->vertices.size());
+	glBindVertexArray(mh.vao);
+	glDrawArrays(draw_type, 0, mh.vertex_count);
+	glBindVertexArray(0);
+}
+
+DModel::DModel(Mesh mh) : DModel(mh, NULL)
+{
 	
 }
 
-DModel::DModel(Mesh* mh)
-{
-	DModel(mh, NULL);
-}
 
-
-DModel::DModel(Mesh* mh, Shader* sh, uint draw_type)
+DModel::DModel(Mesh mh, Shader* sh, uint draw_type)
 {
 	this->mh = mh;
 	this->draw_type = draw_type;

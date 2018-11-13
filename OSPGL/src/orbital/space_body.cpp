@@ -86,6 +86,11 @@ NewtonState SpaceBody::to_state()
 	return out;
 }
 
+NewtonState SpaceBody::state_from_mean(double mean)
+{
+	return NewtonState();
+}
+
 // alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
 static double starting_value(double ecc, double mean)
 {
