@@ -60,6 +60,14 @@ auto create_logger()
 	return log;
 }
 
+double scroll_delta = 0.0;
+bool scroll_delta_set_now = false;
+
+void glfw_scrollwheel_callback(GLFWwindow* win, double xoffset, double yoffset)
+{
+	scroll_delta = yoffset;
+	scroll_delta_set_now = true;
+}
 
 
 int main()
@@ -147,7 +155,7 @@ int main()
 	SpaceBody moon;
 	moon.mass = 7.32 * 10e22;
 	moon.smajor_axis = 384399000;
-	moon.eccentricity = 0.4549;
+	moon.eccentricity = 0.0549;
 	moon.arg_periapsis = 114;
 	moon.asc_node = -11;
 	moon.inclination = 5.012;
@@ -162,26 +170,41 @@ int main()
 
 	OrbitView orbit_view = OrbitView(&system);
 
+	system.newton_bodies.push_back(&newton);
 
 
+	glfwSetScrollCallback(window, &glfw_scrollwheel_callback);
+
+	bool logged = false;
 
 	while (!glfwWindowShouldClose(window))
 	{
+
+
+		orbit_view.update(window, 0.005f);
+
+
 		v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
 		//v_point = glm::vec3(0.1f, 4.0f, 0.1f);
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		moon.true_anomaly = t;
+
 		// render
 		glClearColor(0.1f, 0.0f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-		newton.state = newton.solve(system, NewtonBody::SolverMethod::EULER, 8, 1000);
+		system.simulate(10000.0f, 1.0f, &t);
 
 		//log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
+		//log->info("Universe time: {}s / {}days", system.time, system.time / (60 * 60 * 24));
+
+		if (system.time >= 1000000 && !logged)
+		{
+			log->info("POS AT 1000000s: ({},{},{})", newton.state.pos.x, newton.state.pos.y, newton.state.pos.z);
+			logged = true;
+		}
 
 		debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
 		debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
@@ -189,11 +212,15 @@ int main()
 		debug_draw.add_point(newton.state.pos / 10e7, glm::vec4(0.7f, 0.2f, 0.2f, 1.0f), 2.0f, 4.0f);
 
 		debug_draw.update(0.01f);
-		debug_draw.draw(view, proj);
+		debug_draw.draw(orbit_view.view, orbit_view.proj);
+
+		// All physics are done on a reduced timestep,
+		// regardless of the warp, we choose 10 second per
+		
 
 
+		orbit_view.draw();
 
-		orbit_view.draw(view, proj);
 
 
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
@@ -202,12 +229,18 @@ int main()
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		view = glm::lookAt(v_point, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		//orbit_view.view = glm::lookAt(v_point, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		orbit_view.proj = proj;
 
-		t += 0.01;
+		if (scroll_delta_set_now)
+		{
+			scroll_delta = 0;
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+
 	}
 
 	log->info("Terminating OSP");

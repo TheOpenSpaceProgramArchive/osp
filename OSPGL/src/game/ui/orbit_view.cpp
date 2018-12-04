@@ -50,6 +50,12 @@ static void generate_mesh(SpaceBody* body, PlanetOrbitPack* target)
 	target->vert_count = (v_count * 2) + 2;
 }
 
+void OrbitView::glfw_scroll_callback(GLFWwindow* win, double xoffset, double yoffset)
+{
+	// We only care about yoffset
+	view_distance += yoffset * 10.0f;
+}
+
 OrbitView::OrbitView(const SpaceSystem* system)
 {
 	for (size_t i = 0; i < system->bodies.size(); i++)
@@ -62,9 +68,41 @@ OrbitView::OrbitView(const SpaceSystem* system)
 			planets.push_back(pack);
 		}
 	}
+
+	view_pos_abs = glm::vec3(1.0, 0, 0);
+	view_distance = 3.0f;
 }
 
-void OrbitView::draw(glm::mat4 view, glm::mat4 proj)
+void OrbitView::update_inputs(GLFWwindow* win, float dt)
+{
+	// Camera rotation
+	double mouse_x, mouse_y;
+	glfwGetCursorPos(win, &mouse_x, &mouse_y);
+
+	if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	{
+		double delta_x = mouse_x - prev_mouse_x;
+		double delta_y = mouse_y - prev_mouse_y;
+		rot_x += (float)delta_x * dt;
+		rot_y += (float)delta_y * dt;
+
+		if (rot_y >= PI / 2.0f)
+		{
+			rot_y = PI / 2.0f;
+		}
+
+		if (rot_y <= -PI / 2.0f)
+		{
+			rot_y = -PI / 2.0f;
+		}
+	}
+	prev_mouse_x = mouse_x;
+	prev_mouse_y = mouse_y;
+
+	view_change_speed -= scroll_delta * 9.0f;
+}
+
+void OrbitView::draw()
 {
 	d_shader->use();
 	d_shader->setmat4("view", view);
@@ -79,6 +117,31 @@ void OrbitView::draw(glm::mat4 view, glm::mat4 proj)
 		glDrawArrays(GL_LINES, 0, planets[i].vert_count);
 
 		glBindVertexArray(0);
+	}
+}
+
+void OrbitView::update(GLFWwindow* win, float dt)
+{
+	update_inputs(win, dt);
+
+	view_pos_abs = glm::vec3(cos(rot_x) * cos(rot_y), sin(rot_y), sin(rot_x) * cos(rot_y));
+	view = glm::lookAt(view_pos_abs * view_distance, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+	if (view_change_speed > 0.0f)
+	{
+		view_change_speed -= 135.5f * dt;
+	}
+	else if(view_change_speed < 0.0f)
+	{
+		view_change_speed += 135.5f * dt;
+	}
+
+
+	view_distance += view_change_speed * dt;
+
+	if (std::abs(view_change_speed) <= 0.1f)
+	{
+		view_change_speed = 0.0f;
 	}
 }
 

@@ -76,7 +76,7 @@ public:
 	// Orbit properties, only defined on bodies with a parent
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
 
-	NewtonState to_state();
+	NewtonState to_state(bool fast = true);
 	NewtonState state_from_mean(double mean);
 	double mean_to_eccentric(double mean, double tol);
 	double mean_to_true(double mean_anomaly, double tol = 1.0e-14);

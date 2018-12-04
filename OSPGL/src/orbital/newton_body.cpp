@@ -1,6 +1,6 @@
 #include "newton_body.h"
 
-
+/*
 
 NewtonState NewtonBody::solve(SpaceSystem system, SolverMethod method, int loops, float dt)
 {
@@ -41,6 +41,8 @@ NewtonState NewtonBody::solve_runge_kutta(SpaceSystem system, int loops, float d
 {
 	return NewtonState();
 }
+
+*/
 
 NewtonBody::NewtonBody()
 {

@@ -24,3 +24,5 @@ typedef unsigned int uint;
 
 extern Shader* g_shader;
 extern Shader* d_shader;
+
+extern double scroll_delta;

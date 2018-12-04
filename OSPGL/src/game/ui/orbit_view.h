@@ -35,11 +35,30 @@ struct PlanetOrbitPack
 // orbits and vessels, and the GUI for managing newtonian orbit viewing.
 class OrbitView
 {
+private:
+
+	double prev_mouse_x, prev_mouse_y;
+	glm::vec3 view_pos_abs;
+	float view_distance;
+
+	float view_change_speed;
+
+	double rot_x, rot_y;
+
+	void update_inputs(GLFWwindow* win, float dt);
+
+
 public:
 
 	std::vector<PlanetOrbitPack> planets;
 
-	void draw(glm::mat4 view, glm::mat4 proj);
+	glm::mat4 view, proj;
+
+	void draw();
+	void update(GLFWwindow* win, float dt);
+
+
+	void glfw_scroll_callback(GLFWwindow* win, double xoffset, double yoffset);
 
 	OrbitView(const SpaceSystem* system);
 	~OrbitView();

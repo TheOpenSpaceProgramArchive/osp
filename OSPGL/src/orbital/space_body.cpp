@@ -38,7 +38,7 @@ static PosPack to_pos(double mass, SpaceBody* o)
 
 
 
-NewtonState SpaceBody::to_state()
+NewtonState SpaceBody::to_state(bool fast)
 {
 	NewtonState out;
 
@@ -73,15 +73,18 @@ NewtonState SpaceBody::to_state()
 	PosPack cur = to_pos(mass + parent->mass, this);
 
 	out.pos = cur.pos;
-	true_anomaly += 1e-11;
-	glm::dvec3 next = to_pos(mass + parent->mass, this).pos;
-	true_anomaly -= 1e-11;
+	if (!fast)
+	{
+		true_anomaly += 1e-11;
+		glm::dvec3 next = to_pos(mass + parent->mass, this).pos;
+		true_anomaly -= 1e-11;
 
-	double vel = sqrt(G * (mass + parent->mass) * ((2.0 / cur.r) - (1.0 / smajor_axis)));
+		double vel = sqrt(G * (mass + parent->mass) * ((2.0 / cur.r) - (1.0 / smajor_axis)));
 
-	out.dir = glm::normalize(next - out.pos);
-	out.vel = vel;
-	out.delta = out.dir * out.vel;
+		out.dir = glm::normalize(next - out.pos);
+		out.vel = vel;
+		out.delta = out.dir * out.vel;
+	}
 
 	return out;
 }
