@@ -64,6 +64,9 @@ public:
 	bool logged = false;
 
 	SpaceBody* parent = NULL;
+
+	// Used by the SpaceSystem to save a bunch of computations
+	NewtonState last_state;
 	
 	// Mass of the body, must be given in kg
 	double mass;

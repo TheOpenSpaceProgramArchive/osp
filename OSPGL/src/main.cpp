@@ -195,7 +195,14 @@ int main()
 		glClearColor(0.1f, 0.0f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		system.simulate(10000.0f, 1.0f, &t);
+		clock_t begin = clock();
+
+		system.simulate(1000.0f, 1.0f, &t);
+
+		clock_t end = clock();
+		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+		log->info("Time taken for 1 iteration: {}s", elapsed_secs);
 
 		//log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
 		//log->info("Universe time: {}s / {}days", system.time, system.time / (60 * 60 * 24));
@@ -206,10 +213,13 @@ int main()
 			logged = true;
 		}
 
-		debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
-		debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
+		//debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
+		//debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
 		debug_draw.add_cross(newton.state.pos / 10e7, 0.03f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 		debug_draw.add_point(newton.state.pos / 10e7, glm::vec4(0.7f, 0.2f, 0.2f, 1.0f), 2.0f, 4.0f);
+
+		debug_draw.add_sphere(glm::vec3(0, 0, 0), 6371000.0f / 10e7f, glm::vec4(0.5f, 0.3f, 0.9f, 1.0f), 10);
+		debug_draw.add_sphere(moon.to_state().pos / 10e7, 1737500.0f / 10e7f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f), 10);
 
 		debug_draw.update(0.01f);
 		debug_draw.draw(orbit_view.view, orbit_view.proj);

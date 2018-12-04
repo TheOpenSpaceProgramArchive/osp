@@ -5,6 +5,11 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "shader.h"
+#include <math.h>
+
+#ifndef PI 
+#define PI (3.14159265358979323846264338327950288419716939937510582097494)
+#endif
 
 struct DebugDrawCommand
 {
@@ -29,6 +34,7 @@ public:
 	void add_line(glm::vec3 pos0, glm::vec3 pos1, glm::vec4 color, float time = 0.0f);
 	void add_arrow(glm::vec3 pos0, glm::vec3 pos1, glm::vec4 color, float time = 0.0f);
 	void add_cross(glm::vec3 pos, float radius, glm::vec4 color, float time = 0.0f);
+	void add_sphere(glm::vec3 pos, float radius, glm::vec4 color, size_t precision = 8, float time = 0.0f);
 
 	virtual void draw(glm::mat4 view, glm::mat4 proj);
 

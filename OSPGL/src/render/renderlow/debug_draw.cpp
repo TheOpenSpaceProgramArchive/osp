@@ -1,5 +1,11 @@
 #include "debug_draw.h"
 
+static void spherical_to_cartesian(float vert, float hor, float radius, float px, float py, float pz, float* x, float* y, float* z)
+{
+	*x = sin(hor) * cos(vert) * radius + px;
+	*z = sin(hor) * sin(vert) * radius + pz;
+	*y = cos(hor) * radius + py;
+}
 
 void DebugDrawCommand::generate(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
 {
@@ -80,6 +86,36 @@ void DebugDraw::add_cross(glm::vec3 pos, float radius, glm::vec4 color, float ti
 	commands.push_back(line0);
 	commands.push_back(line1);
 	commands.push_back(line2);
+}
+
+void DebugDraw::add_sphere(glm::vec3 pos, float radius, glm::vec4 color, size_t precision, float time)
+{
+	float prec = (2.0f * PI) / (float)precision;
+
+	for (float vert = 0.0f; vert < 2.0f * PI; vert += prec)
+	{
+		for (float hor = 0.0f; hor < 2.0f * PI; hor += prec)
+		{
+			DebugDrawCommand prev_hor, prev_vert;
+			prev_hor.time = time; prev_vert.time = time;
+			prev_hor.color = color; prev_vert.color = color;
+			prev_hor.draw_mode = GL_LINES; prev_vert.draw_mode = GL_LINES;
+
+			float x, y, z;
+			float prevv_x, prevv_y, prevv_z;
+			float prevh_x, prevh_y, prevh_z;
+
+			spherical_to_cartesian(vert, hor, radius, pos.x, pos.y, pos.z, &x, &y, &z);
+			spherical_to_cartesian(vert - prec, hor, radius, pos.x, pos.y, pos.z, &prevv_x, &prevv_y, &prevv_z);
+			spherical_to_cartesian(vert, hor - prec, radius, pos.x, pos.y, pos.z, &prevh_x, &prevh_y, &prevh_z);
+
+			prev_hor.generate(glm::vec3(x, y, z), glm::vec3(prevh_x, prevh_y, prevh_z), glm::vec3(0, 0, 0));
+			prev_vert.generate(glm::vec3(x, y, z), glm::vec3(prevv_x, prevv_y, prevv_z), glm::vec3(0, 0, 0));
+
+			commands.push_back(prev_hor);
+			commands.push_back(prev_vert);
+		}
+	}
 }
 
 void DebugDraw::draw(glm::mat4 view, glm::mat4 proj)
