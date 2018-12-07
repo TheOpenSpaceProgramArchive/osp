@@ -6,6 +6,42 @@
 #define G (6.67 * std::pow(10, -11))
 #endif
 
+struct RK4Derivative
+{
+	glm::dvec3 pos;
+	glm::dvec3 vel;
+
+	RK4Derivative operator+(RK4Derivative b)
+	{
+		RK4Derivative out;
+		out.pos = pos + b.pos; out.vel = vel + b.vel;
+		return out;
+	}
+	void operator+=(RK4Derivative b)
+	{
+		pos += b.pos; vel += b.vel;
+	}
+	RK4Derivative operator*(double b)
+	{
+		RK4Derivative out;
+		out.pos = pos * b; out.vel = vel * b;
+		return out;
+	}
+	void operator*=(double b)
+	{
+		pos *= b; vel *= b;
+	}
+
+	RK4Derivative(glm::dvec3 pos, glm::dvec3 vel)
+	{
+		this->pos; this->vel = vel;
+	}
+
+	RK4Derivative()
+	{
+
+	}
+};
 
 class SpaceSystem
 {
@@ -24,7 +60,7 @@ public:
 
 	// timewarp is the ammount of seconds we fit in one real second,
 	// dt is the ammount of seconds that passes since last call to simulate
-	void simulate(float timewarp, float dt, float* t);
+	void simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method);
 
 	SpaceSystem();
 	~SpaceSystem();

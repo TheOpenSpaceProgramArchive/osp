@@ -167,6 +167,7 @@ int main()
 	NewtonBody newton;
 	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
 	newton.state.delta = glm::dvec3(0, 0, 1400);
+	newton.state.prev = newton.state.pos - newton.state.delta;
 
 	OrbitView orbit_view = OrbitView(&system);
 
@@ -197,7 +198,7 @@ int main()
 
 		clock_t begin = clock();
 
-		system.simulate(1000.0f, 1.0f, &t);
+		system.simulate(1000.0f, 1.0f, &t, NewtonBody::SolverMethod::VERLET);
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;

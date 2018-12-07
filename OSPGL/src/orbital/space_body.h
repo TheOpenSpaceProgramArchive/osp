@@ -27,6 +27,9 @@ struct NewtonState
 	// Velocity of the body. Must be m/s following IS
 	double vel;
 
+	// Previous position (Used in verlet integration)
+	glm::dvec3 prev;
+
 	void add_force(glm::dvec3 force)
 	{
 		delta += force;
