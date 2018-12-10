@@ -2,6 +2,8 @@
 
 #include "space_body.h"
 #include "newton_body.h"
+#include <imgui/imgui.h>
+#include "../util/gui/multi_plot.h"
 #ifndef G
 #define G (6.67 * std::pow(10, -11))
 #endif
@@ -53,6 +55,8 @@ public:
 	std::vector<SpaceBody*> bodies;
 	std::vector<NewtonBody*> newton_bodies;
 
+	MultiPlot plot;
+
 	// Computes instantaneous gravitational force at a given point
 	// Mass of second object is assumed to be extremely small compared to the
 	// planetary body, but we could implement it too.
@@ -61,6 +65,11 @@ public:
 	// timewarp is the ammount of seconds we fit in one real second,
 	// dt is the ammount of seconds that passes since last call to simulate
 	void simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method);
+
+	// Throws string if anything is wrong
+	void deserialize(std::string data);
+	// Throws string if anything is wrong
+	std::string serialize();
 
 	SpaceSystem();
 	~SpaceSystem();

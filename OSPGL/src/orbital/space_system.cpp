@@ -64,6 +64,7 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 			}
 			else if (method == NewtonBody::SolverMethod::RUNGE_KUTTA)
 			{
+				spdlog::get("OSP")->error("NOT IMPLEMENTED RUNGE KUTTA IN USE!");
 				// TODO
 				NewtonState copy = newton_bodies[j]->state;
 				RK4Derivative d0 = RK4Derivative();
@@ -87,17 +88,53 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 		time += realDelta;
 	}
 
-	// Output energy for every newton body
+	// Uncomment to enable energy debugging
+	/*ImGui::Begin("Orbital Energy");
+
+	// Output energy for every newton body (assume mass 1)
 	for (size_t i = 0; i < newton_bodies.size(); i++)
 	{
+		ImGui::Text("Body %i", i);
 
+		double potential = 0;
+		double vsquared;
+		if (method == NewtonBody::SolverMethod::VERLET)
+		{
+			glm::dvec3 v = newton_bodies[i]->state.pos - newton_bodies[i]->state.prev;
+			vsquared = glm::length(v) * glm::length(v);
+		}
+		else
+		{
+			vsquared = newton_bodies[i]->state.vel * newton_bodies[i]->state.vel;
+		}
+
+		double kinetic = vsquared / 2.0f;
+
+		for (size_t j = 0; j < bodies.size(); j++)
+		{
+			double dist = glm::distance(newton_bodies[i]->state.pos, bodies[j]->last_state.pos);
+			double pot = -G * (bodies[j]->mass / dist);
+			potential += pot;
+		}
+		
+		plot.draw(256, 128);
+
+		plot.add_data("energy", kinetic + potential);
+		plot.add_data("kinetic", kinetic);
+		plot.add_data("potential", potential);
 	}
+
+	ImGui::End();*/
 	
 }
 
 
 SpaceSystem::SpaceSystem()
 {
+	plot = MultiPlot();
+	plot.create_plot("energy", glm::vec3(1.0, 0.0, 0.0));
+	plot.create_plot("kinetic", glm::vec3(0.0, 1.0, 0.0));
+	plot.create_plot("potential", glm::vec3(0.4, 0.4, 1.0));
 }
 
 

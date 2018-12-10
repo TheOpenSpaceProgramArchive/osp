@@ -63,6 +63,8 @@ auto create_logger()
 double scroll_delta = 0.0;
 bool scroll_delta_set_now = false;
 
+const double fixed_step = 1.0f;
+
 void glfw_scrollwheel_callback(GLFWwindow* win, double xoffset, double yoffset)
 {
 	scroll_delta = yoffset;
@@ -167,7 +169,7 @@ int main()
 	NewtonBody newton;
 	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
 	newton.state.delta = glm::dvec3(0, 0, 1400);
-	newton.state.prev = newton.state.pos - newton.state.delta;
+	newton.state.prev = newton.state.pos - (newton.state.delta * fixed_step);
 
 	OrbitView orbit_view = OrbitView(&system);
 
@@ -198,22 +200,13 @@ int main()
 
 		clock_t begin = clock();
 
-		system.simulate(1000.0f, 1.0f, &t, NewtonBody::SolverMethod::VERLET);
+		system.simulate(1000.0f, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-		log->info("Time taken for 1 iteration: {}s", elapsed_secs);
-
 		//log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
 		//log->info("Universe time: {}s / {}days", system.time, system.time / (60 * 60 * 24));
-
-		if (system.time >= 1000000 && !logged)
-		{
-			log->info("POS AT 1000000s: ({},{},{})", newton.state.pos.x, newton.state.pos.y, newton.state.pos.z);
-			logged = true;
-		}
-
 		//debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
 		//debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
 		debug_draw.add_cross(newton.state.pos / 10e7, 0.03f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -232,6 +225,8 @@ int main()
 
 		orbit_view.draw();
 
+
+		
 
 
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
