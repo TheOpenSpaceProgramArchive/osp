@@ -64,6 +64,9 @@ class SpaceBody
 {
 public:
 
+	std::string id;
+	std::string parent_id; //< used by deserializer
+
 	bool logged = false;
 
 	SpaceBody* parent = NULL;

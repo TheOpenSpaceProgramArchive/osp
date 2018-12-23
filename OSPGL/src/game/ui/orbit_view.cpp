@@ -64,7 +64,7 @@ OrbitView::OrbitView(const SpaceSystem* system)
 		{
 			PlanetOrbitPack pack;
 			generate_mesh(system->bodies[i], &pack);
-			
+			pack.body = system->bodies[i];
 			planets.push_back(pack);
 		}
 	}
@@ -105,19 +105,30 @@ void OrbitView::update_inputs(GLFWwindow* win, float dt)
 void OrbitView::draw()
 {
 	d_shader->use();
+
 	d_shader->setmat4("view", view);
 	d_shader->setmat4("proj", proj);
 
 	for (size_t i = 0; i < planets.size(); i++)
 	{
+		glm::mat4 model;
+
+		if (planets[i].body->parent != NULL)
+		{
+			model = glm::translate(model, (glm::vec3)(planets[i].body->parent->last_state.pos / 10e7));
+		}
+
 		glBindVertexArray(planets[i].vao);
 		glm::dvec4 col = glm::vec4(0.3, 0.3, 0.3, 1.0);
 		d_shader->setvec4("color", col);
+		d_shader->setmat4("model", model);
 
 		glDrawArrays(GL_LINES, 0, planets[i].vert_count);
 
 		glBindVertexArray(0);
 	}
+
+	d_shader->setmat4("model", glm::mat4());
 }
 
 void OrbitView::update(GLFWwindow* win, float dt)

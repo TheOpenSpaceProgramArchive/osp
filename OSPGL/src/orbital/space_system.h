@@ -4,6 +4,8 @@
 #include "newton_body.h"
 #include <imgui/imgui.h>
 #include "../util/gui/multi_plot.h"
+#include "../render/renderlow/debug_draw.h"
+#include <sstream>
 #ifndef G
 #define G (6.67 * std::pow(10, -11))
 #endif
@@ -66,8 +68,11 @@ public:
 	// dt is the ammount of seconds that passes since last call to simulate
 	void simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method);
 
-	// Throws string if anything is wrong
+	// Can't throw as there are no fatal errors, invalid data is discarded
 	void deserialize(std::string data);
+
+	void draw_debug_data(DebugDraw* debug, double scale);
+
 	// Always works
 	std::string serialize();
 

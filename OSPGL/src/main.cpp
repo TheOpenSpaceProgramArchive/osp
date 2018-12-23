@@ -151,29 +151,14 @@ int main()
 
 	DebugDraw debug_draw;
 
+	std::string system_data = FileUtil::load_file("res/systems/earth_moon.txt");
+
 	SpaceSystem system;
-	SpaceBody earth;
-	earth.mass = 5.97 * 10e24;
-	SpaceBody moon;
-	moon.mass = 7.32 * 10e22;
-	moon.smajor_axis = 384399000;
-	moon.eccentricity = 0.0549;
-	moon.arg_periapsis = 114;
-	moon.asc_node = -11;
-	moon.inclination = 5.012;
-	moon.parent = &earth;
-
-	system.bodies.push_back(&earth);
-	system.bodies.push_back(&moon);
-
-	NewtonBody newton;
-	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
-	newton.state.delta = glm::dvec3(0, 0, 1400);
-	newton.state.prev = newton.state.pos - (newton.state.delta * fixed_step);
+	system.deserialize(system_data);
 
 	OrbitView orbit_view = OrbitView(&system);
 
-	system.newton_bodies.push_back(&newton);
+	//system.newton_bodies.push_back(&newton);
 
 
 	glfwSetScrollCallback(window, &glfw_scrollwheel_callback);
@@ -205,30 +190,12 @@ int main()
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-		//log->info("Newton State: raw({},{},{})", newton.state.delta.x, newton.state.delta.y, newton.state.delta.z);
-		//log->info("Universe time: {}s / {}days", system.time, system.time / (60 * 60 * 24));
-		//debug_draw.add_cross(moon.to_state().pos / 10e7, 0.05f, glm::vec4(0.4f, 0.4f, 1.0f, 1.0f));
-		//debug_draw.add_cross(glm::vec3(0.0f, 0.0f, 0.0f), 0.1f, glm::vec4(1.0f, 0.6f, 0.6f, 1.0f));
-		debug_draw.add_cross(newton.state.pos / 10e7, 0.03f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		debug_draw.add_point(newton.state.pos / 10e7, glm::vec4(0.7f, 0.2f, 0.2f, 1.0f), 2.0f, 4.0f);
-
-		debug_draw.add_sphere(glm::vec3(0, 0, 0), 6371000.0f / 10e7f, glm::vec4(0.5f, 0.3f, 0.9f, 1.0f), 10);
-		debug_draw.add_sphere(moon.to_state().pos / 10e7, 1737500.0f / 10e7f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f), 10);
+		system.draw_debug_data(&debug_draw, 10e-9);
 
 		debug_draw.update(0.01f);
 		debug_draw.draw(orbit_view.view, orbit_view.proj);
 
-		// All physics are done on a reduced timestep,
-		// regardless of the warp, we choose 10 second per
-		
-
-
 		orbit_view.draw();
-
-
-		
-
-
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
 		// Finish

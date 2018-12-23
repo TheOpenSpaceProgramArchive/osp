@@ -32,6 +32,11 @@ static PosPack to_pos(double mass, SpaceBody* o)
 
 	out.r = r;
 
+	if (o->parent != NULL)
+	{
+		out.pos += o->parent->last_state.pos;
+	}
+
 	return out;
 }
 
