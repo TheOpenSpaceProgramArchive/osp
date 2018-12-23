@@ -68,7 +68,7 @@ public:
 
 	// Throws string if anything is wrong
 	void deserialize(std::string data);
-	// Throws string if anything is wrong
+	// Always works
 	std::string serialize();
 
 	SpaceSystem();

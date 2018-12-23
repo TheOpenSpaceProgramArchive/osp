@@ -53,13 +53,21 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 			}
 			else if (method == NewtonBody::SolverMethod::VERLET)
 			{
+				// !!This is actually velocity verlet!!
+
 				NewtonState copy = newton_bodies[j]->state;
-				glm::dvec3 force = computeForce(copy.pos) * realDelta;
-				glm::dvec3 pos = copy.pos * 2.0;
-				pos -= copy.prev;
-				pos += force;
+				glm::dvec3 force = computeForce(copy.pos);
+				//glm::dvec3 pos = copy.pos * 2.0;
+				//pos -= copy.prev;
+				//pos += force * realDelta;
+
+				glm::dvec3 pos = copy.pos;
+				glm::dvec3 delta = copy.delta;
+				pos += copy.delta * realDelta + 0.5 * force * realDelta * realDelta;
+				delta += force * realDelta;
 
 				newton_bodies[j]->state.pos = pos;
+				newton_bodies[j]->state.delta = delta;
 				newton_bodies[j]->state.prev = copy.pos;
 			}
 			else if (method == NewtonBody::SolverMethod::RUNGE_KUTTA)
@@ -128,6 +136,52 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 	
 }
 
+static std::string serialize_body(SpaceBody* body)
+{
+	std::string out;
+
+	out += "B";
+
+	// Data order:
+	// mass, eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly
+
+	out += std::to_string(body->mass); out += ";";
+	out += std::to_string(body->smajor_axis); out += ";";
+	out += std::to_string(body->inclination); out += ";";
+	out += std::to_string(body->asc_node); out += ";";
+	out += std::to_string(body->arg_periapsis); out += ";";
+	out += std::to_string(body->true_anomaly);
+
+	out += "\n";
+
+	return out;
+}
+
+static std::string serialize_newton(NewtonBody* body)
+{
+	std::string out;
+
+	// Data order: pos, delta, prev (if verlet?)
+	NewtonState state = body->state;
+
+
+
+
+	out += "\n";
+	return out;
+}
+
+std::string SpaceSystem::serialize()
+{
+	std::string out;
+
+	for (size_t i = 0; i < bodies.size(); i++)
+	{
+		out += serialize_body(bodies[i]);
+	}
+
+	return out;
+}
 
 SpaceSystem::SpaceSystem()
 {
