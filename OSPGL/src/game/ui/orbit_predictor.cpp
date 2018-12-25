@@ -21,16 +21,24 @@ void OrbitPredictor::update_mesh()
 
 	past_mesh.mh.vertices.clear();
 	Vertex prev;
+	prev.pos = glm::vec3(0, 0, 0);
 	for (size_t i = 0; i < def_past.size(); i++)
 	{
+		float perc = (float)i / (float)def_past.size();
 		glm::dvec3 p = def_frame.transform(def_past[i].pos, def_past[i].t);
 		Vertex vert;
 		vert.pos = p * 10e-9;
-		vert.col = glm::vec3(1.0f, 0.0f, 1.0f);
-		vert.pos = glm::vec3(0.5, 0.5, 0.5); 
-		past_mesh.mh.vertices.push_back(prev);
+		vert.col = glm::vec3(perc * 0.5f + 0.5f, perc * 0.5f + 0.5f, perc * 0.5f + 0.5f);
+		if (prev.pos == glm::vec3(0, 0, 0))
+		{
+			prev.pos = vert.pos;
+			past_mesh.mh.vertices.push_back(vert);
+		}
+		else
+		{
+			past_mesh.mh.vertices.push_back(prev);
+		}
 		past_mesh.mh.vertices.push_back(vert);
-
 		prev = vert;
 	}
 
@@ -42,7 +50,7 @@ void OrbitPredictor::update_mesh()
 void OrbitPredictor::draw(glm::mat4 view, glm::mat4 proj)
 {
 	past_mesh.tform.pos = def_frame.center->last_state.pos / ORBIT_VIEW_SCALE;
-	past_mesh.draw(glm::mat4(), glm::mat4());
+	past_mesh.draw(view, proj);
 	future_mesh.draw(view, proj);
 }
 

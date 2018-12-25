@@ -75,8 +75,8 @@ public:
 	bool predicting = true;
 
 	// In seconds
-	double past_points_time = 86400;
-	double future_points_time = 86400;
+	double past_points_time = 86400 * 10;
+	double future_points_time = 86400 * 10;
 	double predictor_dt = 1;
 
 	SpaceSystem* system;

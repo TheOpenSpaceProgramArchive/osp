@@ -382,7 +382,7 @@ void SpaceSystem::draw_debug_data(DebugDraw* debug, double scale)
 	for (size_t i = 0; i < newton_bodies.size(); i++)
 	{
 		debug->add_cross(newton_bodies[i]->state.pos * scale, 0.05f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		debug->add_point(newton_bodies[i]->state.pos * scale, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 3.0f, 1.0f);
+		//debug->add_point(newton_bodies[i]->state.pos * scale, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 3.0f, 1.0f);
 	}
 }
 

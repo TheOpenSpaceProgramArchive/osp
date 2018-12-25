@@ -175,6 +175,8 @@ int main()
 
 	bool logged = false;
 
+	float timewarp = 1000.0f;
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -195,8 +197,8 @@ int main()
 
 		clock_t begin = clock();
 
-		system.simulate(5000.0f, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
-		predictor.update(5000.0 * fixed_step, system.time);
+		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
+		predictor.update(timewarp * fixed_step, system.time);
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -220,6 +222,11 @@ int main()
 		if (scroll_delta_set_now)
 		{
 			scroll_delta = 0;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+		{
+			timewarp += 50.0f;
 		}
 
 		glfwSwapBuffers(window);
