@@ -30,6 +30,8 @@
 
 #include "game/ui/orbit_view.h"
 
+#include "game/ui/orbit_predictor.h"
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -156,10 +158,18 @@ int main()
 	SpaceSystem system;
 	system.deserialize(system_data);
 
+	NewtonBody newton;
+	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
+	newton.state.delta = glm::dvec3(0, 0, 1400);
+
+	system.newton_bodies.push_back(&newton);
+
 	OrbitView orbit_view = OrbitView(&system);
 
 	//system.newton_bodies.push_back(&newton);
 
+	OrbitPredictor predictor = OrbitPredictor(&system, &newton);
+	predictor.def_frame.center = system.bodies[0];
 
 	glfwSetScrollCallback(window, &glfw_scrollwheel_callback);
 
@@ -185,7 +195,8 @@ int main()
 
 		clock_t begin = clock();
 
-		system.simulate(1000.0f, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
+		system.simulate(5000.0f, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
+		predictor.update(5000.0 * fixed_step, system.time);
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -196,6 +207,7 @@ int main()
 		debug_draw.draw(orbit_view.view, orbit_view.proj);
 
 		orbit_view.draw();
+		predictor.draw(orbit_view.view, orbit_view.proj);
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
 		// Finish

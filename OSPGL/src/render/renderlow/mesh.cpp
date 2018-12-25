@@ -7,11 +7,13 @@ void Mesh::destroy()
 	if (vao != 0)
 	{
 		glDeleteVertexArrays(1, &vao);
+		vao = 0;
 	}
 
 	if (vbo != 0)
 	{
 		glDeleteBuffers(1, &vbo);
+		vbo = 0;
 	}
 }
 

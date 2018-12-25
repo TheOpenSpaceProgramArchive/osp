@@ -160,7 +160,9 @@ static std::string serialize_body(SpaceBody* body)
 	out += std::to_string(body->inclination); out += ";";
 	out += std::to_string(body->asc_node); out += ";";
 	out += std::to_string(body->arg_periapsis); out += ";";
-	out += std::to_string(body->true_anomaly) += ";";
+	out += std::to_string(body->eccentricity); out += ";";
+	out += std::to_string(body->true_anomaly); out += ";";
+
 
 	out += "\n";
 
@@ -264,14 +266,14 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 		// Kepler Body
 		std::vector<std::string> data = break_chunk(chunk);
 
-		if (data.size() != 8)
+		if (data.size() != 9)
 		{
 			spdlog::get("OSP")->warn("[Deserialize Error] (line: {}): Invalid kepler body datasize", line);
 			return;
 		}
 
 		SpaceBody* body = new SpaceBody();
-		double mass, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
+		double mass, smajor_axis, inclination, asc_node, arg_periapsis, eccentricity, true_anomaly;
 		try
 		{
 			mass = deserialize_double(data[2]);
@@ -279,7 +281,8 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 			inclination = deserialize_double(data[4]);
 			asc_node = deserialize_double(data[5]);
 			arg_periapsis = deserialize_double(data[6]);
-			true_anomaly = deserialize_double(data[7]);
+			eccentricity = deserialize_double(data[7]);
+			true_anomaly = deserialize_double(data[8]);
 		}
 		catch (int)
 		{
@@ -293,6 +296,7 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 		body->inclination = inclination;
 		body->asc_node = asc_node;
 		body->arg_periapsis = arg_periapsis;
+		body->eccentricity = eccentricity;
 		body->true_anomaly = true_anomaly;
 
 		sys->bodies.push_back(body);
@@ -372,7 +376,7 @@ void SpaceSystem::draw_debug_data(DebugDraw* debug, double scale)
 {
 	for (size_t i = 0; i < bodies.size(); i++)
 	{
-		debug->add_sphere(bodies[i]->last_state.pos * scale, 0.1f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		debug->add_cross(bodies[i]->last_state.pos * scale, 0.1f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
 	for (size_t i = 0; i < newton_bodies.size(); i++)

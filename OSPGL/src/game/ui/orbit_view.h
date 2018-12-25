@@ -2,8 +2,6 @@
 #include "../../render/renderlow/drawables/dmodel.h"
 #include "../../orbital/space_system.h"
 
-// Scale between OpenGL and real units (Value is divided by this)
-#define ORBIT_VIEW_SCALE (10e7)
 
 // Minimum number of vertices to generate for an orbit, later multiplied by scale
 #define ORBIT_VIEW_PRECISION 360
@@ -30,7 +28,6 @@ struct PlanetOrbitPack
 };
 
 
-
 // Handles drawing of the "map view", showing planets in small scale, alongside
 // orbits and vessels, and the GUI for managing newtonian orbit viewing.
 class OrbitView
@@ -53,6 +50,8 @@ public:
 	std::vector<PlanetOrbitPack> planets;
 
 	glm::mat4 view, proj;
+
+
 
 	void draw();
 	void update(GLFWwindow* win, float dt);

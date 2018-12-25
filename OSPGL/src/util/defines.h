@@ -27,3 +27,6 @@ extern Shader* d_shader;
 
 extern double scroll_delta;
 
+// Scale between OpenGL and real units (Value is divided by this)
+#define ORBIT_VIEW_SCALE (10e7)
+

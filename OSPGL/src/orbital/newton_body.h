@@ -3,6 +3,7 @@
 #include "space_body.h"
 //#include "space_system.h"
 
+class OrbitPredictor;
 
 class NewtonBody
 {

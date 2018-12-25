@@ -121,6 +121,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game\ui\orbit_predictor.cpp" />
     <ClCompile Include="src\util\gui\multi_plot.cpp" />
     <ClCompile Include="src\util\types\gradients.cpp" />
     <ClCompile Include="src\game\ui\orbit_view.cpp" />
@@ -147,6 +148,7 @@
     <ClCompile Include="src\render\renderlow\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\game\ui\orbit_predictor.h" />
     <ClInclude Include="src\util\gui\multi_plot.h" />
     <ClInclude Include="src\game\ui\orbit_view.h" />
     <ClInclude Include="src\render\renderlow\debug_draw.h" />

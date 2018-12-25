@@ -87,6 +87,9 @@
     <ClCompile Include="src\util\gui\multi_plot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game\ui\orbit_predictor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -723,6 +726,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\util\gui\multi_plot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\ui\orbit_predictor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

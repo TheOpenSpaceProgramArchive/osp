@@ -21,7 +21,7 @@ static void generate_mesh(SpaceBody* body, PlanetOrbitPack* target)
 		body->true_anomaly = glm::radians(true_an);
 
 		NewtonState state = body->to_state();
-		glm::vec3 pos = state.pos / 10e7;
+		glm::vec3 pos = state.pos / ORBIT_VIEW_SCALE;
 
 		if (prev_pos.x == 0 && prev_pos.y == 0 && prev_pos.z == 0)
 		{

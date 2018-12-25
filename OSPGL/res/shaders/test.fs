@@ -15,5 +15,5 @@ void main()
 	vec3 diffuse = diff * vec3(1, 1, 1);
 	diffuse = max(vec3(0.3, 0.3, 0.3), diffuse);
 
-    FragColor = vec4(vColor, 1.0);
+    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 } 
