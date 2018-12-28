@@ -37,10 +37,23 @@ glm::dvec3 SpaceSystem::compute_force_at(glm::dvec3 pos, double t0)
 	return out;
 }
 
-RK4Derivative rk4_compute(SpaceSystem* sys, glm::dvec3 cur_pos, glm::dvec3 cur_vel, double dt, RK4Derivative der)
+// Returns the acceleration experimented by said state
+// (aka force)
+glm::dvec3 rk4_function(SpaceSystem* sys, NewtonState st, double t, double dt)
 {
-	RK4Derivative state = der * dt + RK4Derivative(cur_pos, cur_vel);
-	return RK4Derivative(state.delta, sys->compute_force(state.pos));
+	return glm::dvec3();
+}
+
+RK4Derivative rk4_compute(SpaceSystem* sys, NewtonState initial, double t, double dt, RK4Derivative der)
+{
+	NewtonState st;
+	st.pos = initial.pos + der.pos * dt;
+	st.delta = initial.delta + der.delta * dt;
+
+	RK4Derivative out;
+	out.pos = st.delta;
+	out.delta = rk4_function(sys, st, t, dt);
+	return out;
 }
 
 
@@ -90,23 +103,17 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 			}
 			else if (method == NewtonBody::SolverMethod::RUNGE_KUTTA)
 			{
-				spdlog::get("OSP")->error("NOT IMPLEMENTED RUNGE KUTTA IN USE!");
+				//spdlog::get("OSP")->error("NOT IMPLEMENTED RUNGE KUTTA IN USE!");
 				// TODO
 				NewtonState copy = newton_bodies[j]->state;
-				RK4Derivative d0 = RK4Derivative();
-				RK4Derivative d1 = rk4_compute(this, copy.pos, copy.delta, realDelta * 0.0, d0);
-				RK4Derivative d2 = rk4_compute(this, copy.pos, copy.delta, realDelta * 0.5, d1);
-				RK4Derivative d3 = rk4_compute(this, copy.pos, copy.delta, realDelta * 0.5, d2);
-				RK4Derivative d4 = rk4_compute(this, copy.pos, copy.delta, realDelta * 1.0, d3);
+				RK4Derivative d0, d1, d2, d3;
 
-				d3 *= 2;
-				d2 += d3;
-				d2 *= 1.0 / 6.0;
-				d1 += d2;
-				d4 += d1;
+				d0 = rk4_compute(this, copy, time, 0.0, RK4Derivative());
+				d1 = rk4_compute(this, copy, time, realDelta * 0.5, d0);
+				d2 = rk4_compute(this, copy, time, realDelta * 0.5, d1);
+				d3 = rk4_compute(this, copy, time, realDelta, d2);
 
-				copy.pos += d4.pos * realDelta;
-				copy.delta += d4.delta * realDelta;
+			
 			}
 		}
 
@@ -118,14 +125,13 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 
 NewtonState SpaceSystem::simulate_static(double dt, double t0, NewtonState st)
 {
-	glm::dvec3 force = compute_force_at(st.pos, t0);
-	glm::dvec3 pos = st.pos;
-	glm::dvec3 delta = st.delta;
-	pos += st.delta * dt + 0.5 * force * dt * dt;
-	delta += force * dt;
+	NewtonState copy = st;
+	glm::dvec3 force = compute_force(copy.pos) * dt;
+	copy.add_force(force);
+	copy.pos += copy.delta * dt;
 
-	st.pos = pos;
-	st.delta = delta;
+	st.pos = copy.pos;
+	st.delta = copy.delta;
 
 	return st;
 }

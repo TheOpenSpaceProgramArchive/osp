@@ -153,7 +153,7 @@ int main()
 
 	DebugDraw debug_draw;
 
-	std::string system_data = FileUtil::load_file("res/systems/earth_moon.txt");
+	std::string system_data = FileUtil::load_file("res/systems/earth.txt");
 
 	SpaceSystem system;
 	system.deserialize(system_data);
@@ -197,7 +197,7 @@ int main()
 
 		clock_t begin = clock();
 
-		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
+		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::EULER);
 		predictor.update(timewarp * fixed_step, system.time, newton.state);
 
 		clock_t end = clock();
