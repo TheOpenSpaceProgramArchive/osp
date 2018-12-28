@@ -153,7 +153,7 @@ int main()
 
 	DebugDraw debug_draw;
 
-	std::string system_data = FileUtil::load_file("res/systems/earth_moon.txt");
+	std::string system_data = FileUtil::load_file("res/systems/earth.txt");
 
 	SpaceSystem system;
 	system.deserialize(system_data);
@@ -168,7 +168,7 @@ int main()
 
 	//system.newton_bodies.push_back(&newton);
 
-	OrbitPredictor predictor = OrbitPredictor(&system, &newton);
+	OrbitPredictor predictor = OrbitPredictor(&system);
 	predictor.def_frame.center = system.bodies[0];
 
 	glfwSetScrollCallback(window, &glfw_scrollwheel_callback);
@@ -198,7 +198,7 @@ int main()
 		clock_t begin = clock();
 
 		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::VERLET);
-		predictor.update(timewarp * fixed_step, system.time);
+		predictor.update(timewarp * fixed_step, system.time, newton.state);
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -224,10 +224,6 @@ int main()
 			scroll_delta = 0;
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-		{
-			timewarp += 50.0f;
-		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

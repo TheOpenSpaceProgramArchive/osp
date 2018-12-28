@@ -2,7 +2,7 @@
 
 
 
-glm::dvec3 SpaceSystem::computeForce(glm::dvec3 pos)
+glm::dvec3 SpaceSystem::compute_force(glm::dvec3 pos)
 {
 	glm::dvec3 out;
 
@@ -19,10 +19,28 @@ glm::dvec3 SpaceSystem::computeForce(glm::dvec3 pos)
 	return out;
 }
 
+glm::dvec3 SpaceSystem::compute_force_at(glm::dvec3 pos, double t0)
+{
+	glm::dvec3 out;
+
+	for (size_t i = 0; i < bodies.size(); i++)
+	{
+		double true_anom = bodies[i]->mean_to_true(bodies[i]->time_to_mean(t0));
+		glm::dvec3 body_pos = bodies[i]->to_state_at(true_anom).pos;
+		double dist = glm::distance(pos, body_pos);
+		double intensity = bodies[i]->mass / (dist * dist);
+		intensity *= G;
+
+		out += glm::normalize(body_pos - pos) * intensity;
+	}
+
+	return out;
+}
+
 RK4Derivative rk4_compute(SpaceSystem* sys, glm::dvec3 cur_pos, glm::dvec3 cur_vel, double dt, RK4Derivative der)
 {
 	RK4Derivative state = der * dt + RK4Derivative(cur_pos, cur_vel);
-	return RK4Derivative(state.vel, sys->computeForce(state.pos));
+	return RK4Derivative(state.delta, sys->compute_force(state.pos));
 }
 
 
@@ -46,7 +64,7 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 			if (method == NewtonBody::SolverMethod::EULER)
 			{
 				NewtonState copy = newton_bodies[j]->state;
-				glm::dvec3 force = computeForce(copy.pos) * realDelta;
+				glm::dvec3 force = compute_force(copy.pos) * realDelta;
 				copy.add_force(force);
 				copy.pos += copy.delta * realDelta;
 				newton_bodies[j]->state = copy;
@@ -56,7 +74,7 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 				// !!This is actually velocity verlet!!
 
 				NewtonState copy = newton_bodies[j]->state;
-				glm::dvec3 force = computeForce(copy.pos);
+				glm::dvec3 force = compute_force(copy.pos);
 				//glm::dvec3 pos = copy.pos * 2.0;
 				//pos -= copy.prev;
 				//pos += force * realDelta;
@@ -88,52 +106,28 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 				d4 += d1;
 
 				copy.pos += d4.pos * realDelta;
-				copy.delta += d4.vel * realDelta;
+				copy.delta += d4.delta * realDelta;
 			}
 		}
 
 		*t += realDelta;
 		time += realDelta;
 	}
-
-	// Uncomment to enable energy debugging
-	/*ImGui::Begin("Orbital Energy");
-
-	// Output energy for every newton body (assume mass 1)
-	for (size_t i = 0; i < newton_bodies.size(); i++)
-	{
-		ImGui::Text("Body %i", i);
-
-		double potential = 0;
-		double vsquared;
-		if (method == NewtonBody::SolverMethod::VERLET)
-		{
-			glm::dvec3 v = newton_bodies[i]->state.pos - newton_bodies[i]->state.prev;
-			vsquared = glm::length(v) * glm::length(v);
-		}
-		else
-		{
-			vsquared = newton_bodies[i]->state.vel * newton_bodies[i]->state.vel;
-		}
-
-		double kinetic = vsquared / 2.0f;
-
-		for (size_t j = 0; j < bodies.size(); j++)
-		{
-			double dist = glm::distance(newton_bodies[i]->state.pos, bodies[j]->last_state.pos);
-			double pot = -G * (bodies[j]->mass / dist);
-			potential += pot;
-		}
-		
-		plot.draw(256, 128);
-
-		plot.add_data("energy", kinetic + potential);
-		plot.add_data("kinetic", kinetic);
-		plot.add_data("potential", potential);
-	}
-
-	ImGui::End();*/
 	
+}
+
+NewtonState SpaceSystem::simulate_static(double dt, double t0, NewtonState st)
+{
+	glm::dvec3 force = compute_force_at(st.pos, t0);
+	glm::dvec3 pos = st.pos;
+	glm::dvec3 delta = st.delta;
+	pos += st.delta * dt + 0.5 * force * dt * dt;
+	delta += force * dt;
+
+	st.pos = pos;
+	st.delta = delta;
+
+	return st;
 }
 
 static std::string serialize_body(SpaceBody* body)

@@ -5,22 +5,25 @@
 
 #include <list>
 #include <deque>
+#include <mutex> 
 
 struct OrbitSnapshot
 {
 	// position relative to inertial frame
 	glm::dvec3 pos;
 	// velocity relative to inertial frame
-	glm::dvec3 vel;
+	glm::dvec3 delta;
 
 	double t;
 
 	OrbitSnapshot(NewtonState st, double t)
 	{
 		this->pos = st.pos;
-		this->vel = st.delta;
+		this->delta = st.delta;
 		this->t = t;
 	}
+
+	OrbitSnapshot() {}
 };
 
 struct OrbitSegment
@@ -60,6 +63,13 @@ struct ReferenceFrame
 	glm::dvec3 transform(glm::dvec3 inertial, double t);
 };
 
+struct PredictorSettings
+{
+	double past_points_time = 86400 * 10;
+	double future_points_time = 86400 * 1;
+	double predictor_dt = 1;
+};
+
 class OrbitPredictor
 {
 private:
@@ -70,27 +80,32 @@ private:
 	DModel past_mesh;
 	DModel future_mesh;
 
+
+
 public:
 
 	bool predicting = true;
 
 	// In seconds
-	double past_points_time = 86400 * 10;
-	double future_points_time = 86400 * 10;
-	double predictor_dt = 1;
+	PredictorSettings def_predictor_sets;
 
 	SpaceSystem* system;
-	NewtonBody* owner;
 
 	ReferenceFrame def_frame;
 
 	size_t uid = 0;
 
+	std::mutex mtx;
 	std::deque<OrbitSnapshot> def_past;
 	std::deque<OrbitSnapshot> def_future;
-	//std::thread def_thread;
+	std::thread* def_thread;
 
 	std::unordered_map<size_t, OrbitSegment> segments;
+
+	// Closes all threads
+	void close_threads();
+	// Opens all threads
+	void open_threads();
 
 	// Creates and launches a new segment simulator.
 	// link is the segment we are based off, if 0 it's the def_predictor
@@ -105,7 +120,7 @@ public:
 
 	// Called by space_system every "tick".
 	// dt is real dt, used to remove old points
-	void update(double dt, double t);
+	void update(double dt, double t, NewtonState state);
 
 	// Updates the GPU mesh for both
 	// past and future.
@@ -115,7 +130,10 @@ public:
 
 	void draw(glm::mat4 view, glm::mat4 proj);
 
-	OrbitPredictor(SpaceSystem* system, NewtonBody* owner);
+	// Copy constructor as we need to keep
+	// threads
+	OrbitPredictor(const OrbitPredictor& b);
+	OrbitPredictor(SpaceSystem* system);
 	~OrbitPredictor();
 };
 

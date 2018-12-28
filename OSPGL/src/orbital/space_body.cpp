@@ -6,12 +6,12 @@ struct PosPack
 	double r;
 };
 
-static PosPack to_pos(double mass, SpaceBody* o)
+static PosPack to_pos(double mass, const SpaceBody* o, double true_anom)
 {
 	PosPack out;
 
 	// Calculate radius (height)
-	double r = (o->smajor_axis * (1.0 - (o->eccentricity * o->eccentricity))) / (1 + o->eccentricity * cos(o->true_anomaly));
+	double r = (o->smajor_axis * (1.0 - (o->eccentricity * o->eccentricity))) / (1 + o->eccentricity * cos(true_anom));
 
 	if (r < 0 && o->eccentricity >= 1.0)
 	{
@@ -20,8 +20,8 @@ static PosPack to_pos(double mass, SpaceBody* o)
 
 	// Adjust for other parameters
 
-	out.pos.x = cos(o->true_anomaly) * r;
-	out.pos.z = sin(o->true_anomaly) * r;
+	out.pos.x = cos(true_anom) * r;
+	out.pos.z = sin(true_anom) * r;
 
 	// Arg.of.Periapsis
 	out.pos = glm::rotateY(out.pos, glm::radians(o->arg_periapsis));
@@ -43,10 +43,9 @@ static PosPack to_pos(double mass, SpaceBody* o)
 
 
 
-NewtonState SpaceBody::to_state(bool fast)
+NewtonState SpaceBody::to_state_at(double true_anom, bool fast) const
 {
 	NewtonState out;
-
 	if (parent == NULL)
 	{
 		NewtonState st;
@@ -56,45 +55,45 @@ NewtonState SpaceBody::to_state(bool fast)
 	// Sanity checks
 	if (eccentricity < 0.0)
 	{
-		eccentricity = -eccentricity;
-	}
-	if (eccentricity >= 0.99999 && eccentricity <= 1.00001)
-	{
-		eccentricity += 0.01;
+		throw("Invalid orbital data");
 	}
 
 	if (eccentricity < 1.0 && smajor_axis < 0)
 	{
-		smajor_axis = -smajor_axis;
+		throw("Invalid orbital data");
 	}
 
 	if (eccentricity >= 1.0 && smajor_axis > 0)
 	{
-		smajor_axis = -smajor_axis;
+		throw("Invalid orbital data");
 	}
 
 
 
-	PosPack cur = to_pos(mass + parent->mass, this);
+	PosPack cur = to_pos(mass + parent->mass, this, true_anom);
 
 	out.pos = cur.pos;
+
 	if (!fast)
 	{
-		true_anomaly += 1e-11;
-		glm::dvec3 next = to_pos(mass + parent->mass, this).pos;
-		true_anomaly -= 1e-11;
+		glm::dvec3 next = to_pos(mass + parent->mass, this, true_anom + 1e-11).pos;
 
 		double vel = sqrt(G * (mass + parent->mass) * ((2.0 / cur.r) - (1.0 / smajor_axis)));
 
 		out.dir = glm::normalize(next - out.pos);
 		out.vel = vel;
-		out.delta = out.dir * out.vel;
+		out.delta = out.dir * out.delta;
 	}
 
 	return out;
 }
 
-NewtonState SpaceBody::state_from_mean(double mean)
+NewtonState SpaceBody::to_state(bool fast) const
+{
+	return to_state_at(true_anomaly, fast);
+}
+
+NewtonState SpaceBody::state_from_mean(double mean) const
 {
 	return NewtonState();
 }
@@ -122,7 +121,7 @@ static double eps3(double ecc, double mean, double x)
 }
 
 
-double SpaceBody::true_to_eccentric()
+double SpaceBody::true_to_eccentric() const
 {
 	double upper = sqrt(1 - eccentricity * eccentricity) * sin(true_anomaly);
 	double lower = eccentricity + cos(true_anomaly);
@@ -130,13 +129,13 @@ double SpaceBody::true_to_eccentric()
 	return atan(upper / lower);
 }
 
-double SpaceBody::eccentric_to_mean(double eccentric)
+double SpaceBody::eccentric_to_mean(double eccentric) const
 {
 	// Mean = eccentric - e * sin(eccentric), per the kepler equation
 	return eccentric - eccentricity * sin(eccentric);
 }
 
-double SpaceBody::time_to_mean(double time)
+double SpaceBody::time_to_mean(double time) const
 {
 	double sm = std::abs(smajor_axis);
 	if (sm == 0)
@@ -148,7 +147,7 @@ double SpaceBody::time_to_mean(double time)
 	return n * time;
 }
 
-double SpaceBody::mean_to_time(double mean)
+double SpaceBody::mean_to_time(double mean) const
 {
 	double sm = std::abs(smajor_axis);
 	if (sm == 0)
@@ -162,7 +161,7 @@ double SpaceBody::mean_to_time(double mean)
 	return n / mean;
 }
 
-double SpaceBody::mean_to_eccentric(double mean, double tol)
+double SpaceBody::mean_to_eccentric(double mean, double tol) const
 {
 	if (eccentricity < 1)
 	{
@@ -239,7 +238,7 @@ double SpaceBody::mean_to_eccentric(double mean, double tol)
 
 
 
-double SpaceBody::mean_to_true(double mean_anomaly, double tol)
+double SpaceBody::mean_to_true(double mean_anomaly, double tol) const
 {
 	double eccentric = mean_to_eccentric(mean_anomaly, tol);
 	double half = eccentric / 2.0;

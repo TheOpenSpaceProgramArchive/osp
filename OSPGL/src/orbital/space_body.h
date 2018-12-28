@@ -33,8 +33,8 @@ struct NewtonState
 	void add_force(glm::dvec3 force)
 	{
 		delta += force;
-		dir = glm::normalize(delta);
-		vel = glm::length(delta);
+		dir = glm::normalize(force);
+		vel = glm::length(force);
 	}
 };
 
@@ -73,6 +73,8 @@ public:
 
 	// Used by the SpaceSystem to save a bunch of computations
 	NewtonState last_state;
+	NewtonState old_state;
+	double old_true_anomaly;
 	
 	// Mass of the body, must be given in kg
 	double mass;
@@ -85,14 +87,15 @@ public:
 	// Orbit properties, only defined on bodies with a parent
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
 
-	NewtonState to_state(bool fast = true);
-	NewtonState state_from_mean(double mean);
-	double mean_to_eccentric(double mean, double tol);
-	double mean_to_true(double mean_anomaly, double tol = 1.0e-14);
-	double time_to_mean(double time);
-	double mean_to_time(double mean);
-	double true_to_eccentric();
-	double eccentric_to_mean(double eccentric);
+	NewtonState to_state_at(double true_anom, bool fast = true) const;
+	NewtonState to_state(bool fast = true) const;
+	NewtonState state_from_mean(double mean) const;
+	double mean_to_eccentric(double mean, double tol) const;
+	double mean_to_true(double mean_anomaly, double tol = 1.0e-14) const;
+	double time_to_mean(double time) const;
+	double mean_to_time(double mean) const;
+	double true_to_eccentric() const;
+	double eccentric_to_mean(double eccentric) const;
 
 
 	// Gets a point in the orbit given the time since epoch

@@ -496,6 +496,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\cmaps\CREDITS.txt" />
+    <Text Include="res\systems\earth.txt" />
     <Text Include="res\systems\earth_moon.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

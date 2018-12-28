@@ -13,32 +13,32 @@
 struct RK4Derivative
 {
 	glm::dvec3 pos;
-	glm::dvec3 vel;
+	glm::dvec3 delta;
 
 	RK4Derivative operator+(RK4Derivative b)
 	{
 		RK4Derivative out;
-		out.pos = pos + b.pos; out.vel = vel + b.vel;
+		out.pos = pos + b.pos; out.delta = delta + b.delta;
 		return out;
 	}
 	void operator+=(RK4Derivative b)
 	{
-		pos += b.pos; vel += b.vel;
+		pos += b.pos; delta += b.delta;
 	}
 	RK4Derivative operator*(double b)
 	{
 		RK4Derivative out;
-		out.pos = pos * b; out.vel = vel * b;
+		out.pos = pos * b; out.delta = delta * b;
 		return out;
 	}
 	void operator*=(double b)
 	{
-		pos *= b; vel *= b;
+		pos *= b; delta *= b;
 	}
 
-	RK4Derivative(glm::dvec3 pos, glm::dvec3 vel)
+	RK4Derivative(glm::dvec3 pos, glm::dvec3 delta)
 	{
-		this->pos; this->vel = vel;
+		this->pos; this->delta = delta;
 	}
 
 	RK4Derivative()
@@ -62,11 +62,18 @@ public:
 	// Computes instantaneous gravitational force at a given point
 	// Mass of second object is assumed to be extremely small compared to the
 	// planetary body, but we could implement it too.
-	glm::dvec3 computeForce(glm::dvec3 pos);
+	glm::dvec3 compute_force(glm::dvec3 pos);
+
+	glm::dvec3 compute_force_at(glm::dvec3 pos, double t0);
 
 	// timewarp is the ammount of seconds we fit in one real second,
 	// dt is the ammount of seconds that passes since last call to simulate
 	void simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method);
+
+	// Propagates a newton state
+	// Always uses velocity verlet because it's the most appropiate method for this
+	// kind of operation.
+	NewtonState simulate_static(double dt, double t0, NewtonState st);
 
 	// Can't throw as there are no fatal errors, invalid data is discarded
 	void deserialize(std::string data);
