@@ -87,8 +87,11 @@ public:
 	// Orbit properties, only defined on bodies with a parent
 	double eccentricity, smajor_axis, inclination, asc_node, arg_periapsis, true_anomaly;
 
-	NewtonState to_state_at(double true_anom, bool fast = true) const;
-	NewtonState to_state(bool fast = true) const;
+	NewtonState to_state_at(double true_anom, double time, bool fast = true) const;
+	NewtonState to_state(double time, bool fast = true) const;
+	// Gets the state assuming the object has its parent at (0, 0, 0), used by the orbit drawer
+	NewtonState to_state_origin(double true_anom) const;
+
 	NewtonState state_from_mean(double mean) const;
 	double mean_to_eccentric(double mean, double tol) const;
 	double mean_to_true(double mean_anomaly, double tol = 1.0e-14) const;

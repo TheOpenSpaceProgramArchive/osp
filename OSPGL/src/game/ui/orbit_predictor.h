@@ -66,8 +66,11 @@ struct ReferenceFrame
 struct PredictorSettings
 {
 	double past_points_time = 86400 * 10;
-	double future_points_time = 86400 * 1;
+	double future_points_time = 86400 * 10;
 	double predictor_dt = 1;
+
+	// Only points every [x] are rendered
+	int future_precision = 1000;
 };
 
 class OrbitPredictor

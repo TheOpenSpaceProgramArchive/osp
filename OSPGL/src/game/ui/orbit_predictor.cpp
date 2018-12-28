@@ -36,23 +36,26 @@ static void def_predictor(OrbitPredictor* owner)
 
 	
 		// Clear old points
-		size_t i;
-		for (i = 0; i < owner->def_future.size(); i++)
+		if (owner->def_future.size() > 2)
 		{
-			if (owner->def_future[i].t <= owner->system->time)
+			size_t i;
+			for (i = 0; i < owner->def_future.size(); i++)
 			{
-				break;
+				if (owner->def_future[i].t >= owner->system->time)
+				{
+					break;
+				}
 			}
-		}
 
-		owner->mtx.lock();
-		// pop i elements
-		for (size_t j = 0; j < i; j++)
-		{
-			owner->def_future.pop_front();
-		}
+			owner->mtx.lock();
+			// pop elements
+			for (size_t j = 0; j < i; j++)
+			{
+				owner->def_future.pop_front();
+			}
 
-		owner->mtx.unlock();
+			owner->mtx.unlock();
+		}
 	}
 
 	return;
@@ -72,8 +75,12 @@ void OrbitPredictor::update_mesh()
 	Vertex prev;
 	prev.pos = glm::vec3(0, 0, 0);
 	mtx.lock();
-	for (size_t i = 0; i < def_future.size(); i++)
+	for (size_t i = 0; i < def_future.size(); i+= def_predictor_sets.future_precision)
 	{
+		if (i > def_future.size() - 1)
+		{
+			i = def_future.size() - 1;
+		}
 		float perc = (float)i / (float)def_future.size();
 
 		glm::dvec3 p = def_frame.transform(def_future[i].pos, def_future[i].t);

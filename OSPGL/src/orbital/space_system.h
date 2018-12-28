@@ -68,7 +68,7 @@ public:
 
 	// timewarp is the ammount of seconds we fit in one real second,
 	// dt is the ammount of seconds that passes since last call to simulate
-	void simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method);
+	void simulate(float timewarp, float dt, double* t, NewtonBody::SolverMethod method);
 
 	// Propagates a newton state
 	// Always uses velocity verlet because it's the most appropiate method for this

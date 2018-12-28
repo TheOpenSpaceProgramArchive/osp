@@ -6,7 +6,7 @@ struct PosPack
 	double r;
 };
 
-static PosPack to_pos(double mass, const SpaceBody* o, double true_anom)
+static PosPack to_pos(double mass, const SpaceBody* o, double true_anom, double time, bool ignore_parent = false)
 {
 	PosPack out;
 
@@ -32,9 +32,11 @@ static PosPack to_pos(double mass, const SpaceBody* o, double true_anom)
 
 	out.r = r;
 
-	if (o->parent != NULL)
+	if (o->parent != NULL && !ignore_parent)
 	{
-		out.pos += o->parent->last_state.pos;
+		//out.pos += o->parent->last_state.pos;
+		double tr = o->parent->mean_to_true(o->parent->time_to_mean(time));
+		out.pos += o->parent->to_state_at(tr, time).pos;
 	}
 
 	return out;
@@ -43,7 +45,7 @@ static PosPack to_pos(double mass, const SpaceBody* o, double true_anom)
 
 
 
-NewtonState SpaceBody::to_state_at(double true_anom, bool fast) const
+NewtonState SpaceBody::to_state_at(double true_anom, double time, bool fast) const
 {
 	NewtonState out;
 	if (parent == NULL)
@@ -70,13 +72,13 @@ NewtonState SpaceBody::to_state_at(double true_anom, bool fast) const
 
 
 
-	PosPack cur = to_pos(mass + parent->mass, this, true_anom);
+	PosPack cur = to_pos(mass + parent->mass, this, true_anom, time);
 
 	out.pos = cur.pos;
 
 	if (!fast)
 	{
-		glm::dvec3 next = to_pos(mass + parent->mass, this, true_anom + 1e-11).pos;
+		glm::dvec3 next = to_pos(mass + parent->mass, this, true_anom + 1e-11, time).pos;
 
 		double vel = sqrt(G * (mass + parent->mass) * ((2.0 / cur.r) - (1.0 / smajor_axis)));
 
@@ -88,9 +90,42 @@ NewtonState SpaceBody::to_state_at(double true_anom, bool fast) const
 	return out;
 }
 
-NewtonState SpaceBody::to_state(bool fast) const
+
+NewtonState SpaceBody::to_state(double time, bool fast) const
 {
-	return to_state_at(true_anomaly, fast);
+	return to_state_at(true_anomaly, time, fast);
+}
+
+NewtonState SpaceBody::to_state_origin(double true_anom) const
+{
+	NewtonState out;
+	if (parent == NULL)
+	{
+		NewtonState st;
+		st.pos = glm::vec3(0, 0, 0);
+		return st;
+	}
+	// Sanity checks
+	if (eccentricity < 0.0)
+	{
+		throw("Invalid orbital data");
+	}
+
+	if (eccentricity < 1.0 && smajor_axis < 0)
+	{
+		throw("Invalid orbital data");
+	}
+
+	if (eccentricity >= 1.0 && smajor_axis > 0)
+	{
+		throw("Invalid orbital data");
+	}
+
+	PosPack cur = to_pos(mass + parent->mass, this, true_anom, 0.0, true);
+
+	out.pos = cur.pos;
+
+	return out;
 }
 
 NewtonState SpaceBody::state_from_mean(double mean) const

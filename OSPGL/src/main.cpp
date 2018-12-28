@@ -147,13 +147,13 @@ int main()
 	const GLubyte *ver = glGetString(GL_VERSION);
 	log->info("OpenGL version: {}", ver);
 
-	float t = 0.0f;
+	double t = 0.0f;
 
 	glm::vec3 v_point;
 
 	DebugDraw debug_draw;
 
-	std::string system_data = FileUtil::load_file("res/systems/earth.txt");
+	std::string system_data = FileUtil::load_file("res/systems/earth_moon.txt");
 
 	SpaceSystem system;
 	system.deserialize(system_data);

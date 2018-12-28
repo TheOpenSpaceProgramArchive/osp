@@ -4,8 +4,6 @@ static void generate_mesh(SpaceBody* body, PlanetOrbitPack* target)
 {
 	std::vector<float> out;
 
-	double or_true = body->true_anomaly;
-
 	size_t v_count = ORBIT_VIEW_PRECISION;
 
 	if (body->smajor_axis > AU)
@@ -17,10 +15,8 @@ static void generate_mesh(SpaceBody* body, PlanetOrbitPack* target)
 	for (size_t i = 0; i <= v_count; i++)
 	{
 		double true_an = ((double)i / (double)v_count) * 360.0;
-		
-		body->true_anomaly = glm::radians(true_an);
 
-		NewtonState state = body->to_state();
+		NewtonState state = body->to_state_origin(glm::radians(true_an));
 		glm::vec3 pos = state.pos / ORBIT_VIEW_SCALE;
 
 		if (prev_pos.x == 0 && prev_pos.y == 0 && prev_pos.z == 0)

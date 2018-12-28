@@ -26,7 +26,7 @@ glm::dvec3 SpaceSystem::compute_force_at(glm::dvec3 pos, double t0)
 	for (size_t i = 0; i < bodies.size(); i++)
 	{
 		double true_anom = bodies[i]->mean_to_true(bodies[i]->time_to_mean(t0));
-		glm::dvec3 body_pos = bodies[i]->to_state_at(true_anom).pos;
+		glm::dvec3 body_pos = bodies[i]->to_state_at(true_anom, t0).pos;
 		double dist = glm::distance(pos, body_pos);
 		double intensity = bodies[i]->mass / (dist * dist);
 		intensity *= G;
@@ -44,7 +44,7 @@ RK4Derivative rk4_compute(SpaceSystem* sys, glm::dvec3 cur_pos, glm::dvec3 cur_v
 }
 
 
-void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::SolverMethod method)
+void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::SolverMethod method)
 {
 	int loops = timewarp / dt;
 	double realDelta = dt;
@@ -55,7 +55,7 @@ void SpaceSystem::simulate(float timewarp, float dt, float* t, NewtonBody::Solve
 		for (size_t j = 0; j < bodies.size(); j++)
 		{
 			bodies[j]->true_anomaly = bodies[j]->mean_to_true(bodies[j]->time_to_mean(time));
-			bodies[j]->last_state = bodies[j]->to_state();
+			bodies[j]->last_state = bodies[j]->to_state(time);
 		}
 
 		for (size_t j = 0; j < newton_bodies.size(); j++)
