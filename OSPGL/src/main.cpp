@@ -153,14 +153,14 @@ int main()
 
 	DebugDraw debug_draw;
 
-	std::string system_data = FileUtil::load_file("res/systems/earth.txt");
+	std::string system_data = FileUtil::load_file("res/systems/earth_moon.txt");
 
 	SpaceSystem system;
 	system.deserialize(system_data);
 
 	NewtonBody newton;
-	newton.state.pos = glm::dvec3(384399000 / 1.1f, 0, 0);
-	newton.state.delta = glm::dvec3(0, 0, 1400);
+	newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 1.1f);
+	newton.state.delta = glm::dvec3(3700, 0, 300);
 
 	system.newton_bodies.push_back(&newton);
 
@@ -170,6 +170,7 @@ int main()
 
 	OrbitPredictor predictor = OrbitPredictor(&system);
 	predictor.def_frame.center = system.bodies[0];
+	predictor.show_ui = true;
 
 	glfwSetScrollCallback(window, &glfw_scrollwheel_callback);
 

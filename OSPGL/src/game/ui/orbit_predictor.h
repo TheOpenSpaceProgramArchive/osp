@@ -100,10 +100,13 @@ public:
 
 	std::mutex mtx;
 	std::deque<OrbitSnapshot> def_past;
+	bool def_future_clear;
 	std::deque<OrbitSnapshot> def_future;
 	std::thread* def_thread;
 
 	std::unordered_map<size_t, OrbitSegment> segments;
+
+	bool show_ui = false;
 
 	// Closes all threads
 	void close_threads();

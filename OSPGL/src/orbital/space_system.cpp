@@ -126,7 +126,7 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 NewtonState SpaceSystem::simulate_static(double dt, double t0, NewtonState st)
 {
 	NewtonState copy = st;
-	glm::dvec3 force = compute_force(copy.pos) * dt;
+	glm::dvec3 force = compute_force_at(copy.pos, t0) * dt;
 	copy.add_force(force);
 	copy.pos += copy.delta * dt;
 
@@ -403,12 +403,73 @@ std::string SpaceSystem::serialize()
 	return out;
 }
 
+
+std::vector<std::string> SpaceSystem::get_all_ids()
+{
+	std::vector<std::string> out = get_kepler_ids();
+
+	std::vector<std::string> newtons = get_newton_ids();
+	out.insert(out.end(), newtons.begin(), newtons.end());
+
+	return out;
+}
+
+std::vector<std::string> SpaceSystem::get_kepler_ids()
+{
+	std::vector<std::string> out;
+
+	for (size_t i = 0; i < bodies.size(); i++)
+	{
+		out.push_back(bodies[i]->id);
+	}
+
+	return out;
+}
+
+std::vector<std::string> SpaceSystem::get_newton_ids()
+{
+	std::vector<std::string> out;
+
+	for (size_t i = 0; i < bodies.size(); i++)
+	{
+		out.push_back(bodies[i]->id);
+	}
+
+	return out;
+}
+
+SpaceBody* SpaceSystem::find_body(std::string id)
+{
+	for (size_t i = 0; i < bodies.size(); i++)
+	{
+		if (bodies[i]->id == id)
+		{
+			return bodies[i];
+		}
+	}
+
+	return NULL;
+}
+
+NewtonBody * SpaceSystem::find_newton(std::string id)
+{
+	for (size_t i = 0; i < newton_bodies.size(); i++)
+	{
+		if (newton_bodies[i]->id == id)
+		{
+			return newton_bodies[i];
+		}
+	}
+
+	return NULL;
+}
+
 SpaceSystem::SpaceSystem()
 {
-	plot = MultiPlot();
-	plot.create_plot("energy", glm::vec3(1.0, 0.0, 0.0));
-	plot.create_plot("kinetic", glm::vec3(0.0, 1.0, 0.0));
-	plot.create_plot("potential", glm::vec3(0.4, 0.4, 1.0));
+//	plot = MultiPlot();
+//	plot.create_plot("energy", glm::vec3(1.0, 0.0, 0.0));
+//	plot.create_plot("kinetic", glm::vec3(0.0, 1.0, 0.0));
+//	plot.create_plot("potential", glm::vec3(0.4, 0.4, 1.0));
 }
 
 

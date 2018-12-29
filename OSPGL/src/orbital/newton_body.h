@@ -9,6 +9,8 @@ class NewtonBody
 {
 public:
 
+	std::string id;
+
 	enum SolverMethod
 	{
 		EULER,

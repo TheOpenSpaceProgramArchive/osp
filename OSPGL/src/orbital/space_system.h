@@ -83,6 +83,17 @@ public:
 	// Always works
 	std::string serialize();
 
+	// Gets the IDs of every thing in the system
+	std::vector<std::string> get_all_ids();
+	// Gets the IDs of every planetary body in the system
+	std::vector<std::string> get_kepler_ids();
+	// Gets the IDs of every vessel (newton body) in the system
+	std::vector<std::string> get_newton_ids();
+
+	SpaceBody* find_body(std::string id);
+
+	NewtonBody* find_newton(std::string id);
+
 	SpaceSystem();
 	~SpaceSystem();
 };
