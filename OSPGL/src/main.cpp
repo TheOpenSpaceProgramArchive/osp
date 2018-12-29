@@ -97,6 +97,15 @@ int main()
 		return -1;
 	}
 
+	GLFWimage* img;
+	img = new GLFWimage();
+	
+	int ch;
+	unsigned char* data = stbi_load("res/icon.png", &img->width, &img->height, &ch, 4);
+	img->pixels = data;
+
+	glfwSetWindowIcon(window, 1, img);
+
 	glfwMakeContextCurrent(window);
 
 	// Load OpenGL function pointers
@@ -161,6 +170,8 @@ int main()
 	NewtonBody newton;
 	newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 1.1f);
 	newton.state.delta = glm::dvec3(3700, 0, 300);
+	//newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 3.0f);
+	//newton.state.delta = glm::dvec3(3700, 0, 300);
 
 	system.newton_bodies.push_back(&newton);
 

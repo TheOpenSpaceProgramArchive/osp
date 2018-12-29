@@ -84,13 +84,13 @@ void OrbitPredictor::update_mesh()
 		{
 			i = def_future.size() - 1;
 		}
-		float perc = (float)i / (float)def_future.size();
+		float perc = 1.0f - ((float)i / (float)def_future.size());
 
 		glm::dvec3 p = def_frame.transform(def_future[i].pos, def_future[i].t);
 
 		Vertex vert;
 		vert.pos = p * 10e-9;
-		vert.col = glm::vec3(perc * 0.5f + 0.5f, perc * 0.1f + 0.1f, perc * 0.1f + 0.1f);
+		vert.col = glm::vec3(perc * 0.6f + 0.4f, perc * 0.1f + 0.1f, perc * 0.1f + 0.1f);
 		if (prev.pos == glm::vec3(0, 0, 0))
 		{
 			prev.pos = vert.pos;
@@ -169,9 +169,11 @@ void OrbitPredictor::draw(glm::mat4 view, glm::mat4 proj)
 
 		float past_time = def_predictor_sets.past_points_time / 86400;
 		float future_time = def_predictor_sets.future_points_time / 86400;
+		//float precision = def_predictor_sets.predictor_dt;
 
 		ImGui::DragFloat("Past Time", &past_time, 0.2f, 0.0f, 0.0f, "%.2f days");
 		ImGui::DragFloat("Future Time", &future_time, 0.2f, 0.0f, 0.0f, "%.2f days");
+		//ImGui::DragFloat("Precision", &precision, 0.1f);
 
 		if (def_future.size() == 0)
 		{
@@ -179,7 +181,9 @@ void OrbitPredictor::draw(glm::mat4 view, glm::mat4 proj)
 		}
 		else
 		{
+			mtx.lock();
 			ImGui::Text("Predicted: %f days", (def_future[def_future.size() - 1].t - system->time) / 86400);
+			mtx.unlock();
 		}
 
 		if (past_time < 0.2f)
@@ -192,8 +196,19 @@ void OrbitPredictor::draw(glm::mat4 view, glm::mat4 proj)
 			future_time = 0.2f;
 		}
 
+		/*if (precision < 0.1f)
+		{
+			precision = 0.1f;
+		}
+
+		if (precision > 100.0f)
+		{
+			precision = 100.0f;
+		}*/
+
 		def_predictor_sets.past_points_time = past_time * 86400;
 		def_predictor_sets.future_points_time = future_time * 86400;
+		//def_predictor_sets.predictor_dt = precision;
 
 		ImGui::Separator();
 		ImGui::Text("Frame of Reference:");

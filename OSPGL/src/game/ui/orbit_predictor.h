@@ -55,7 +55,8 @@ struct ReferenceFrame
 	// with the inertial frame?
 	bool rotating;
 	// If this is non-null rotating will be ignored and
-	// 
+	// the frame of reference will rotate to
+	// the line joining center and aligned
 	SpaceBody* aligned;
 
 
