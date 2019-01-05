@@ -154,7 +154,8 @@ static std::string serialize_body(SpaceBody* body)
 	{
 		out += body->parent->id; out += ";";
 	}
-	
+
+	out += std::to_string(body->radius); out += ";";
 	out += std::to_string(body->mass); out += ";";
 	out += std::to_string(body->smajor_axis); out += ";";
 	out += std::to_string(body->inclination); out += ";";
@@ -266,23 +267,24 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 		// Kepler Body
 		std::vector<std::string> data = break_chunk(chunk);
 
-		if (data.size() != 9)
+		if (data.size() != 10)
 		{
 			spdlog::get("OSP")->warn("[Deserialize Error] (line: {}): Invalid kepler body datasize", line);
 			return;
 		}
 
 		SpaceBody* body = new SpaceBody();
-		double mass, smajor_axis, inclination, asc_node, arg_periapsis, eccentricity, true_anomaly;
+		double radius, mass, smajor_axis, inclination, asc_node, arg_periapsis, eccentricity, true_anomaly;
 		try
 		{
-			mass = deserialize_double(data[2]);
-			smajor_axis = deserialize_double(data[3]);
-			inclination = deserialize_double(data[4]);
-			asc_node = deserialize_double(data[5]);
-			arg_periapsis = deserialize_double(data[6]);
-			eccentricity = deserialize_double(data[7]);
-			true_anomaly = deserialize_double(data[8]);
+			radius = deserialize_double(data[2]);
+			mass = deserialize_double(data[3]);
+			smajor_axis = deserialize_double(data[4]);
+			inclination = deserialize_double(data[5]);
+			asc_node = deserialize_double(data[6]);
+			arg_periapsis = deserialize_double(data[7]);
+			eccentricity = deserialize_double(data[8]);
+			true_anomaly = deserialize_double(data[9]);
 		}
 		catch (int)
 		{
@@ -291,6 +293,7 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 
 		body->id = data[0];
 		body->parent_id = data[1];
+		body->radius = radius;
 		body->mass = mass;
 		body->smajor_axis = smajor_axis;
 		body->inclination = inclination;

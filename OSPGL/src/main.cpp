@@ -151,7 +151,7 @@ int main()
 
 	glm::mat4 view = glm::mat4();
 	view = glm::lookAt(glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+	glm::mat4 proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.01f, 2000.0f);
 
 
 	const GLubyte *ver = glGetString(GL_VERSION);

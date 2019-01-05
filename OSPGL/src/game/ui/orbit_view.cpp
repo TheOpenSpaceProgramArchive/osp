@@ -56,13 +56,23 @@ OrbitView::OrbitView(const SpaceSystem* system)
 {
 	for (size_t i = 0; i < system->bodies.size(); i++)
 	{
-		if (system->bodies[i]->parent != NULL)
-		{
+		//if (system->bodies[i]->parent != NULL)
+		//{
 			PlanetOrbitPack pack;
-			generate_mesh(system->bodies[i], &pack);
+			if (system->bodies[i]->parent != NULL)
+			{
+				generate_mesh(system->bodies[i], &pack);
+			}
 			pack.body = system->bodies[i];
+			pack.mesh = new DCubeSphere();
+			std::string str = "res/cmaps/" + system->bodies[i]->id;
+			pack.mesh->load_cubemap(str);
+			pack.mesh->generate_base();
+
 			planets.push_back(pack);
-		}
+			
+
+		//}
 	}
 
 	view_pos_abs = glm::vec3(1.0, 0, 0);
@@ -122,6 +132,12 @@ void OrbitView::draw()
 		glDrawArrays(GL_LINES, 0, planets[i].vert_count);
 
 		glBindVertexArray(0);
+
+		float radius_scale = (planets[i].body->radius) / 10e7;
+
+		planets[i].mesh->model = glm::translate(glm::mat4(), (glm::vec3)(planets[i].body->last_state.pos / 10e7));
+		planets[i].mesh->model = glm::scale(planets[i].mesh->model, glm::vec3(radius_scale, radius_scale, radius_scale));
+		planets[i].mesh->draw(view, proj);
 	}
 
 	d_shader->setmat4("model", glm::mat4());

@@ -114,6 +114,8 @@ public:
 	// Generates base LODs
 	void generate_base();
 
+	glm::mat4 model;
+
 	virtual void draw(glm::mat4 view, glm::mat4 proj) override;
 
 	void launch_worker();

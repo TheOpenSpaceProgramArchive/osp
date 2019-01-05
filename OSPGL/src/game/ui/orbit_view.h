@@ -1,7 +1,7 @@
 #pragma once
 #include "../../render/renderlow/drawables/dmodel.h"
 #include "../../orbital/space_system.h"
-
+#include "../../render/renderlow/drawables/dcubesphere.h"
 
 // Minimum number of vertices to generate for an orbit, later multiplied by scale
 #define ORBIT_VIEW_PRECISION 360
@@ -25,6 +25,7 @@ struct PlanetOrbitPack
 	GLuint vbo, vao;
 	size_t vert_count;
 	SpaceBody* body;
+	DCubeSphere* mesh;
 };
 
 

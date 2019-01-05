@@ -4,192 +4,193 @@
 
 void RocketEngine::imgui_draw()
 {
-	ImGui::Begin("De-Laval Nozzle");
-
-
-	ImGui::Text("Radius:");
-	ImGui::Columns(3);
-	ImGui::SliderFloat("Inlet", &nozzle.inlet_radius, 0.1f, 100.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Throat", &nozzle.throat_radius, 0.1f, 100.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Outlet", &nozzle.outlet_radius, 0.1f, 100.0f);
-	ImGui::EndColumns();
-
-	ImGui::Text("Length:");
-	ImGui::Columns(2);
-	ImGui::SliderFloat("Inlet##", &nozzle.inlet_length, 0.1f, 100.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Outlet##", &nozzle.outlet_length, 0.1f, 100.0f);
-	ImGui::EndColumns();
-
-	ImGui::Text("Slope:");
-	ImGui::Columns(3);
-	ImGui::SliderFloat("Inlet###", &nozzle.inlet_slope, -30.0f, 0.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Throat###", &nozzle.throat_slope, 0.0f, 30.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Outlet###", &nozzle.outlet_slope, -10.0f, 30.0f);
-	ImGui::EndColumns();
-
-	ImGui::Text("Propellant Properties");
-	ImGui::Columns(3);
-	ImGui::SliderFloat("Pressure", &inlet_p, 0.0f, 100.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Temperature", &inlet_t, 0.0f, 10000.0f);
-	ImGui::NextColumn();
-	ImGui::SliderFloat("Adiabatic", &propellant_k, 1.01f, 4.5f);
-	ImGui::EndColumns();
-
-	ImGui::Separator();
-	const char* items[] = { "Mach Number", "Pressure", "Temperature"};
-	ImGui::ListBox("Preview Type", &item, items, 3);
-	ImGui::Text("Preview: ");
-
-
-	ImGuiWindow* window = ImGui::GetCurrentWindow();
-	const ImRect frame_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x, window->DC.CursorPos.y));
-	
-
-	std::vector<NozzleData> data;
-	for (float x = 0.0f; x < nozzle.outlet_length + nozzle.inlet_length; x += 0.1f)
+	if (ImGui::Begin("De-Laval Nozzle"))
 	{
-		NozzleData dat = nozzle.simulate(inlet_p, inlet_t, propellant_k, x);
-		data.push_back(dat);
-	}
 
-	float max_radius = -1.0f;
-	float max_temp = -1.0f;
-	float max_pres = -1.0f;
-	float max_mach = -1.0f;
 
-	for (size_t i = 0; i < data.size(); i++)
-	{
-		if (data[i].mach > max_mach)
+		ImGui::Text("Radius:");
+		ImGui::Columns(3);
+		ImGui::SliderFloat("Inlet", &nozzle.inlet_radius, 0.1f, 100.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Throat", &nozzle.throat_radius, 0.1f, 100.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Outlet", &nozzle.outlet_radius, 0.1f, 100.0f);
+		ImGui::EndColumns();
+
+		ImGui::Text("Length:");
+		ImGui::Columns(2);
+		ImGui::SliderFloat("Inlet##", &nozzle.inlet_length, 0.1f, 100.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Outlet##", &nozzle.outlet_length, 0.1f, 100.0f);
+		ImGui::EndColumns();
+
+		ImGui::Text("Slope:");
+		ImGui::Columns(3);
+		ImGui::SliderFloat("Inlet###", &nozzle.inlet_slope, -30.0f, 0.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Throat###", &nozzle.throat_slope, 0.0f, 30.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Outlet###", &nozzle.outlet_slope, -10.0f, 30.0f);
+		ImGui::EndColumns();
+
+		ImGui::Text("Propellant Properties");
+		ImGui::Columns(3);
+		ImGui::SliderFloat("Pressure", &inlet_p, 0.0f, 100.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Temperature", &inlet_t, 0.0f, 10000.0f);
+		ImGui::NextColumn();
+		ImGui::SliderFloat("Adiabatic", &propellant_k, 1.01f, 4.5f);
+		ImGui::EndColumns();
+
+		ImGui::Separator();
+		const char* items[] = { "Mach Number", "Pressure", "Temperature" };
+		ImGui::ListBox("Preview Type", &item, items, 3);
+		ImGui::Text("Preview: ");
+
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		const ImRect frame_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x, window->DC.CursorPos.y));
+
+
+		std::vector<NozzleData> data;
+		for (float x = 0.0f; x < nozzle.outlet_length + nozzle.inlet_length; x += 0.1f)
 		{
-			max_mach = data[i].mach;
+			NozzleData dat = nozzle.simulate(inlet_p, inlet_t, propellant_k, x);
+			data.push_back(dat);
 		}
-		if (data[i].temp > max_temp)
+
+		float max_radius = -1.0f;
+		float max_temp = -1.0f;
+		float max_pres = -1.0f;
+		float max_mach = -1.0f;
+
+		for (size_t i = 0; i < data.size(); i++)
 		{
-			max_temp = data[i].temp;
-		}
-		if (data[i].radius > max_radius)
-		{
-			max_radius = data[i].radius;
-		}
-		if (data[i].pres > max_pres)
-		{
-			max_pres = data[i].pres;
-		}
-
-	}
-
-	float mid_cord = max_radius * 2.5f;
-	float graph_height = 128.0f;
-
-	float prev_y_graph = 0.0f;
-
-	// Draw graph skeleton
-	ImVec2 g0 = ImVec2(frame_bb.Min.x, frame_bb.Min.y + mid_cord * 2.0f);
-	ImVec2 g1 = ImVec2(frame_bb.Min.x + data.size(), frame_bb.Min.y + mid_cord * 2.0f + graph_height);
-	window->DrawList->AddRect(g0, g1, ImColor(0.4f, 0.4f, 0.4f));
-
-	ImVec2 pp0 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
-	ImVec2 pp1 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
-
-	ImVec2 mouse = ImGui::GetMousePos();
-
-	for (size_t i = 0; i < data.size(); i++)
-	{
-		float x_scl = i;
-		float y_cord = mid_cord - data[i].radius * 2.0f;
-		float yy_cord = mid_cord + data[i].radius * 2.0f;
-		ImVec2 p0 = ImVec2(x_scl + frame_bb.Min.x, y_cord + frame_bb.Min.y);
-		ImVec2 p1 = ImVec2(x_scl + frame_bb.Min.x + 1.0f, yy_cord + frame_bb.Min.y);
-		ImColor col;
-		if (item == 0)
-		{
-			// We use two colors, blue for subsonic flow and red for supersonic
-			// flow so the engine can be more intuitive
-			if (data[i].mach < 1.0)
+			if (data[i].mach > max_mach)
 			{
-				col = ImColor(0.0f, data[i].mach * 0.5f, data[i].mach, 1.0f);
+				max_mach = data[i].mach;
+			}
+			if (data[i].temp > max_temp)
+			{
+				max_temp = data[i].temp;
+			}
+			if (data[i].radius > max_radius)
+			{
+				max_radius = data[i].radius;
+			}
+			if (data[i].pres > max_pres)
+			{
+				max_pres = data[i].pres;
+			}
+
+		}
+
+		float mid_cord = max_radius * 2.5f;
+		float graph_height = 128.0f;
+
+		float prev_y_graph = 0.0f;
+
+		// Draw graph skeleton
+		ImVec2 g0 = ImVec2(frame_bb.Min.x, frame_bb.Min.y + mid_cord * 2.0f);
+		ImVec2 g1 = ImVec2(frame_bb.Min.x + data.size(), frame_bb.Min.y + mid_cord * 2.0f + graph_height);
+		window->DrawList->AddRect(g0, g1, ImColor(0.4f, 0.4f, 0.4f));
+
+		ImVec2 pp0 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
+		ImVec2 pp1 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
+
+		ImVec2 mouse = ImGui::GetMousePos();
+
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			float x_scl = i;
+			float y_cord = mid_cord - data[i].radius * 2.0f;
+			float yy_cord = mid_cord + data[i].radius * 2.0f;
+			ImVec2 p0 = ImVec2(x_scl + frame_bb.Min.x, y_cord + frame_bb.Min.y);
+			ImVec2 p1 = ImVec2(x_scl + frame_bb.Min.x + 1.0f, yy_cord + frame_bb.Min.y);
+			ImColor col;
+			if (item == 0)
+			{
+				// We use two colors, blue for subsonic flow and red for supersonic
+				// flow so the engine can be more intuitive
+				if (data[i].mach < 1.0)
+				{
+					col = ImColor(0.0f, data[i].mach * 0.5f, data[i].mach, 1.0f);
+				}
+				else
+				{
+					col = ImColor((data[i].mach / max_mach), 0.5f, 1.0f - (data[i].mach / max_mach), 1.0f);
+				}
+
+			}
+			else if (item == 1)
+			{
+				col = ImColor((data[i].pres / max_pres), 0.2f, 0.5f, 1.0f);
 			}
 			else
 			{
-				col = ImColor((data[i].mach / max_mach), 0.5f, 1.0f - (data[i].mach / max_mach), 1.0f);
+				col = ImColor((data[i].temp / max_temp), 0.2f, 0.5f, 1.0f);
 			}
-			
-		}
-		else if (item == 1)
-		{
-			col = ImColor((data[i].pres / max_pres), 0.2f, 0.5f, 1.0f);
-		}
-		else
-		{
-			col = ImColor((data[i].temp / max_temp), 0.2f, 0.5f, 1.0f);
-		}
-		
 
-		if ((mouse.x < p1.x && mouse.y < p1.y && mouse.x >= p0.x && mouse.y >= p0.y)
-			|| (mouse.y >= g0.y && mouse.y < g1.y && mouse.x >= p0.x && mouse.x < p1.x))
-		{
-			ImGui::BeginTooltip();
-			ImGui::Text("Mach: %f", data[i].mach);
-			ImGui::Text("Pressure: %fMPa", data[i].pres);
-			ImGui::Text("Temperature: %fK", data[i].temp);
-			ImGui::Text("Radius: %fm", data[i].radius);
-			ImGui::EndTooltip();
 
-			// Draw Graph selector
-			//col = ImColor(1.0f - col.Value.x, 1.0f - col.Value.y, 1.0f - col.Value.z);
-			col = ImColor(1.0f, 0.7f, 0.7f);
+			if ((mouse.x < p1.x && mouse.y < p1.y && mouse.x >= p0.x && mouse.y >= p0.y)
+				|| (mouse.y >= g0.y && mouse.y < g1.y && mouse.x >= p0.x && mouse.x < p1.x))
+			{
+				ImGui::BeginTooltip();
+				ImGui::Text("Mach: %f", data[i].mach);
+				ImGui::Text("Pressure: %fMPa", data[i].pres);
+				ImGui::Text("Temperature: %fK", data[i].temp);
+				ImGui::Text("Radius: %fm", data[i].radius);
+				ImGui::EndTooltip();
 
-			ImVec2 gl0 = ImVec2(x_scl + g0.x, g0.y);
-			ImVec2 gl1 = ImVec2(x_scl + g0.x, g1.y);
-			window->DrawList->AddLine(gl0, gl1, ImColor(1.0f, 0.7f, 0.7f));
+				// Draw Graph selector
+				//col = ImColor(1.0f - col.Value.x, 1.0f - col.Value.y, 1.0f - col.Value.z);
+				col = ImColor(1.0f, 0.7f, 0.7f);
+
+				ImVec2 gl0 = ImVec2(x_scl + g0.x, g0.y);
+				ImVec2 gl1 = ImVec2(x_scl + g0.x, g1.y);
+				window->DrawList->AddLine(gl0, gl1, ImColor(1.0f, 0.7f, 0.7f));
+			}
+			window->DrawList->AddRectFilled(p0, p1, col);
+			window->DrawList->AddLine(pp0, p0, ImColor(1.0f, 1.0f, 1.0f), 2.0f);
+			window->DrawList->AddLine(pp1, ImVec2(p1.x - 1.0f, p1.y), ImColor(1.0f, 1.0f, 1.0f), 2.0f);
+
+			// Draw small graph underneath
+			float y_graph = 0.0f;
+			if (item == 0)
+			{
+				y_graph = data[i].mach / max_mach;
+			}
+			else if (item == 1)
+			{
+				y_graph = data[i].pres / max_pres;
+			}
+			else
+			{
+				y_graph = data[i].temp / max_temp;
+			}
+			y_graph *= graph_height;
+
+			ImVec2 l0 = ImVec2(x_scl - 1.0f + g0.x, g1.y - prev_y_graph);
+			ImVec2 l1 = ImVec2(x_scl + g0.x, g1.y - y_graph);
+			window->DrawList->AddLine(l0, l1, ImColor(0.8f, 0.8f, 0.8f));
+
+			prev_y_graph = y_graph;
+			pp0 = p0;
+			pp1 = ImVec2(p1.x - 1.0f, p1.y);
 		}
-		window->DrawList->AddRectFilled(p0, p1, col);
-		window->DrawList->AddLine(pp0, p0, ImColor(1.0f, 1.0f, 1.0f), 2.0f);
-		window->DrawList->AddLine(pp1, ImVec2(p1.x - 1.0f, p1.y), ImColor(1.0f, 1.0f, 1.0f), 2.0f);
 
-		// Draw small graph underneath
-		float y_graph = 0.0f;
+
+
 		if (item == 0)
 		{
-			y_graph = data[i].mach / max_mach;
+			// Draw Mach1 Line
+			float y = 1.0f / max_mach;
+			y *= graph_height;
+			window->DrawList->AddLine(ImVec2(g0.x, g1.y - y), ImVec2(g1.x, g1.y - y), ImColor(1.0f, 0.0f, 0.0f));
 		}
-		else if (item == 1)
-		{
-			y_graph = data[i].pres / max_pres;
-		}
-		else
-		{
-			y_graph = data[i].temp / max_temp;
-		}
-		y_graph *= graph_height;
 
-		ImVec2 l0 = ImVec2(x_scl - 1.0f + g0.x, g1.y - prev_y_graph);
-		ImVec2 l1 = ImVec2(x_scl + g0.x, g1.y - y_graph);
-		window->DrawList->AddLine(l0, l1, ImColor(0.8f, 0.8f, 0.8f));
 
-		prev_y_graph = y_graph;
-		pp0 = p0;
-		pp1 = ImVec2(p1.x - 1.0f, p1.y);
 	}
-
-
-
-	if (item == 0)
-	{
-		// Draw Mach1 Line
-		float y = 1.0f / max_mach;
-		y *= graph_height;
-		window->DrawList->AddLine(ImVec2(g0.x, g1.y - y), ImVec2(g1.x, g1.y - y), ImColor(1.0f, 0.0f, 0.0f));
-	}
-
-
-
 	ImGui::End();
 }
 

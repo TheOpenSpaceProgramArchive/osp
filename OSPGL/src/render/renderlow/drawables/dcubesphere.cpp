@@ -174,7 +174,7 @@ void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)
 	g_shader->use();
 
 	// Set uniforms
-	g_shader->setmat4("model", glm::mat4());
+	g_shader->setmat4("model", model);
 	g_shader->setmat4("view", view);
 	g_shader->setmat4("proj", proj);
 

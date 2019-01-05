@@ -81,6 +81,9 @@ public:
 	// Polar (north) vector of the planet. Used to get the equatorial plane
 	glm::dvec3 polar;
 
+	// Radius in meters 
+	double radius;
+
 	// Radius of the sphere of influence in meters
 	double soi;
 
