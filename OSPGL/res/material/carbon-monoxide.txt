@@ -1,0 +1,2 @@
+name: Carbon Monoxide
+desc: A toxic gas usually produced via not-complete combustion

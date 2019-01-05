@@ -1,0 +1,8 @@
+name: Water
+desc: Distilled water of very high purity
+formula: H2O
+density: 1
+cost: 0.01
+melting: 273.15
+boiling: 373.15
+heat: 4184

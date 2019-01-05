@@ -1,0 +1,8 @@
+name: Nitromethane
+desc: A nitrated form of methane, usually produced via the nitration of propane using nitric acid in gaseous form. Useful as a monopropellant.
+formula: CH3NO2
+density: 1.1371
+cost: 0.01
+melting: 244.77
+boiling: 374.34
+heat: 4184

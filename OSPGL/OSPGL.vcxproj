@@ -121,6 +121,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp" />
+    <ClCompile Include="src\game\vessel\part.cpp" />
     <ClCompile Include="src\game\ui\orbit_predictor.cpp" />
     <ClCompile Include="src\util\gui\multi_plot.cpp" />
     <ClCompile Include="src\util\types\gradients.cpp" />
@@ -148,6 +150,10 @@
     <ClCompile Include="src\render\renderlow\transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\game\vessel\material\material.h" />
+    <ClInclude Include="src\game\vessel\engine\rocket_engine.h" />
+    <ClInclude Include="src\game\vessel\material\reaction.h" />
+    <ClInclude Include="src\game\vessel\part.h" />
     <ClInclude Include="src\game\ui\orbit_predictor.h" />
     <ClInclude Include="src\util\gui\multi_plot.h" />
     <ClInclude Include="src\game\ui\orbit_view.h" />
@@ -496,6 +502,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\cmaps\CREDITS.txt" />
+    <Text Include="res\material\carbon-monoxide.txt" />
+    <Text Include="res\material\nitromethane.txt" />
+    <Text Include="res\material\reaction\nitromethane-monoprop.txt" />
+    <Text Include="res\material\water.txt" />
     <Text Include="res\systems\earth.txt" />
     <Text Include="res\systems\earth_moon.txt" />
   </ItemGroup>

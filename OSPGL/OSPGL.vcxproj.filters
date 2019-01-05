@@ -90,6 +90,12 @@
     <ClCompile Include="src\game\ui\orbit_predictor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game\vessel\part.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -731,6 +737,18 @@
     <ClInclude Include="src\game\ui\orbit_predictor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\game\vessel\part.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\vessel\engine\rocket_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\vessel\material\material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\vessel\material\reaction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl">
@@ -1108,5 +1126,9 @@
     <Text Include="res\cmaps\CREDITS.txt" />
     <Text Include="res\systems\earth_moon.txt" />
     <Text Include="res\systems\earth.txt" />
+    <Text Include="res\material\water.txt" />
+    <Text Include="res\material\nitromethane.txt" />
+    <Text Include="res\material\reaction\nitromethane-monoprop.txt" />
+    <Text Include="res\material\carbon-monoxide.txt" />
   </ItemGroup>
 </Project>
