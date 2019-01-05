@@ -37,9 +37,12 @@ struct Nozzle
 class RocketEngine
 {
 private:
-	int item;
+	int item = 0;
 public:
 
+	float propellant_k = 1.8f;
+	float inlet_t = 3000.0f;
+	float inlet_p = 2.0f;
 
 
 	Nozzle nozzle;

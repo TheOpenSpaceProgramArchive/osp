@@ -6,9 +6,44 @@ void RocketEngine::imgui_draw()
 {
 	ImGui::Begin("De-Laval Nozzle");
 
+
+	ImGui::Text("Radius:");
+	ImGui::Columns(3);
+	ImGui::SliderFloat("Inlet", &nozzle.inlet_radius, 0.1f, 100.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Throat", &nozzle.throat_radius, 0.1f, 100.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Outlet", &nozzle.outlet_radius, 0.1f, 100.0f);
+	ImGui::EndColumns();
+
+	ImGui::Text("Length:");
+	ImGui::Columns(2);
+	ImGui::SliderFloat("Inlet##", &nozzle.inlet_length, 0.1f, 100.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Outlet##", &nozzle.outlet_length, 0.1f, 100.0f);
+	ImGui::EndColumns();
+
+	ImGui::Text("Slope:");
+	ImGui::Columns(3);
+	ImGui::SliderFloat("Inlet###", &nozzle.inlet_slope, -30.0f, 0.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Throat###", &nozzle.throat_slope, 0.0f, 30.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Outlet###", &nozzle.outlet_slope, -10.0f, 30.0f);
+	ImGui::EndColumns();
+
+	ImGui::Text("Propellant Properties");
+	ImGui::Columns(3);
+	ImGui::SliderFloat("Pressure", &inlet_p, 0.0f, 100.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Temperature", &inlet_t, 0.0f, 10000.0f);
+	ImGui::NextColumn();
+	ImGui::SliderFloat("Adiabatic", &propellant_k, 1.01f, 4.5f);
+	ImGui::EndColumns();
+
+	ImGui::Separator();
 	const char* items[] = { "Mach Number", "Pressure", "Temperature"};
 	ImGui::ListBox("Preview Type", &item, items, 3);
-	ImGui::Separator();
 	ImGui::Text("Preview: ");
 
 
@@ -19,7 +54,7 @@ void RocketEngine::imgui_draw()
 	std::vector<NozzleData> data;
 	for (float x = 0.0f; x < nozzle.outlet_length + nozzle.inlet_length; x += 0.1f)
 	{
-		NozzleData dat = nozzle.simulate(1.0f, 1.0f, 3.0f, x);
+		NozzleData dat = nozzle.simulate(inlet_p, inlet_t, propellant_k, x);
 		data.push_back(dat);
 	}
 
@@ -59,6 +94,11 @@ void RocketEngine::imgui_draw()
 	ImVec2 g1 = ImVec2(frame_bb.Min.x + data.size(), frame_bb.Min.y + mid_cord * 2.0f + graph_height);
 	window->DrawList->AddRect(g0, g1, ImColor(0.4f, 0.4f, 0.4f));
 
+	ImVec2 pp0 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
+	ImVec2 pp1 = ImVec2(frame_bb.Min.x, mid_cord + frame_bb.Min.y);
+
+	ImVec2 mouse = ImGui::GetMousePos();
+
 	for (size_t i = 0; i < data.size(); i++)
 	{
 		float x_scl = i;
@@ -69,18 +109,49 @@ void RocketEngine::imgui_draw()
 		ImColor col;
 		if (item == 0)
 		{
-			col = ImColor(data[i].mach * 1.0f, 0.5f, 0.5f, 1.0f);
+			// We use two colors, blue for subsonic flow and red for supersonic
+			// flow so the engine can be more intuitive
+			if (data[i].mach < 1.0)
+			{
+				col = ImColor(0.0f, data[i].mach * 0.5f, data[i].mach, 1.0f);
+			}
+			else
+			{
+				col = ImColor((data[i].mach / max_mach), 0.5f, 1.0f - (data[i].mach / max_mach), 1.0f);
+			}
+			
 		}
 		else if (item == 1)
 		{
-			col = ImColor(data[i].pres * 1.0f, 0.5f, 0.5f, 1.0f);
+			col = ImColor((data[i].pres / max_pres), 0.2f, 0.5f, 1.0f);
 		}
 		else
 		{
-			col = ImColor(data[i].temp * 1.0f, 0.5f, 0.5f, 1.0f);
+			col = ImColor((data[i].temp / max_temp), 0.2f, 0.5f, 1.0f);
 		}
 		
+
+		if ((mouse.x < p1.x && mouse.y < p1.y && mouse.x >= p0.x && mouse.y >= p0.y)
+			|| (mouse.y >= g0.y && mouse.y < g1.y && mouse.x >= p0.x && mouse.x < p1.x))
+		{
+			ImGui::BeginTooltip();
+			ImGui::Text("Mach: %f", data[i].mach);
+			ImGui::Text("Pressure: %fMPa", data[i].pres);
+			ImGui::Text("Temperature: %fK", data[i].temp);
+			ImGui::Text("Radius: %fm", data[i].radius);
+			ImGui::EndTooltip();
+
+			// Draw Graph selector
+			//col = ImColor(1.0f - col.Value.x, 1.0f - col.Value.y, 1.0f - col.Value.z);
+			col = ImColor(1.0f, 0.7f, 0.7f);
+
+			ImVec2 gl0 = ImVec2(x_scl + g0.x, g0.y);
+			ImVec2 gl1 = ImVec2(x_scl + g0.x, g1.y);
+			window->DrawList->AddLine(gl0, gl1, ImColor(1.0f, 0.7f, 0.7f));
+		}
 		window->DrawList->AddRectFilled(p0, p1, col);
+		window->DrawList->AddLine(pp0, p0, ImColor(1.0f, 1.0f, 1.0f), 2.0f);
+		window->DrawList->AddLine(pp1, ImVec2(p1.x - 1.0f, p1.y), ImColor(1.0f, 1.0f, 1.0f), 2.0f);
 
 		// Draw small graph underneath
 		float y_graph = 0.0f;
@@ -103,6 +174,8 @@ void RocketEngine::imgui_draw()
 		window->DrawList->AddLine(l0, l1, ImColor(0.8f, 0.8f, 0.8f));
 
 		prev_y_graph = y_graph;
+		pp0 = p0;
+		pp1 = ImVec2(p1.x - 1.0f, p1.y);
 	}
 
 
@@ -178,6 +251,10 @@ static double mach_area_eval_lhs(double area, double choke_area, double ad, doub
 
 static float mach_area_relation_solve(float area, float choke_area, float ad, bool super_sonic, float tol = 0.05f)
 {
+	if (area < choke_area)
+	{
+		return 0.0f;
+	}
 	float sol = 0.0f;
 
 	bool exit = false;
@@ -231,7 +308,7 @@ static float mach_area_relation_solve(float area, float choke_area, float ad, bo
 		p = -(c / slope);
 
 		it++;
-		if (it > 1000)
+		if (it > 10000)
 		{
 			exit = true;
 		}
