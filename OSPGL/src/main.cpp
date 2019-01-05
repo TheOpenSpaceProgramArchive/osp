@@ -31,6 +31,7 @@
 #include "game/ui/orbit_view.h"
 
 #include "game/ui/orbit_predictor.h"
+#include "game/vessel/engine/rocket_engine.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -189,6 +190,8 @@ int main()
 
 	float timewarp = 1000.0f;
 
+	RocketEngine engine;
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -223,6 +226,8 @@ int main()
 		orbit_view.draw();
 		predictor.draw(orbit_view.view, orbit_view.proj);
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
+
+		engine.imgui_draw();
 
 		// Finish
 		ImGui::Render();
