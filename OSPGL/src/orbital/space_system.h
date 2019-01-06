@@ -90,9 +90,13 @@ public:
 	// Gets the IDs of every vessel (newton body) in the system
 	std::vector<std::string> get_newton_ids();
 
-	SpaceBody* find_body(std::string id);
+	SpaceBody* find_body(std::string id) const;
 
-	NewtonBody* find_newton(std::string id);
+	NewtonBody* find_newton(std::string id) const;
+
+	// Finds the position of a body or newton body
+	// given id. Prioritized planetary bodies
+	glm::dvec3 find_pos(std::string id, bool no_error = false) const;
 
 	SpaceSystem();
 	~SpaceSystem();

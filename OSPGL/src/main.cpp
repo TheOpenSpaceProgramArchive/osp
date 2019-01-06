@@ -169,6 +169,7 @@ int main()
 	system.deserialize(system_data);
 
 	NewtonBody newton;
+	newton.id = "Mark I";
 	newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 1.1f);
 	newton.state.delta = glm::dvec3(3700, 0, 300);
 	//newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 3.0f);
@@ -196,7 +197,6 @@ int main()
 	{
 
 
-		orbit_view.update(window, 0.005f);
 
 
 		v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
@@ -220,6 +220,8 @@ int main()
 
 		system.draw_debug_data(&debug_draw, 10e-9);
 
+
+		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);
 		debug_draw.draw(orbit_view.view, orbit_view.proj);
 

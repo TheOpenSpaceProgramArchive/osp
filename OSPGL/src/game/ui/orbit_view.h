@@ -45,8 +45,11 @@ private:
 
 	void update_inputs(GLFWwindow* win, float dt);
 
+	const SpaceSystem* sys;
 
 public:
+
+	std::string focus;
 
 	std::vector<PlanetOrbitPack> planets;
 

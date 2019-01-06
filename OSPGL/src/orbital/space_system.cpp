@@ -441,7 +441,7 @@ std::vector<std::string> SpaceSystem::get_newton_ids()
 	return out;
 }
 
-SpaceBody* SpaceSystem::find_body(std::string id)
+SpaceBody* SpaceSystem::find_body(std::string id) const
 {
 	for (size_t i = 0; i < bodies.size(); i++)
 	{
@@ -454,7 +454,7 @@ SpaceBody* SpaceSystem::find_body(std::string id)
 	return NULL;
 }
 
-NewtonBody * SpaceSystem::find_newton(std::string id)
+NewtonBody* SpaceSystem::find_newton(std::string id) const
 {
 	for (size_t i = 0; i < newton_bodies.size(); i++)
 	{
@@ -465,6 +465,28 @@ NewtonBody * SpaceSystem::find_newton(std::string id)
 	}
 
 	return NULL;
+}
+
+glm::dvec3 SpaceSystem::find_pos(std::string id, bool no_error) const
+{
+	SpaceBody* as_sbody = find_body(id);
+	if (as_sbody == NULL)
+	{
+		NewtonBody* as_newton = find_newton(id);
+
+		if (as_newton == NULL)
+		{
+			if (!no_error)
+			{
+				spdlog::get("OSP")->warn("Tried to get position of invalid id: {}", id);
+			}
+			return glm::dvec3(0, 0, 0);
+		}
+
+		return as_newton->state.pos;
+	}
+
+	return as_sbody->last_state.pos;
 }
 
 SpaceSystem::SpaceSystem()

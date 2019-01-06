@@ -77,6 +77,8 @@ OrbitView::OrbitView(const SpaceSystem* system)
 
 	view_pos_abs = glm::vec3(1.0, 0, 0);
 	view_distance = 3.0f;
+
+	sys = system;
 }
 
 void OrbitView::update_inputs(GLFWwindow* win, float dt)
@@ -147,8 +149,10 @@ void OrbitView::update(GLFWwindow* win, float dt)
 {
 	update_inputs(win, dt);
 
+	glm::vec3 focus_point = glm::vec3(sys->find_pos(focus, true) / 10e7);
+
 	view_pos_abs = glm::vec3(cos(rot_x) * cos(rot_y), sin(rot_y), sin(rot_x) * cos(rot_y));
-	view = glm::lookAt(view_pos_abs * view_distance, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	view = glm::lookAt(view_pos_abs * view_distance + focus_point, focus_point, glm::vec3(0, 1, 0));
 
 	if (view_change_speed > 0.0f)
 	{
@@ -161,11 +165,51 @@ void OrbitView::update(GLFWwindow* win, float dt)
 
 
 	view_distance += view_change_speed * dt;
+	if (view_distance <= 0.1f)
+	{
+		view_distance = 0.1f;
+	}
 
-	if (std::abs(view_change_speed) <= 0.1f)
+	if (std::abs(view_change_speed) <= 2.0f)
 	{
 		view_change_speed = 0.0f;
 	}
+
+	if (focus == "")
+	{
+		focus = planets[0].body->id;
+	}
+
+
+	// Focus window
+	ImGui::Begin("View Focus");
+	ImGui::Text("Focus: %s", focus.c_str());
+
+	ImGui::Columns(2);
+	ImGui::Text("Bodies: ");
+	for (size_t i = 0; i < sys->bodies.size(); i++)
+	{
+		if (ImGui::Button(sys->bodies[i]->id.c_str()))
+		{
+			focus = sys->bodies[i]->id;
+		}
+	}
+
+	ImGui::NextColumn();
+	ImGui::Text("Vessels: ");
+
+	for (size_t i = 0; i < sys->newton_bodies.size(); i++)
+	{
+		if (ImGui::Button(sys->newton_bodies[i]->id.c_str()))
+		{
+			focus = sys->newton_bodies[i]->id;
+		}
+	}
+
+	ImGui::EndColumns();
+
+	ImGui::End();
+
 }
 
 OrbitView::~OrbitView()
