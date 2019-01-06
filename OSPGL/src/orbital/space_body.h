@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/geometric.hpp>
+#include "../util/defines.h"
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -36,6 +37,8 @@ struct NewtonState
 		dir = glm::normalize(force);
 		vel = glm::length(force);
 	}
+
+	double rotation;
 };
 
 /*
@@ -79,10 +82,16 @@ public:
 	// Mass of the body, must be given in kg
 	double mass;
 	// Polar (north) vector of the planet. Used to get the equatorial plane
-	glm::dvec3 polar;
+	glm::vec3 polar = glm::vec3(0, 1, 0);
 
 	// Radius in meters 
 	double radius;
+
+	// Starting rotation in degrees at time 0
+	double start_rotation;
+
+	// Rotation alongside polar in seconds per revolution
+	double rotation_speed;
 
 	// Radius of the sphere of influence in meters
 	double soi;

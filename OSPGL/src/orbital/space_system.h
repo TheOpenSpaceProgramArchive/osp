@@ -7,7 +7,7 @@
 #include "../render/renderlow/debug_draw.h"
 #include <sstream>
 #ifndef G
-#define G (6.67 * std::pow(10, -11))
+#define G (6.67 * 10e-11)
 #endif
 
 struct RK4Derivative

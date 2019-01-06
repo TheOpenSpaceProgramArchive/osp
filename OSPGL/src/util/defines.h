@@ -8,6 +8,8 @@
 #include <iostream>
 #include <rang.h>
 
+#include "../game/ui/ui_manager.h"
+
 class Shader;
 
 namespace spd = spdlog;
@@ -24,6 +26,7 @@ typedef unsigned int uint;
 
 extern Shader* g_shader;
 extern Shader* d_shader;
+extern UIManager ui_manager;
 
 extern double scroll_delta;
 

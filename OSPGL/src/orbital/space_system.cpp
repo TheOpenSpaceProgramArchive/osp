@@ -67,8 +67,8 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 
 		for (size_t j = 0; j < bodies.size(); j++)
 		{
-			bodies[j]->true_anomaly = bodies[j]->mean_to_true(bodies[j]->time_to_mean(time));
-			bodies[j]->last_state = bodies[j]->to_state(time);
+			bodies[j]->true_anomaly = bodies[j]->mean_to_true(bodies[j]->time_to_mean(time + realDelta * i));
+			bodies[j]->last_state = bodies[j]->to_state(time + realDelta * i);
 		}
 
 		for (size_t j = 0; j < newton_bodies.size(); j++)
@@ -119,6 +119,7 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 
 		*t += realDelta;
 		time += realDelta;
+		ui_manager.time = time;
 	}
 	
 }
@@ -156,6 +157,8 @@ static std::string serialize_body(SpaceBody* body)
 	}
 
 	out += std::to_string(body->radius); out += ";";
+	out += std::to_string(body->rotation_speed); out += ";";
+	out += std::to_string(body->start_rotation); out += ";";
 	out += std::to_string(body->mass); out += ";";
 	out += std::to_string(body->smajor_axis); out += ";";
 	out += std::to_string(body->inclination); out += ";";
@@ -267,24 +270,26 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 		// Kepler Body
 		std::vector<std::string> data = break_chunk(chunk);
 
-		if (data.size() != 10)
+		if (data.size() != 12)
 		{
 			spdlog::get("OSP")->warn("[Deserialize Error] (line: {}): Invalid kepler body datasize", line);
 			return;
 		}
 
 		SpaceBody* body = new SpaceBody();
-		double radius, mass, smajor_axis, inclination, asc_node, arg_periapsis, eccentricity, true_anomaly;
+		double radius, rotation_speed, start_rotation, mass, smajor_axis, inclination, asc_node, arg_periapsis, eccentricity, true_anomaly;
 		try
 		{
 			radius = deserialize_double(data[2]);
-			mass = deserialize_double(data[3]);
-			smajor_axis = deserialize_double(data[4]);
-			inclination = deserialize_double(data[5]);
-			asc_node = deserialize_double(data[6]);
-			arg_periapsis = deserialize_double(data[7]);
-			eccentricity = deserialize_double(data[8]);
-			true_anomaly = deserialize_double(data[9]);
+			rotation_speed = deserialize_double(data[3]);
+			start_rotation = deserialize_double(data[4]);
+			mass = deserialize_double(data[5]);
+			smajor_axis = deserialize_double(data[6]);
+			inclination = deserialize_double(data[7]);
+			asc_node = deserialize_double(data[8]);
+			arg_periapsis = deserialize_double(data[9]);
+			eccentricity = deserialize_double(data[10]);
+			true_anomaly = deserialize_double(data[11]);
 		}
 		catch (int)
 		{
@@ -294,7 +299,9 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 		body->id = data[0];
 		body->parent_id = data[1];
 		body->radius = radius;
-		body->mass = mass;
+		body->rotation_speed = rotation_speed;
+		body->start_rotation = start_rotation;
+		body->mass = mass * 5.9722 * 10e23; // Convert from earth masses to kg
 		body->smajor_axis = smajor_axis;
 		body->inclination = inclination;
 		body->asc_node = asc_node;

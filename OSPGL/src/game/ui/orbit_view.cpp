@@ -56,23 +56,18 @@ OrbitView::OrbitView(const SpaceSystem* system)
 {
 	for (size_t i = 0; i < system->bodies.size(); i++)
 	{
-		//if (system->bodies[i]->parent != NULL)
-		//{
-			PlanetOrbitPack pack;
-			if (system->bodies[i]->parent != NULL)
-			{
-				generate_mesh(system->bodies[i], &pack);
-			}
-			pack.body = system->bodies[i];
-			pack.mesh = new DCubeSphere();
-			std::string str = "res/cmaps/" + system->bodies[i]->id;
-			pack.mesh->load_cubemap(str);
-			pack.mesh->generate_base();
+		PlanetOrbitPack pack;
+		if (system->bodies[i]->parent != NULL)
+		{
+			generate_mesh(system->bodies[i], &pack);
+		}
+		pack.body = system->bodies[i];
+		pack.mesh = new DCubeSphere();
+		std::string str = "res/cmaps/" + system->bodies[i]->id;
+		pack.mesh->load_cubemap(str);
+		pack.mesh->generate_base();
 
-			planets.push_back(pack);
-			
-
-		//}
+		planets.push_back(pack);
 	}
 
 	view_pos_abs = glm::vec3(1.0, 0, 0);
@@ -96,12 +91,12 @@ void OrbitView::update_inputs(GLFWwindow* win, float dt)
 
 		if (rot_y >= PI / 2.0f)
 		{
-			rot_y = PI / 2.0f;
+			rot_y = PI / 2.0f - 0.01f;
 		}
 
 		if (rot_y <= -PI / 2.0f)
 		{
-			rot_y = -PI / 2.0f;
+			rot_y = -PI / 2.0f + 0.01f;
 		}
 	}
 	prev_mouse_x = mouse_x;
@@ -137,8 +132,11 @@ void OrbitView::draw()
 
 		float radius_scale = (planets[i].body->radius) / 10e7;
 
+
 		planets[i].mesh->model = glm::translate(glm::mat4(), (glm::vec3)(planets[i].body->last_state.pos / 10e7));
 		planets[i].mesh->model = glm::scale(planets[i].mesh->model, glm::vec3(radius_scale, radius_scale, radius_scale));
+		planets[i].mesh->model = glm::rotate(planets[i].mesh->model, 
+			glm::radians((float)planets[i].body->last_state.rotation), planets[i].body->polar);
 		planets[i].mesh->draw(view, proj);
 	}
 
@@ -182,33 +180,36 @@ void OrbitView::update(GLFWwindow* win, float dt)
 
 
 	// Focus window
-	ImGui::Begin("View Focus");
-	ImGui::Text("Focus: %s", focus.c_str());
-
-	ImGui::Columns(2);
-	ImGui::Text("Bodies: ");
-	for (size_t i = 0; i < sys->bodies.size(); i++)
+	if (ui_manager.orbit_focus)
 	{
-		if (ImGui::Button(sys->bodies[i]->id.c_str()))
+		ImGui::Begin("View Focus", &ui_manager.orbit_focus);
+		ImGui::Text("Focus: %s", focus.c_str());
+
+		ImGui::Columns(2);
+		ImGui::Text("Bodies: ");
+		for (size_t i = 0; i < sys->bodies.size(); i++)
 		{
-			focus = sys->bodies[i]->id;
+			if (ImGui::Button(sys->bodies[i]->id.c_str()))
+			{
+				focus = sys->bodies[i]->id;
+			}
 		}
-	}
 
-	ImGui::NextColumn();
-	ImGui::Text("Vessels: ");
+		ImGui::NextColumn();
+		ImGui::Text("Vessels: ");
 
-	for (size_t i = 0; i < sys->newton_bodies.size(); i++)
-	{
-		if (ImGui::Button(sys->newton_bodies[i]->id.c_str()))
+		for (size_t i = 0; i < sys->newton_bodies.size(); i++)
 		{
-			focus = sys->newton_bodies[i]->id;
+			if (ImGui::Button(sys->newton_bodies[i]->id.c_str()))
+			{
+				focus = sys->newton_bodies[i]->id;
+			}
 		}
+
+		ImGui::EndColumns();
+
+		ImGui::End();
 	}
-
-	ImGui::EndColumns();
-
-	ImGui::End();
 
 }
 

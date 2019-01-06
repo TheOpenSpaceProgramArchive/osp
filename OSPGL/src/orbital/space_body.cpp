@@ -18,7 +18,14 @@ static PosPack to_pos(double mass, const SpaceBody* o, double true_anom, double 
 		return out;
 	}
 
+	double pico = G * (o->parent->mass);
+
 	// Adjust for other parameters
+	ui_manager.true_anom = true_anom;
+	ui_manager.period = 2.0 * PI * sqrt((o->smajor_axis * o->smajor_axis * o ->smajor_axis) / pico);
+
+	double speed = sqrt(pico * (2.0 / r - 1.0 / o->smajor_axis));
+	speed = sqrt(pico / o->smajor_axis);
 
 	out.pos.x = cos(true_anom) * r;
 	out.pos.z = sin(true_anom) * r;
@@ -26,7 +33,7 @@ static PosPack to_pos(double mass, const SpaceBody* o, double true_anom, double 
 	// Arg.of.Periapsis
 	out.pos = glm::rotateY(out.pos, glm::radians(o->arg_periapsis));
 	// Inclination 
-	out.pos = glm::rotateX(out.pos, glm::radians(o->inclination));
+	out.pos = glm::rotateX(out.pos, glm::radians(o->inclination + 180.0));
 	// Ascending node
 	out.pos = glm::rotateY(out.pos, glm::radians(o->asc_node));
 
@@ -52,6 +59,7 @@ NewtonState SpaceBody::to_state_at(double true_anom, double time, bool fast) con
 	{
 		NewtonState st;
 		st.pos = glm::vec3(0, 0, 0);
+		st.rotation = start_rotation + (1.0 / rotation_speed) * time * 360;
 		return st;
 	}
 	// Sanity checks
@@ -75,6 +83,8 @@ NewtonState SpaceBody::to_state_at(double true_anom, double time, bool fast) con
 	PosPack cur = to_pos(mass + parent->mass, this, true_anom, time);
 
 	out.pos = cur.pos;
+	out.rotation = start_rotation + (1.0 / rotation_speed) * time * 360;
+
 
 	if (!fast)
 	{

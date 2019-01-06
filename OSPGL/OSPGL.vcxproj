@@ -121,6 +121,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game\ui\ui_manager.cpp" />
     <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp" />
     <ClCompile Include="src\game\vessel\part.cpp" />
     <ClCompile Include="src\game\ui\orbit_predictor.cpp" />
@@ -367,6 +368,7 @@
     <ClInclude Include="src\orbital\space_body.h" />
     <ClInclude Include="src\render\renderlow\transform.h" />
     <ClInclude Include="src\util\types\gradients.h" />
+    <ClInclude Include="src\game\ui\ui_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl" />
@@ -506,7 +508,6 @@
     <Text Include="res\material\nitromethane.txt" />
     <Text Include="res\material\reaction\nitromethane-monoprop.txt" />
     <Text Include="res\material\water.txt" />
-    <Text Include="res\systems\earth.txt" />
     <Text Include="res\systems\earth_moon.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

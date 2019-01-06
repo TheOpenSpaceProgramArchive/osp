@@ -151,89 +151,92 @@ void OrbitPredictor::draw(glm::mat4 view, glm::mat4 proj)
 
 	if (show_ui)
 	{
-		ImGui::Begin("Orbit Predictor Settings");
-
-		ImGui::SameLine();
-		if (ImGui::Button("Clear Past"))
+		if (ui_manager.orbit_plotter)
 		{
-			def_past.clear();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Clear Future"))
-		{
-			mtx.lock();
-			def_future.clear();
-			def_future_clear = true;
-			mtx.unlock();
-		}
+			ImGui::Begin("Orbit Predictor Settings", &ui_manager.orbit_plotter);
 
-		float past_time = def_predictor_sets.past_points_time / 86400;
-		float future_time = def_predictor_sets.future_points_time / 86400;
-		//float precision = def_predictor_sets.predictor_dt;
-
-		ImGui::DragFloat("Past Time", &past_time, 0.2f, 0.0f, 0.0f, "%.2f days");
-		ImGui::DragFloat("Future Time", &future_time, 0.2f, 0.0f, 0.0f, "%.2f days");
-		//ImGui::DragFloat("Precision", &precision, 0.1f);
-
-		if (def_future.size() == 0)
-		{
-			ImGui::Text("No prediction");
-		}
-		else
-		{
-			mtx.lock();
-			ImGui::Text("Predicted: %f days", (def_future[def_future.size() - 1].t - system->time) / 86400);
-			mtx.unlock();
-		}
-
-		if (past_time < 0.2f)
-		{
-			past_time = 0.2f;
-		}
-
-		if (future_time < 0.2f)
-		{
-			future_time = 0.2f;
-		}
-
-		/*if (precision < 0.1f)
-		{
-			precision = 0.1f;
-		}
-
-		if (precision > 100.0f)
-		{
-			precision = 100.0f;
-		}*/
-
-		def_predictor_sets.past_points_time = past_time * 86400;
-		def_predictor_sets.future_points_time = future_time * 86400;
-		//def_predictor_sets.predictor_dt = precision;
-
-		ImGui::Separator();
-		ImGui::Text("Frame of Reference:");
-
-		ImGui::BeginColumns("TEST", 2);
-		ImGui::Text("Center:");
-		for (size_t i = 0; i < system->bodies.size(); i++)
-		{
-			bool n = false;
-			if (def_frame.center == system->bodies[i])
+			ImGui::SameLine();
+			if (ImGui::Button("Clear Past"))
 			{
-				n = true;
+				def_past.clear();
 			}
-			ImGui::Checkbox(system->bodies[i]->id.c_str(), &n);
-			if (n == true)
+			ImGui::SameLine();
+			if (ImGui::Button("Clear Future"))
 			{
-				def_frame.center = system->bodies[i];
+				mtx.lock();
+				def_future.clear();
+				def_future_clear = true;
+				mtx.unlock();
 			}
+
+			float past_time = def_predictor_sets.past_points_time / 86400;
+			float future_time = def_predictor_sets.future_points_time / 86400;
+			//float precision = def_predictor_sets.predictor_dt;
+
+			ImGui::DragFloat("Past Time", &past_time, 0.2f, 0.0f, 0.0f, "%.2f days");
+			ImGui::DragFloat("Future Time", &future_time, 0.2f, 0.0f, 0.0f, "%.2f days");
+			//ImGui::DragFloat("Precision", &precision, 0.1f);
+
+			if (def_future.size() == 0)
+			{
+				ImGui::Text("No prediction");
+			}
+			else
+			{
+				mtx.lock();
+				ImGui::Text("Predicted: %f days", (def_future[def_future.size() - 1].t - system->time) / 86400);
+				mtx.unlock();
+			}
+
+			if (past_time < 0.2f)
+			{
+				past_time = 0.2f;
+			}
+
+			if (future_time < 0.2f)
+			{
+				future_time = 0.2f;
+			}
+
+			/*if (precision < 0.1f)
+			{
+				precision = 0.1f;
+			}
+
+			if (precision > 100.0f)
+			{
+				precision = 100.0f;
+			}*/
+
+			def_predictor_sets.past_points_time = past_time * 86400;
+			def_predictor_sets.future_points_time = future_time * 86400;
+			//def_predictor_sets.predictor_dt = precision;
+
+			ImGui::Separator();
+			ImGui::Text("Frame of Reference:");
+
+			ImGui::BeginColumns("TEST", 2);
+			ImGui::Text("Center:");
+			for (size_t i = 0; i < system->bodies.size(); i++)
+			{
+				bool n = false;
+				if (def_frame.center == system->bodies[i])
+				{
+					n = true;
+				}
+				ImGui::Checkbox(system->bodies[i]->id.c_str(), &n);
+				if (n == true)
+				{
+					def_frame.center = system->bodies[i];
+				}
+			}
+
+			ImGui::NextColumn();
+			ImGui::Text("Settings:");
+			ImGui::EndColumns();
+
+			ImGui::End();
 		}
-
-		ImGui::NextColumn();
-		ImGui::Text("Settings:");
-		ImGui::EndColumns();
-
-		ImGui::End();
 	}
 }
 

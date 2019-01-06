@@ -32,7 +32,7 @@
 
 #include "game/ui/orbit_predictor.h"
 #include "game/vessel/engine/rocket_engine.h"
-
+#include "game/ui/ui_manager.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -46,7 +46,7 @@ namespace spd = spdlog;
 
 Shader* g_shader = NULL;
 Shader* d_shader = NULL;
-
+UIManager ui_manager; 
 
 auto create_logger()
 {
@@ -170,8 +170,8 @@ int main()
 
 	NewtonBody newton;
 	newton.id = "Mark I";
-	newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 1.1f);
-	newton.state.delta = glm::dvec3(3700, 0, 300);
+	newton.state.pos = glm::dvec3(384399000 / 1000.6f, 0, -384399000 / 10.1f);
+	newton.state.delta = glm::dvec3(4370, 0, 300);
 	//newton.state.pos = glm::dvec3(384399000 / 100.6f, 0, -384399000 / 3.0f);
 	//newton.state.delta = glm::dvec3(3700, 0, 300);
 
@@ -207,7 +207,7 @@ int main()
 
 
 		// render
-		glClearColor(0.1f, 0.0f, 0.1f, 1.0f);
+		glClearColor(0.06f, 0.0f, 0.06f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		clock_t begin = clock();
@@ -220,6 +220,7 @@ int main()
 
 		system.draw_debug_data(&debug_draw, 10e-9);
 
+		ui_manager.draw();
 
 		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);

@@ -2,6 +2,7 @@
 #include "../../render/renderlow/drawables/dmodel.h"
 #include "../../orbital/space_system.h"
 #include "../../render/renderlow/drawables/dcubesphere.h"
+#include "../../util/defines.h"
 
 // Minimum number of vertices to generate for an orbit, later multiplied by scale
 #define ORBIT_VIEW_PRECISION 360

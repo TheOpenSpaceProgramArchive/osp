@@ -18,7 +18,7 @@ void main()
 {
 	vColor = aCol;
 	vTex = aTex;
-	vNormal = aNrm;
+	vNormal = mat3(transpose(inverse(model))) * aNrm;
 	vPos = vec3(model * vec4(aPos, 1.0));
 	gl_Position = proj * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
 
