@@ -121,6 +121,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dep\tiny_obj_loader.cpp" />
+    <ClCompile Include="src\render\renderlow\framebuffer.cpp" />
+    <ClCompile Include="src\game\ui\navball\navball.cpp" />
     <ClCompile Include="src\game\ui\ui_manager.cpp" />
     <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp" />
     <ClCompile Include="src\game\vessel\part.cpp" />
@@ -149,8 +152,12 @@
     <ClCompile Include="src\orbital\space_body.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\render\renderlow\transform.cpp" />
+    <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dep\tiny_obj_loader.h" />
+    <ClInclude Include="src\render\renderlow\framebuffer.h" />
+    <ClInclude Include="src\game\ui\navball\navball.h" />
     <ClInclude Include="src\game\vessel\material\material.h" />
     <ClInclude Include="src\game\vessel\engine\rocket_engine.h" />
     <ClInclude Include="src\game\vessel\material\reaction.h" />
@@ -369,6 +376,7 @@
     <ClInclude Include="src\render\renderlow\transform.h" />
     <ClInclude Include="src\util\types\gradients.h" />
     <ClInclude Include="src\game\ui\ui_manager.h" />
+    <ClInclude Include="src\render\renderlow\texture.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl" />
@@ -487,6 +495,10 @@
     <None Include="dep\glm\gtx\wrap.inl" />
     <None Include="res\shaders\debug.fs" />
     <None Include="res\shaders\debug.vs" />
+    <None Include="res\shaders\navball\navball.fs" />
+    <None Include="res\shaders\navball\navball.vs" />
+    <None Include="res\shaders\navball\navball_fbuffer.fs" />
+    <None Include="res\shaders\navball\navball_fbuffer.vs" />
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
     <None Include="res\shaders\sphere.fs" />

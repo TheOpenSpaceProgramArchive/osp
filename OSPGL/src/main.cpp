@@ -33,6 +33,7 @@
 #include "game/ui/orbit_predictor.h"
 #include "game/vessel/engine/rocket_engine.h"
 #include "game/ui/ui_manager.h"
+#include "game/ui/navball/navball.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -193,6 +194,8 @@ int main()
 
 	RocketEngine engine;
 
+	Navball navball;
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -222,6 +225,7 @@ int main()
 
 		ui_manager.draw();
 
+
 		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);
 		debug_draw.draw(orbit_view.view, orbit_view.proj);
@@ -230,7 +234,13 @@ int main()
 		predictor.draw(orbit_view.view, orbit_view.proj);
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
+
+		navball.draw_to_texture(glm::vec3(0.0f, 0.0f, 0.0f));
+		// Restore glViewport as we use a framebuffer
+		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
 		engine.imgui_draw();
+
 
 		// Finish
 		ImGui::Render();

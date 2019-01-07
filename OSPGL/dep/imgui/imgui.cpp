@@ -491,7 +491,7 @@ Note: Text input widget releases focus on "Return KeyDown", so the subsequent "R
 have 'io.WantCaptureKeyboard=false'. Depending on your application logic it may or not be inconvenient. You might want to track which key-downs
 were targeted for Dear ImGui, e.g. with an array of bool, and filter out the corresponding key-ups.)
 
-Q: How can I display an image? What is ImTextureID, how does it works?
+Q: How can I display an image? What is º, how does it works?
 A: Short explanation:
 - You may use functions such as ImGui::Image(), ImGui::ImageButton() or lower-level ImDrawList::AddImage() to emit draw calls that will use your own textures.
 - Actual textures are identified in a way that is up to the user/engine.

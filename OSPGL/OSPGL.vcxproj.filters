@@ -99,6 +99,18 @@
     <ClCompile Include="src\game\ui\ui_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game\ui\navball\navball.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderlow\framebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\tiny_obj_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderlow\texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -755,6 +767,18 @@
     <ClInclude Include="src\game\ui\ui_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\game\ui\navball\navball.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\framebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderlow\texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl">
@@ -1107,6 +1131,10 @@
     <None Include="res\shaders\planet.vs" />
     <None Include="res\shaders\debug.fs" />
     <None Include="res\shaders\debug.vs" />
+    <None Include="res\shaders\navball\navball_fbuffer.vs" />
+    <None Include="res\shaders\navball\navball.fs" />
+    <None Include="res\shaders\navball\navball.vs" />
+    <None Include="res\shaders\navball\navball_fbuffer.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\cmaps\earth\nx.png">
