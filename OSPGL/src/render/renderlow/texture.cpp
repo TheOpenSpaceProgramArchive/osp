@@ -2,6 +2,11 @@
 
 
 
+Texture::Texture(GLuint tex)
+{
+	this->texture = tex;
+}
+
 Texture::Texture(std::string path)
 {
 	glGenTextures(1, &texture);

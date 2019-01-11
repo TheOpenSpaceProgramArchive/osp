@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/geometric.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "../util/defines.h"
 
 #ifndef PI
@@ -38,7 +39,22 @@ struct NewtonState
 		vel = glm::length(force);
 	}
 
+	// Used by planets with a fixed axis of rotation
 	double rotation;
+
+	// Used by other stuff with no fixed axis of rotation
+	// RELATIVE TO INERTIAL FRAME
+	glm::quat quat_rot;
+
+	// Length of the vector indicates velocity
+	// (1 = 1 radian per second)
+	// Direction of the vector indicates axis of rotation
+	glm::vec3 angular_momentum;
+
+	NewtonState()
+	{
+		//quat_rot = glm::toQuat(glm::mat4());
+	}
 };
 
 /*

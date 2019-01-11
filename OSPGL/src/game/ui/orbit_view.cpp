@@ -74,6 +74,10 @@ OrbitView::OrbitView(const SpaceSystem* system)
 	view_distance = 3.0f;
 
 	sys = system;
+
+	vessel_indicator.load_from_obj("res/model/rocket_arrow.obj");
+	vessel_indicator.build_array();
+	vessel_indicator.upload();
 }
 
 void OrbitView::update_inputs(GLFWwindow* win, float dt)
@@ -138,6 +142,21 @@ void OrbitView::draw()
 		planets[i].mesh->model = glm::rotate(planets[i].mesh->model, 
 			glm::radians((float)planets[i].body->last_state.rotation), planets[i].body->polar);
 		planets[i].mesh->draw(view, proj);
+	}
+
+	for (size_t i = 0; i < sys->newton_bodies.size(); i++)
+	{
+		glm::mat4 model = glm::mat4();
+		model = glm::translate(model, (glm::vec3)(sys->newton_bodies[i]->state.pos / 10e7));
+		float model_scale = std::min(0.015f * std::powf(view_distance, 0.88f), 1.0f);
+		model = glm::scale(model, glm::vec3(model_scale, model_scale, model_scale));
+
+		model *= glm::toMat4(sys->newton_bodies[i]->state.quat_rot);
+
+		d_shader->setmat4("model", model);
+		glBindVertexArray(vessel_indicator.vao);
+		glDrawArrays(GL_TRIANGLES, 0, vessel_indicator.vertex_count);
+		glBindVertexArray(0);
 	}
 
 	d_shader->setmat4("model", glm::mat4());

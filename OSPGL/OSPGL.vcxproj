@@ -122,6 +122,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dep\tiny_obj_loader.cpp" />
+    <ClCompile Include="src\render\renderlow\drawables\dsprite.cpp" />
     <ClCompile Include="src\render\renderlow\framebuffer.cpp" />
     <ClCompile Include="src\game\ui\navball\navball.cpp" />
     <ClCompile Include="src\game\ui\ui_manager.cpp" />
@@ -156,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\tiny_obj_loader.h" />
+    <ClInclude Include="src\render\renderlow\drawables\dsprite.h" />
     <ClInclude Include="src\render\renderlow\framebuffer.h" />
     <ClInclude Include="src\game\ui\navball\navball.h" />
     <ClInclude Include="src\game\vessel\material\material.h" />
@@ -495,10 +497,10 @@
     <None Include="dep\glm\gtx\wrap.inl" />
     <None Include="res\shaders\debug.fs" />
     <None Include="res\shaders\debug.vs" />
+    <None Include="res\shaders\generic\sprite.fs" />
+    <None Include="res\shaders\generic\sprite.vs" />
     <None Include="res\shaders\navball\navball.fs" />
     <None Include="res\shaders\navball\navball.vs" />
-    <None Include="res\shaders\navball\navball_fbuffer.fs" />
-    <None Include="res\shaders\navball\navball_fbuffer.vs" />
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
     <None Include="res\shaders\sphere.fs" />

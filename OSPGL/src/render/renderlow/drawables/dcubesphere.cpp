@@ -161,12 +161,19 @@ void DCubeSphere::generate_base()
 	glm::vec4 full = glm::vec4(0.0, 0.0, 1.0, 1.0);
 	glm::vec4 null = glm::vec4(-1.0, -1.0, -1.0, -1.0);
 
-	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true, 96);
-	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false, 96);
-	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null, true, 96);
-	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null, false, 96);
-	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null, true, 96);
-	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null, false, 96);
+	size_t subdiv = 96; // 96 for a Release value, 32 loads faster in Debug
+
+#ifdef _DEBUG
+	subdiv = 32;
+#endif
+
+
+	generate_face(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), &rootx.mesh, &cubemap[0], 0, full, null, true, subdiv);
+	generate_face(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), &rooty.mesh, &cubemap[2], 2, full, null, false, subdiv);
+	generate_face(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), &rootz.mesh, &cubemap[4], 0, full, null, true, subdiv);
+	generate_face(glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), &rootmx.mesh, &cubemap[1], 1, full, null, false, subdiv);
+	generate_face(glm::vec3(0, -1, 0), glm::vec3(1, 0, 0), &rootmy.mesh, &cubemap[3], 0, full, null, true, subdiv);
+	generate_face(glm::vec3(0, 0, -1), glm::vec3(0, 0, 0), &rootmz.mesh, &cubemap[5], 1, full, null, false, subdiv);
 }
 
 void DCubeSphere::draw(glm::mat4 view, glm::mat4 proj)

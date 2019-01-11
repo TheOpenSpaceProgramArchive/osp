@@ -11,7 +11,7 @@ public:
 
 	GLuint texture;
 
-
+	Texture(GLuint tex);
 	Texture(std::string path);
 	~Texture();
 };

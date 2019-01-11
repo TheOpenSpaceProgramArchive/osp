@@ -17,6 +17,76 @@ void Mesh::destroy()
 	}
 }
 
+void Mesh::load_from_obj(std::string path)
+{
+	Logger log = spdlog::get("OSP");
+	// Load the navball mesh
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn;
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str());
+
+	if (!ret)
+	{
+		log->critical("Couldn't load model ({})", path);
+		return;
+	}
+
+	if (!err.empty())
+	{
+		log->warn("Error loading obj file: {}", err);
+	}
+
+	// Check data sanity
+	if (shapes.size() > 1)
+	{
+		log->critical("Invalid number of shapes in icosphere.obj");
+		return;
+	}
+
+	size_t index_offset = 0;
+	for (size_t f = 0; f < shapes[0].mesh.num_face_vertices.size(); f++)
+	{
+		int fv = shapes[0].mesh.num_face_vertices[f];
+
+		if (fv > 3)
+		{
+			log->critical("Non-Triangulated icosphere.obj");
+			return;
+		}
+
+		for (size_t v = 0; v < 3; v++)
+		{
+			Vertex vert;
+			tinyobj::index_t idx = shapes[0].mesh.indices[index_offset + v];
+			tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
+			tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
+			tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
+			tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
+			tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
+			tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
+			if (idx.texcoord_index > 0)
+			{
+				tinyobj::real_t ux = attrib.texcoords[2 * idx.texcoord_index + 0];
+				tinyobj::real_t uy = attrib.texcoords[2 * idx.texcoord_index + 1];
+				vert.uv.x = ux; vert.uv.y = uy;
+			}
+			
+
+			vert.pos.x = vx; vert.pos.y = vy; vert.pos.z = vz;
+			vert.nrm.x = nx; vert.nrm.y = ny; vert.nrm.z = nz;
+			vert.col = glm::vec3(1.0f, 1.0f, 1.0f);
+			// TODO: Read materials for color
+
+			vertices.push_back(vert);
+		}
+
+		index_offset += fv;
+	}
+}
+
 void Mesh::build_array()
 {
 	// For now simply place the positions

@@ -235,9 +235,12 @@ int main()
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
 
-		navball.draw_to_texture(glm::vec3(0.0f, 0.0f, 0.0f));
+		navball.draw_to_texture(system.newton_bodies[0]->state.quat_rot);
+
 		// Restore glViewport as we use a framebuffer
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+		navball.draw_to_screen(glm::ivec2(SCR_WIDTH, SCR_HEIGHT));
 
 		engine.imgui_draw();
 

@@ -3,12 +3,12 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "../../util/defines.h"
-
+#include <tiny_obj_loader.h>
 
 struct Vertex
 {
 	glm::vec3 pos;
-	glm::vec3 col;
+	glm::vec3 col = glm::vec3(1, 1, 1);
 	glm::vec3 nrm;
 	glm::vec2 uv;
 };
@@ -57,6 +57,8 @@ public:
 	void generate_normals(bool smooth = true, bool flip = false);
 
 	void destroy();
+
+	void load_from_obj(std::string path);
 
 	Mesh();
 	~Mesh();
