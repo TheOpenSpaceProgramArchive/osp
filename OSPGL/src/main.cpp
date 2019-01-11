@@ -221,7 +221,7 @@ int main()
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
-		system.draw_debug_data(&debug_draw, 10e-9);
+		system.draw_debug_data(&debug_draw, 10e7);
 
 		ui_manager.draw();
 
@@ -266,8 +266,6 @@ int main()
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_forward(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_right(), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_up(), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-
-		glm::dvec3 ang_mom = system.newton_bodies[0]->state.angular_momentum;
 
 		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);

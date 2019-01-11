@@ -127,6 +127,7 @@ void DebugDraw::draw(glm::mat4 view, glm::mat4 proj)
 
 
 	shader->use();
+	shader->setmat4("model", glm::mat4());
 	shader->setmat4("view", view);
 	shader->setmat4("proj", proj);
 
