@@ -225,6 +225,49 @@ int main()
 
 		ui_manager.draw();
 
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum -= system.newton_bodies[0]->state.get_up() * 0.000001;
+			system.newton_bodies[0]->state.angular_momentum += glm::vec3(0.0f, 0.0f, 1.0f) * 0.000001f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum += system.newton_bodies[0]->state.get_up() * 0.000001;
+			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(0.0f, 0.0f, 1.0f) * 0.000001f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum += system.newton_bodies[0]->state.get_right() * 0.000001;
+			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum -= system.newton_bodies[0]->state.get_right() * 0.000001;
+			system.newton_bodies[0]->state.angular_momentum += glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum -= system.newton_bodies[0]->state.get_forward() * 0.000001;ç
+			system.newton_bodies[0]->state.angular_momentum += glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		{
+			//system.newton_bodies[0]->state.angular_momentum += system.newton_bodies[0]->state.get_forward() * 0.000001;
+			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
+		}
+
+		glm::dvec3 pos = system.newton_bodies[0]->state.pos / 10e7;
+
+		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_forward(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_right(), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_up(), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+		glm::dvec3 ang_mom = system.newton_bodies[0]->state.angular_momentum;
 
 		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);

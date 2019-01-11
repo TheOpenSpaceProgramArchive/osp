@@ -24,7 +24,7 @@ void Navball::draw_to_texture(glm::quat rot)
 	view = glm::lookAt(glm::vec3(0.0f, view_distance, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.7f, 1.0f, 0.0f));
 	model = glm::mat4();
 	model = glm::scale(model, glm::vec3(scale, scale, scale));
-	model *= glm::toMat4(rot);
+	model *= glm::toMat4(glm::conjugate(rot));
 
 	fbuffer.bind();
 	fbuffer.set_viewport();

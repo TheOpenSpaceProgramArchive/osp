@@ -49,11 +49,36 @@ struct NewtonState
 	// Length of the vector indicates velocity
 	// (1 = 1 radian per second)
 	// Direction of the vector indicates axis of rotation
-	glm::vec3 angular_momentum;
+	glm::dvec3 angular_momentum;
 
-	NewtonState()
+
+	glm::dvec3 rotate_vec(glm::dvec3 vec, glm::quat quat)
 	{
-		//quat_rot = glm::toQuat(glm::mat4());
+		// Vector part
+		glm::dvec3 u = glm::dvec3(quat.x, quat.y, quat.z);
+		// Scalar part
+		double s = quat.w;
+
+		glm::dvec3 out = 2.0f * glm::dot(u, vec) * u + (s * s - dot(u, u)) * vec + 2.0f * s * cross(u, vec);
+
+		return out;
+	}
+
+	// These only make sense for vessels
+	// Forward is the nose of the vessel, by default y positive
+	glm::dvec3 get_forward()
+	{
+		return glm::normalize(rotate_vec(glm::vec3(0.0f, 1.0f, 0.0f), quat_rot));
+	}
+	// Right is the initially x-face of the vessel
+	glm::dvec3 get_right()
+	{
+		return glm::normalize(rotate_vec(glm::vec3(1.0f, 0.0f, 0.0f), quat_rot));
+	}
+	// Up is the initally z-face of the vessel
+	glm::dvec3 get_up()
+	{
+		return glm::normalize(rotate_vec(glm::vec3(0.0f, 0.0f, 1.0f), quat_rot));
 	}
 };
 

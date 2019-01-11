@@ -74,9 +74,8 @@ void SpaceSystem::simulate(float timewarp, float dt, double* t, NewtonBody::Solv
 		for (size_t j = 0; j < newton_bodies.size(); j++)
 		{
 			// Update rotation
-			newton_bodies[j]->state.angular_momentum = glm::vec3(glm::radians(90.0f) * 0.00001f, 0.0f, 0.0f);
 			glm::vec3 ang_mom = newton_bodies[j]->state.angular_momentum;
-			if (glm::length(ang_mom) > 0.00001f)
+			if (glm::length(ang_mom) > 0.0f)
 			{
 				newton_bodies[j]->state.quat_rot *= glm::angleAxis(glm::length(ang_mom) * (float)realDelta, glm::normalize(ang_mom));
 			}

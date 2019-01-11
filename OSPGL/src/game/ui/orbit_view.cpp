@@ -144,6 +144,9 @@ void OrbitView::draw()
 		planets[i].mesh->draw(view, proj);
 	}
 
+	g_shader->use();
+	g_shader->setmat4("view", view);
+	g_shader->setmat4("proj", proj);
 	for (size_t i = 0; i < sys->newton_bodies.size(); i++)
 	{
 		glm::mat4 model = glm::mat4();
@@ -153,13 +156,12 @@ void OrbitView::draw()
 
 		model *= glm::toMat4(sys->newton_bodies[i]->state.quat_rot);
 
-		d_shader->setmat4("model", model);
+		g_shader->setmat4("model", model);
 		glBindVertexArray(vessel_indicator.vao);
 		glDrawArrays(GL_TRIANGLES, 0, vessel_indicator.vertex_count);
 		glBindVertexArray(0);
 	}
 
-	d_shader->setmat4("model", glm::mat4());
 }
 
 void OrbitView::update(GLFWwindow* win, float dt)
