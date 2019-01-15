@@ -196,12 +196,10 @@ int main()
 
 	Navball navball;
 
+
+
 	while (!glfwWindowShouldClose(window))
 	{
-
-
-
-
 		v_point = glm::vec3(sin(t) * 6.8f, 3.0f, cos(t) * 6.8f);
 		//v_point = glm::vec3(0.1f, 4.0f, 0.1f);
 		ImGui_ImplOpenGL3_NewFrame();
@@ -215,9 +213,31 @@ int main()
 
 		clock_t begin = clock();
 
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		{
+
+			system.newton_bodies[0]->state.delta += system.newton_bodies[0]->state.get_forward();
+
+
+			predictor.thruster_clear_current += 0.01;
+			if (predictor.thruster_clear_current >= predictor.thruster_clear_time)
+			{
+				predictor.thruster_clear_current = 0;
+				predictor.mtx.lock();
+				predictor.def_future.clear();
+				predictor.def_future_clear = true;
+				predictor.mtx.unlock();
+			}
+
+			predictor.def_predictor_sets.predictor_dt = 10.0;
+		}
+		else
+		{
+			predictor.def_predictor_sets.predictor_dt = 1.0;
+		}
+
 		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::EULER);
 		predictor.update(timewarp * fixed_step, system.time, newton.state);
-
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
@@ -240,32 +260,39 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
 			//system.newton_bodies[0]->state.angular_momentum += system.newton_bodies[0]->state.get_right() * 0.000001;
-			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
+			system.newton_bodies[0]->state.angular_momentum += glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
 			//system.newton_bodies[0]->state.angular_momentum -= system.newton_bodies[0]->state.get_right() * 0.000001;
-			system.newton_bodies[0]->state.angular_momentum += glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
+			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(1.0f, 0.0f, 0.0f) * 0.000001f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		{
 			//system.newton_bodies[0]->state.angular_momentum -= system.newton_bodies[0]->state.get_forward() * 0.000001;ç
-			system.newton_bodies[0]->state.angular_momentum += glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
+			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		{
 			//system.newton_bodies[0]->state.angular_momentum += system.newton_bodies[0]->state.get_forward() * 0.000001;
-			system.newton_bodies[0]->state.angular_momentum -= glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
+			system.newton_bodies[0]->state.angular_momentum += glm::vec3(0.0f, 1.0f, 0.0f) * 0.000001f;
 		}
+		
+
+
 
 		glm::dvec3 pos = system.newton_bodies[0]->state.pos / 10e7;
 
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_forward(), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_right(), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 		debug_draw.add_line(pos, pos + system.newton_bodies[0]->state.get_up(), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		debug_draw.add_line(pos, pos + glm::dvec3(0.0, 1.0, 0.0), glm::vec4(0.0f, 0.4f, 0.0f, 1.0f));
+		debug_draw.add_line(pos, pos + glm::dvec3(1.0, 0.0, 0.0), glm::vec4(0.4f, 0.0f, 0.0f, 1.0f));
+		debug_draw.add_line(pos, pos + glm::dvec3(0.0, 0.0, 1.0), glm::vec4(0.0f, 0.0f, 0.4f, 1.0f));
+
 
 		orbit_view.update(window, 0.005f);
 		debug_draw.update(0.01f);
@@ -275,8 +302,9 @@ int main()
 		predictor.draw(orbit_view.view, orbit_view.proj);
 		//v_point = glm::vec3(sin(t - 1.3) * 1.8f, sin((t - 1.3) / 2.0f) * 9.0f, cos(t - 1.3) * 1.8f);
 
-
-		navball.draw_to_texture(system.newton_bodies[0]->state.quat_rot);
+		glm::quat prograde_rot = glm::conjugate(glm::toQuat(glm::lookAt(glm::vec3(0, 0, 0), (glm::vec3)glm::normalize(system.newton_bodies[0]->state.delta), 
+			glm::vec3(0.0f, 1.0f, 0.0f)))) * glm::angleAxis(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		navball.draw_to_texture(system.newton_bodies[0]->state.quat_rot, prograde_rot);
 
 		// Restore glViewport as we use a framebuffer
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);

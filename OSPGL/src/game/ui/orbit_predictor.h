@@ -68,7 +68,7 @@ struct PredictorSettings
 {
 	double past_points_time = 86400 * 10;
 	double future_points_time = 86400 * 10;
-	double predictor_dt = 1;
+	double predictor_dt = 10;
 
 	// Only points every [x] are rendered
 	int future_precision = 1000;
@@ -109,6 +109,9 @@ public:
 
 	bool show_ui = false;
 
+	double thruster_clear_time = 0.25;
+	double thruster_clear_current = 0;
+
 	// Closes all threads
 	void close_threads();
 	// Opens all threads
@@ -128,6 +131,13 @@ public:
 	// Called by space_system every "tick".
 	// dt is real dt, used to remove old points
 	void update(double dt, double t, NewtonState state);
+
+	// Forcefully predicts some steps, used to help the user
+	// when maneouvering, it's meant to be a relatively lower quality
+	// prediction as it would otherwise lag the game, but the user
+	// can choose it via the UI
+	// state is the vessel's state after applying acceleration
+	void force_predict(NewtonState state, size_t steps, double dt, double t);
 
 	// Updates the GPU mesh for both
 	// past and future.

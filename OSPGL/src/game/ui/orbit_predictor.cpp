@@ -320,6 +320,23 @@ void OrbitPredictor::update(double dt, double t, NewtonState state)
 	update_mesh();
 }
 
+void OrbitPredictor::force_predict(NewtonState state, size_t steps, double dt, double t)
+{
+	OrbitSnapshot prev;
+	prev.pos = state.pos;
+	prev.delta = state.delta;
+	prev.t = t;
+
+	def_future.push_back(prev);
+
+	for (size_t i = 0; i < steps; i++)
+	{
+		OrbitSnapshot next = simulate(prev, dt, system);
+		def_future.push_back(next);
+		prev = next;
+	}
+}
+
 
 glm::dvec3 ReferenceFrame::transform(glm::dvec3 inertial, double t)
 {

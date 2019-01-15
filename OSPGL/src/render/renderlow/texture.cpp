@@ -2,6 +2,11 @@
 
 
 
+glm::ivec2 Texture::get_size()
+{
+	return size;
+}
+
 Texture::Texture(GLuint tex)
 {
 	this->texture = tex;
@@ -37,6 +42,8 @@ Texture::Texture(std::string path)
 		spdlog::get("OSP")->error("Couldn't load texture");
 	}
 	stbi_image_free(data);
+
+	size = glm::ivec2(width, height);
 }
 
 

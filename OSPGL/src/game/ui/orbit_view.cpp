@@ -151,7 +151,7 @@ void OrbitView::draw()
 	{
 		glm::mat4 model = glm::mat4();
 		model = glm::translate(model, (glm::vec3)(sys->newton_bodies[i]->state.pos / 10e7));
-		float model_scale = std::min(0.015f * std::powf(view_distance, 0.88f), 1.0f);
+		float model_scale = std::min(0.020f * std::powf(view_distance, 0.88f), 1.0f);
 		model = glm::scale(model, glm::vec3(model_scale, model_scale, model_scale));
 
 		model *= glm::toMat4(sys->newton_bodies[i]->state.quat_rot);
