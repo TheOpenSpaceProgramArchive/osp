@@ -265,7 +265,6 @@ static float mach_area_relation_solve(float area, float choke_area, float ad, bo
 
 	size_t it = 0;
 
-	float delta;
 
 	// rhs is always 0 
 	// We do a newton method search for the solution

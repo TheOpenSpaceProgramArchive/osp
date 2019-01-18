@@ -1,6 +1,8 @@
 #pragma once
 #include <unordered_map>
 #include <imgui/imgui.h>
+#include <time.h>
+#include <string>
 
 // Simple class to unify central UI drawing
 class UIManager
@@ -12,9 +14,10 @@ public:
 	bool time_control = true;
 
 	bool de_laval_nozzle;
-	float time;
-	float true_anom;
-	float period;
+
+	float timewarp;
+	float prev_timewarp;
+	double time;
 
 	void draw();
 

@@ -49,7 +49,7 @@ static void generate_mesh(SpaceBody* body, PlanetOrbitPack* target)
 void OrbitView::glfw_scroll_callback(GLFWwindow* win, double xoffset, double yoffset)
 {
 	// We only care about yoffset
-	view_distance += yoffset * 10.0f;
+	view_distance += (float)yoffset * 10.0f;
 }
 
 OrbitView::OrbitView(const SpaceSystem* system)
@@ -106,7 +106,7 @@ void OrbitView::update_inputs(GLFWwindow* win, float dt)
 	prev_mouse_x = mouse_x;
 	prev_mouse_y = mouse_y;
 
-	view_change_speed -= scroll_delta * 9.0f;
+	view_change_speed -= (float)scroll_delta * 9.0f;
 }
 
 void OrbitView::draw()

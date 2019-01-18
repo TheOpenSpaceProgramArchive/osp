@@ -21,9 +21,6 @@ static PosPack to_pos(double mass, const SpaceBody* o, double true_anom, double 
 	double pico = G * (o->parent->mass);
 
 	// Adjust for other parameters
-	ui_manager.true_anom = true_anom;
-	ui_manager.period = 2.0 * PI * sqrt((o->smajor_axis * o->smajor_axis * o ->smajor_axis) / pico);
-
 	double speed = sqrt(pico * (2.0 / r - 1.0 / o->smajor_axis));
 	speed = sqrt(pico / o->smajor_axis);
 

@@ -190,13 +190,16 @@ int main()
 
 	bool logged = false;
 
-	float timewarp = 1000.0f;
+	ui_manager.timewarp = 1000.0f;
 
 	RocketEngine engine;
 
 	Navball navball;
 
 
+	float dt = 0.0f;
+	float physics_timer = 0.0f;
+	double prev_time = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -216,7 +219,7 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		{
 
-			system.newton_bodies[0]->state.delta += system.newton_bodies[0]->state.get_forward();
+			system.newton_bodies[0]->state.delta += system.newton_bodies[0]->state.get_forward() * 1.0;
 
 
 			predictor.thruster_clear_current += 0.01;
@@ -233,11 +236,26 @@ int main()
 		}
 		else
 		{
-			predictor.def_predictor_sets.predictor_dt = 1.0;
+			if (predictor.def_predictor_sets.predictor_dt == 10.0)
+			{
+				predictor.def_predictor_sets.predictor_dt = 1.0;
+				predictor.thruster_clear_current = 0;
+				predictor.mtx.lock();
+				predictor.def_future.clear();
+				predictor.def_future_clear = true;
+				predictor.mtx.unlock();
+			}
 		}
 
-		system.simulate(timewarp, fixed_step, &t, NewtonBody::SolverMethod::EULER);
-		predictor.update(timewarp * fixed_step, system.time, newton.state);
+		physics_timer += dt;
+		if (physics_timer >= 1.0f / ui_manager.timewarp)
+		{
+			system.simulate(ui_manager.timewarp, fixed_step, &t, NewtonBody::SolverMethod::EULER);
+			physics_timer = 0.0f;
+		}
+
+	
+		predictor.update(ui_manager.timewarp * fixed_step, system.time, newton.state);
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
@@ -329,6 +347,12 @@ int main()
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		double actual_time = glfwGetTime();
+		dt = (float)(actual_time - prev_time);
+		prev_time = actual_time;
+
+
 
 
 	}
