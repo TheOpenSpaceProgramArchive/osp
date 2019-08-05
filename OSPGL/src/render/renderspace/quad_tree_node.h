@@ -34,8 +34,12 @@ public:
 		SOUTH_EAST
 	};
 
+	// Can be in another side of the cube, so be careful
+	// North, East, South, West
+	QuadTreeNode* neighbors[4];
+
 	// Children
-	// Northwest, Northeast, Soutwest, SouthEast
+	// Northwest, Northeast, SoutWest, SouthEast
 	QuadTreeNode* children[4];
 
 	// Parent
@@ -48,7 +52,7 @@ public:
 	size_t depth;
 
 	// Returns true if split was possible
-	bool split();
+	bool split(bool get_neighbors = true);
 
 	// Merges all children, destroying them
 	bool merge();
@@ -61,6 +65,8 @@ public:
 	// the central function of the planet rendering system
 	QuadTreeNode* get_recursive(glm::dvec2 coord, size_t maxDepth);
 
+	glm::dvec2 get_center();
+
 	// Returns a equivalent to QuadTreeQuadrant if inside, -1 if outside
 	int get_quadrant(glm::dvec2 coord);
 
@@ -69,7 +75,13 @@ public:
 
 	void merge_all_but(QuadTreeNode* node);
 
+	void obtain_neighbors(QuadTreeQuadrant quad);
+
+	// Draws a "widget" of the subdivided quad tree nodes
+	void draw_gui(int guiSize, glm::dvec2 focusPoint, QuadTreeNode* onNode);
+
 	QuadTreeNode();
+	QuadTreeNode(QuadTreeNode* n_nbor, QuadTreeNode* e_nbor, QuadTreeNode* s_nbor, QuadTreeNode* w_nbor);
 	QuadTreeNode(QuadTreeNode* parent, QuadTreeQuadrant quad);
 	~QuadTreeNode();
 };

@@ -15,25 +15,15 @@
 
 #include "util/defines.h"
 
-#include "render/renderlow/shader.h"
-#include "render/renderlow/mesh.h"
-#include "render/renderlow/transform.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "render/renderlow/drawables/dbillboard.h"
-#include "render/renderlow/drawables/dcubesphere.h"
-#include "render/renderlow/debug_draw.h"
-#include "orbital/newton_body.h"
+#include "render/renderspace/quad_tree_planet.h"
+#include "render/renderlow/shader.h"
 
-#include "game/ui/orbit_view.h"
+#include <stb/stb_image.h>
 
-#include "game/ui/orbit_predictor.h"
-#include "game/vessel/engine/rocket_engine.h"
-#include "game/ui/ui_manager.h"
-#include "game/ui/navball/navball.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window, SpaceBody* earth);
@@ -84,6 +74,12 @@ int main()
 	log->info("Initializing OSP");
 
 	log->info("Initializing GLFW");
+
+	QuadTreePlanet planet = QuadTreePlanet();
+	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
+	QuadTreeNode* onNode = &planet.px;
+
+
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -175,6 +171,26 @@ int main()
 
 		clock_t begin = clock();
 
+		planet.flatten();
+		onNode->get_recursive(focusPoint, 4);
+		planet.draw_gui_window(focusPoint, onNode);
+
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			focusPoint.x -= 0.25f * dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			focusPoint.x += 0.25f * dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			focusPoint.y -= 0.25f * dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			focusPoint.y += 0.25f * dt;
+		}
 
 		// Finish
 		ImGui::Render();
