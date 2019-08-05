@@ -122,6 +122,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dep\tiny_obj_loader.cpp" />
+    <ClCompile Include="src\render\renderspace\quad_tree_node.cpp" />
+    <ClCompile Include="src\main2.cpp" />
     <ClCompile Include="src\render\renderlow\drawables\dsprite.cpp" />
     <ClCompile Include="src\render\renderlow\framebuffer.cpp" />
     <ClCompile Include="src\game\ui\navball\navball.cpp" />
@@ -151,12 +153,12 @@
     <ClCompile Include="src\util\file_util.cpp" />
     <ClCompile Include="src\render\renderlow\shader.cpp" />
     <ClCompile Include="src\orbital\space_body.cpp" />
-    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\render\renderlow\transform.cpp" />
     <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\tiny_obj_loader.h" />
+    <ClInclude Include="src\render\renderspace\quad_tree_node.h" />
     <ClInclude Include="src\render\renderlow\drawables\dsprite.h" />
     <ClInclude Include="src\render\renderlow\framebuffer.h" />
     <ClInclude Include="src\game\ui\navball\navball.h" />
