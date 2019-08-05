@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <glm/glm.hpp>
 
 // Maximum depth, otherwise the algorithm
 // would keep going until infinity
@@ -7,8 +8,16 @@
 
 class QuadTreeNode
 {
+private:
+
+
+	
 public:
 	
+	// Top-left bound of the node
+	glm::dvec2 min_point;
+	double size;
+
 	enum QuadTreeSide
 	{
 		NORTH,
@@ -17,7 +26,7 @@ public:
 		WEST
 	};
 
-	enum QuadTreeCuadrant
+	enum QuadTreeQuadrant
 	{
 		NORTH_WEST,
 		NORTH_EAST,
@@ -47,8 +56,21 @@ public:
 	// A leaf node has no children
 	bool has_children();
 
+	// Recursively splits until we get a node with depth equal to maxDepth
+	// It will automatically merge not-neccesary nodes, this is
+	// the central function of the planet rendering system
+	QuadTreeNode* get_recursive(glm::dvec2 coord, size_t maxDepth);
 
-	QuadTreeNode(QuadTreeNode* parent);
+	// Returns a equivalent to QuadTreeQuadrant if inside, -1 if outside
+	int get_quadrant(glm::dvec2 coord);
+
+	// Gets given quadrant, splits if neccesary
+	QuadTreeNode* get_or_split(QuadTreeQuadrant quad);
+
+	void merge_all_but(QuadTreeNode* node);
+
+	QuadTreeNode();
+	QuadTreeNode(QuadTreeNode* parent, QuadTreeQuadrant quad);
 	~QuadTreeNode();
 };
 

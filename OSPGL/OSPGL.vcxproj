@@ -131,6 +131,7 @@
     <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp" />
     <ClCompile Include="src\game\vessel\part.cpp" />
     <ClCompile Include="src\game\ui\orbit_predictor.cpp" />
+    <ClCompile Include="src\render\renderspace\quad_tree_planet.cpp" />
     <ClCompile Include="src\util\gui\multi_plot.cpp" />
     <ClCompile Include="src\util\types\gradients.cpp" />
     <ClCompile Include="src\game\ui\orbit_view.cpp" />
@@ -143,7 +144,7 @@
     <ClCompile Include="dep\imgui\imgui_draw.cpp" />
     <ClCompile Include="dep\imgui\imgui_impl_glfw.cpp" />
     <ClCompile Include="dep\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="src\render\rendernear\RenderBody.cpp" />
+    <ClCompile Include="src\render\rendernear\render_body.cpp" />
     <ClCompile Include="src\render\renderlow\drawables\dbillboard.cpp" />
     <ClCompile Include="dep\glad\glad.c" />
     <ClCompile Include="dep\glm\detail\glm.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="src\game\vessel\material\reaction.h" />
     <ClInclude Include="src\game\vessel\part.h" />
     <ClInclude Include="src\game\ui\orbit_predictor.h" />
+    <ClInclude Include="src\render\renderspace\quad_tree_planet.h" />
     <ClInclude Include="src\util\gui\multi_plot.h" />
     <ClInclude Include="src\game\ui\orbit_view.h" />
     <ClInclude Include="src\render\renderlow\debug_draw.h" />
@@ -182,7 +184,7 @@
     <ClInclude Include="dep\imgui\stb_rect_pack.h" />
     <ClInclude Include="dep\imgui\stb_textedit.h" />
     <ClInclude Include="dep\imgui\stb_truetype.h" />
-    <ClInclude Include="src\render\rendernear\RenderBody.h" />
+    <ClInclude Include="src\render\rendernear\render_body.h" />
     <ClInclude Include="src\render\renderlow\drawables\dbillboard.h" />
     <ClInclude Include="dep\glad\glad.h" />
     <ClInclude Include="dep\glad\KHR.h" />
