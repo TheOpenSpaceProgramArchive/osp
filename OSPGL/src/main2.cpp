@@ -172,7 +172,7 @@ int main()
 		clock_t begin = clock();
 
 		planet.flatten();
-		onNode->get_recursive(focusPoint, 4);
+		onNode->get_recursive(focusPoint, 8);
 		planet.draw_gui_window(focusPoint, onNode);
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)

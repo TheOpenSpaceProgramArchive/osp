@@ -58,6 +58,16 @@ bool QuadTreeNode::has_children()
 
 QuadTreeNode* QuadTreeNode::get_recursive(glm::dvec2 coord, size_t maxDepth)
 {
+	if (depth >= 1)
+	{
+		// Obtain all neighbors to avoid diagonal loss of detail
+		obtain_neighbors(quad);
+		neighbors[NORTH]->obtain_neighbors(neighbors[NORTH]->quad);
+		neighbors[EAST]->obtain_neighbors(neighbors[EAST]->quad);
+		neighbors[SOUTH]->obtain_neighbors(neighbors[SOUTH]->quad);
+		neighbors[WEST]->obtain_neighbors(neighbors[WEST]->quad);
+	}
+
 	if (depth < maxDepth)
 	{
 		int result = get_quadrant(coord);
@@ -74,6 +84,7 @@ QuadTreeNode* QuadTreeNode::get_recursive(glm::dvec2 coord, size_t maxDepth)
 		merge_all_but(child);
 
 		return child->get_recursive(coord, maxDepth);
+
 	}
 	else
 	{
@@ -176,6 +187,8 @@ void QuadTreeNode::obtain_neighbors(QuadTreeQuadrant quad)
 		neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_WEST);
 		neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_EAST);
 	}
+
+
 }
 
 
@@ -207,6 +220,8 @@ QuadTreeNode::QuadTreeNode(QuadTreeNode* n_nbor, QuadTreeNode* e_nbor, QuadTreeN
 
 QuadTreeNode::QuadTreeNode(QuadTreeNode* p, QuadTreeQuadrant quad) : parent(p)
 {
+	this->quad = quad;
+
 	children[0] = NULL; children[1] = NULL; children[2] = NULL; children[3] = NULL;
 
 	depth = p->depth + 1;

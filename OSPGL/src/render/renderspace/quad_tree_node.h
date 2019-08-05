@@ -14,6 +14,8 @@ private:
 	
 public:
 	
+
+
 	// Top-left bound of the node
 	glm::dvec2 min_point;
 	double size;
@@ -33,6 +35,8 @@ public:
 		SOUTH_WEST,
 		SOUTH_EAST
 	};
+
+	QuadTreeQuadrant quad;
 
 	// Can be in another side of the cube, so be careful
 	// North, East, South, West
