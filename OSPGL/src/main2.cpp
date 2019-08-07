@@ -20,6 +20,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "render/renderspace/quad_tree_planet.h"
+#include "render/renderspace/planet_tile_server.h"
 #include "render/renderlow/shader.h"
 
 #include <stb/stb_image.h>
@@ -172,8 +173,14 @@ int main()
 		clock_t begin = clock();
 
 		planet.flatten();
-		onNode->get_recursive(focusPoint, 8);
+		auto node = onNode->get_recursive(focusPoint, 8);
 		planet.draw_gui_window(focusPoint, onNode);
+
+		auto allLeafs = planet.px.getAllLeafNodes();
+		auto path = node->getPath();
+		PlanetTilePath ppath = PlanetTilePath();
+		ppath.path = path;
+
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{

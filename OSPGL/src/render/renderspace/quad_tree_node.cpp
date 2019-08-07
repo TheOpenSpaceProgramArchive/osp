@@ -194,6 +194,64 @@ void QuadTreeNode::obtain_neighbors(QuadTreeQuadrant quad)
 
 
 
+std::vector<QuadTreeNode::QuadTreeQuadrant> QuadTreeNode::getPath()
+{
+
+	if (depth > 0)
+	{
+
+		std::vector<QuadTreeQuadrant> fromParent = parent->getPath();
+
+		if (parent->children[NORTH_WEST] == this)
+		{
+			fromParent.push_back(NORTH_WEST);
+		}
+
+		if (parent->children[NORTH_EAST] == this)
+		{
+			fromParent.push_back(NORTH_EAST);
+		}
+
+		if (parent->children[SOUTH_WEST] == this)
+		{
+			fromParent.push_back(SOUTH_WEST);
+		}
+
+		if (parent->children[SOUTH_EAST] == this)
+		{
+			fromParent.push_back(SOUTH_EAST);
+		}
+
+		return fromParent;
+	}
+	else
+	{
+		return std::vector<QuadTreeQuadrant>();
+	}
+	
+}
+
+
+std::vector<QuadTreeNode*> QuadTreeNode::getAllLeafNodes()
+{
+	std::vector<QuadTreeNode*> out;
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		if (children[i]->has_children())
+		{
+			std::vector<QuadTreeNode*> fromChild = children[i]->getAllLeafNodes();
+			out.insert(out.end(), fromChild.begin(), fromChild.end());
+		}
+		else
+		{
+			out.push_back(children[i]);
+		}
+	}
+
+	return out;
+}
+
 QuadTreeNode::QuadTreeNode()
 {
 	depth = 0;
@@ -281,6 +339,6 @@ void QuadTreeNode::draw_gui(int SCL, glm::dvec2 focusPoint, QuadTreeNode* onNode
 	if (onNode == this && depth == 0)
 	{
 		ImVec2 target = ImVec2(focusPoint.x * SCL + min.x, focusPoint.y * SCL + min.y);
-		drawList->AddCircle(target, 2.5f, ImColor(1.0f, 0.0f, 0.0f), 12, 5.0f);
+		drawList->AddCircle(target, 2.0f, ImColor(1.0f, 0.0f, 0.0f), 12, 1.0f);
 	}
 }

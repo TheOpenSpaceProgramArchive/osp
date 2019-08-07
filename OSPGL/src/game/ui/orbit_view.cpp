@@ -134,7 +134,7 @@ void OrbitView::draw()
 
 		glBindVertexArray(0);
 
-		float radius_scale = (planets[i].body->radius) / 10e7;
+		float radius_scale = (planets[i].body->planet.radius) / 10e7;
 
 
 		planets[i].mesh->model = glm::translate(glm::mat4(), (glm::vec3)(planets[i].body->last_state.pos / 10e7));

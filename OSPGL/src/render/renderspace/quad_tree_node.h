@@ -1,10 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <vector>
 
 // Maximum depth, otherwise the algorithm
 // would keep going until infinity
 #define MAX_QUADTREE_DEPTH 8
+
+
 
 class QuadTreeNode
 {
@@ -84,9 +87,16 @@ public:
 	// Draws a "widget" of the subdivided quad tree nodes
 	void draw_gui(int guiSize, glm::dvec2 focusPoint, QuadTreeNode* onNode);
 
+	// Gets the path to this quad tree node, from its parent to the node
+	// For example, a node may be {NW, NW, NE}, the first quadrant is the 
+	// root, second is parent of the parent and last is the parent
+	std::vector<QuadTreeQuadrant> getPath();
+
+	// Gets all nodes with no children, sons of this node
+	std::vector<QuadTreeNode*> getAllLeafNodes();
+
 	QuadTreeNode();
 	QuadTreeNode(QuadTreeNode* n_nbor, QuadTreeNode* e_nbor, QuadTreeNode* s_nbor, QuadTreeNode* w_nbor);
 	QuadTreeNode(QuadTreeNode* parent, QuadTreeQuadrant quad);
 	~QuadTreeNode();
 };
-

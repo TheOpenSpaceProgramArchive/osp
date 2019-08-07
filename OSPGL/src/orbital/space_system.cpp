@@ -162,7 +162,7 @@ static std::string serialize_body(SpaceBody* body)
 		out += body->parent->id; out += ";";
 	}
 
-	out += std::to_string(body->radius); out += ";";
+	out += std::to_string(body->planet.radius); out += ";";
 	out += std::to_string(body->rotation_speed); out += ";";
 	out += std::to_string(body->start_rotation); out += ";";
 	out += std::to_string(body->mass); out += ";";
@@ -304,7 +304,7 @@ static void deserialize_chunk(std::string chunk, SpaceSystem* sys, int line)
 
 		body->id = data[0];
 		body->parent_id = data[1];
-		body->radius = radius;
+		body->planet.radius = radius;
 		body->rotation_speed = rotation_speed;
 		body->start_rotation = start_rotation;
 		body->mass = mass * 5.9722 * 10e23; // Convert from earth masses to kg

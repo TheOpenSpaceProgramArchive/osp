@@ -5,6 +5,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include "../util/defines.h"
+#include "planet.h"
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -108,6 +109,8 @@ class SpaceBody
 {
 public:
 
+	Planet planet;
+
 	std::string id;
 	std::string parent_id; //< used by deserializer
 
@@ -125,9 +128,7 @@ public:
 	// Polar (north) vector of the planet. Used to get the equatorial plane
 	glm::vec3 polar = glm::vec3(0, 1, 0);
 
-	// Radius in meters 
-	double radius;
-
+	
 	// Starting rotation in degrees at time 0
 	double start_rotation;
 
