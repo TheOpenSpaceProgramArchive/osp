@@ -17,9 +17,15 @@ struct PlanetTilePath
 	std::vector<QuadTreeNode::QuadTreeQuadrant> path;
 	PlanetSide side;
 
-	size_t getDepth();
+	size_t get_depth();
 	glm::dvec2 getMin();
 	double getSize();
+
+	PlanetTilePath(std::vector<QuadTreeNode::QuadTreeQuadrant> path, PlanetSide side)
+	{
+		this->path = path;
+		this->side = side;
+	}
 };
 
 bool operator==(const PlanetTilePath& a, const PlanetTilePath& b);
@@ -69,7 +75,10 @@ public:
 	std::unordered_map<PlanetTilePath, PlanetTile*, PlanetTilePathHasher> tiles;
 
 	PlanetTile* load(PlanetTilePath path);
-	void unload(PlanetTilePath path);
+	void unload(PlanetTilePath path, bool unload_now = false);
+
+	// Unloads all unused tiles
+	void unload_unused();
 
 	// Minimum depth at which tiles get unloaded, bigger tiles
 	// will be loaded even if not used
@@ -77,7 +86,7 @@ public:
 
 	// Vertices in the side of each tile, smallest tiles
 	// simply get smallest heightmap samples
-	size_t verticesPerSide = 16;
+	size_t verticesPerSide = 2;
 
 	PlanetTileServer(Planet* planet);
 	~PlanetTileServer();

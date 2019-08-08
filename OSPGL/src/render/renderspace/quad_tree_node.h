@@ -39,11 +39,19 @@ public:
 		SOUTH_EAST
 	};
 
+	enum PlanetSide
+	{
+		PX, NX, PY, NY, PZ, NZ
+	};
+
+	PlanetSide planetside;
+
 	QuadTreeQuadrant quad;
 
 	// Can be in another side of the cube, so be careful
 	// North, East, South, West
 	QuadTreeNode* neighbors[4];
+
 
 	// Children
 	// Northwest, Northeast, SoutWest, SouthEast
@@ -86,6 +94,10 @@ public:
 
 	// Draws a "widget" of the subdivided quad tree nodes
 	void draw_gui(int guiSize, glm::dvec2 focusPoint, QuadTreeNode* onNode);
+
+	QuadTreeSide findTouchingSide(QuadTreeNode* node);
+
+	bool touches_any_edge();
 
 	// Gets the path to this quad tree node, from its parent to the node
 	// For example, a node may be {NW, NW, NE}, the first quadrant is the 

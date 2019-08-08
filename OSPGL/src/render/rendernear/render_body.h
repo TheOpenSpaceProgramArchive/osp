@@ -23,18 +23,12 @@ private:
 	void generate_mesh_lowdetail(glm::dvec3 cameraPos, double dist);
 	void generate_mesh_billboard(glm::dvec3 cameraPos, double dist);
 
-	QuadTreePlanet detailed;
-
 public:
 
 	// Distance at which we switch to a simple billboard
 	double far_dist = 1e22;
 	// Distance at which we switch to high detail cubesphere
 	double detail_dist = 1e10;
-
-
-	Mesh mesh;
-
 	
 
 	// cameraPos is given relative to the planet's center

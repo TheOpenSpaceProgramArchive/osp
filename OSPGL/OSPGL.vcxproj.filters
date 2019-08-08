@@ -1165,6 +1165,8 @@
     <None Include="res\shaders\navball\navball.vs" />
     <None Include="res\shaders\generic\sprite.fs" />
     <None Include="res\shaders\generic\sprite.vs" />
+    <None Include="res\shaders\planet_tile.vs" />
+    <None Include="res\shaders\planet_tile.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\cmaps\earth\nx.png">

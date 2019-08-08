@@ -76,10 +76,6 @@ int main()
 
 	log->info("Initializing GLFW");
 
-	QuadTreePlanet planet = QuadTreePlanet();
-	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
-	QuadTreeNode* onNode = &planet.px;
-
 
 
 	glfwInit();
@@ -134,7 +130,6 @@ int main()
 	d_shader = &debugShader;
 
 	// Uncomment for wireframe mode
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -157,6 +152,18 @@ int main()
 	float physics_timer = 0.0f;
 	double prev_time = glfwGetTime();
 
+	float t = 0.0f;
+
+	bool wireframe = false;
+	bool was_wireframe_down = false;
+
+	Planet planet; planet.radius = 10.0;
+	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, d_shader);
+	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
+	QuadTreeNode* onNode = &planet_qtree.ny;
+
+	glm::vec2 eyePoint = glm::vec2(0.0f, 3.14 / 2.0f);
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -167,19 +174,14 @@ int main()
 
 
 		// render
-		glClearColor(0.06f, 0.0f, 0.06f, 1.0f);
+		glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		clock_t begin = clock();
 
-		planet.flatten();
-		auto node = onNode->get_recursive(focusPoint, 8);
-		planet.draw_gui_window(focusPoint, onNode);
-
-		auto allLeafs = planet.px.getAllLeafNodes();
-		auto path = node->getPath();
-		PlanetTilePath ppath = PlanetTilePath();
-		ppath.path = path;
+		planet_qtree.flatten();
+		auto node = onNode->get_recursive(focusPoint, 4);
+		planet_qtree.draw_gui_window(focusPoint, onNode);
 
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -199,6 +201,32 @@ int main()
 			focusPoint.y += 0.25f * dt;
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			eyePoint.y -= dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			eyePoint.x +=  dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			eyePoint.y += dt;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			eyePoint.x -= dt;
+		}
+
+		planet_qtree.update(dt);
+
+		glm::mat4 view = glm::lookAt(
+			glm::vec3(4.0f * sin(eyePoint.y) * cos(eyePoint.x), 4.0f * cos(eyePoint.y), 4.0f * sin(eyePoint.x) * sin(eyePoint.y)),
+			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.01f, 1000.0f);
+		planet_qtree.draw(view, proj);
+
+
 		// Finish
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -215,6 +243,31 @@ int main()
 		double actual_time = glfwGetTime();
 		dt = (float)(actual_time - prev_time);
 		prev_time = actual_time;
+
+		t += dt;
+
+		if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+		{
+			if(!was_wireframe_down)
+			{
+				wireframe = !wireframe;
+
+				if (wireframe)
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				}
+				else
+				{
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				}
+			}
+			
+			was_wireframe_down = true;
+		}
+		else
+		{
+			was_wireframe_down = false;
+		}
 
 	}
 

@@ -1,7 +1,11 @@
 #pragma once
 #include "quad_tree_node.h"
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <imgui/imgui.h>
+#include "../../orbital/planet.h"
+#include "planet_tile_server.h"
+#include "../renderlow/shader.h"
 
 struct QuadTreeCoordinate
 {
@@ -21,10 +25,20 @@ private:
 
 public:
 
+	Shader* shader;
+
+	Planet* planet;
+
+	PlanetTileServer tile_server;
+
 	QuadTreeNode px, nx, py, ny, pz, nz;
 
-	// Parameters of the ellipsoid
-	double ea = 1000.0, eb = 1000.0, ec = 1000.0;
+	std::vector<PlanetTile*> tiles;
+
+	glm::vec3 get_tile_origin(PlanetTilePath& path);
+	glm::vec3 get_tile_rotation(PlanetTilePath& path);
+	glm::vec3 get_tile_translation(PlanetTilePath& path);
+	glm::vec3 get_tile_scale(PlanetTilePath& path);
 
 	void flatten();
 
@@ -32,5 +46,8 @@ public:
 
 	void draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode);
 
-	QuadTreePlanet();
+	void draw(glm::mat4 view, glm::mat4 proj);
+	void update(float dt);
+
+	QuadTreePlanet(Planet* planet, Shader* shader = NULL);
 };

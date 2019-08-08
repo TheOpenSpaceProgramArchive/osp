@@ -6,13 +6,15 @@
 // This one provides a totally flat planet
 class SurfaceProvider
 {
+public:
+
 	// Coordinates are given in polar coordinates being:
 	//	x -> 
 	//	y ->
-	// You are expected to return the radius from the planet center
+	// You are expected to return the deviation from planet radius in meters
 	virtual double getHeight(glm::dvec2 coord, const Planet& planet)
 	{
-		return planet.radius;
+		return 0.0;
 	}
 
 

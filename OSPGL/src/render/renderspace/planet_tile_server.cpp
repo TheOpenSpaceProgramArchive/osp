@@ -19,28 +19,62 @@ PlanetTile* PlanetTileServer::load(PlanetTilePath path)
 	}
 
 	out->users++;
-	out->upload(false, false, false, false);
+
+	if (!out->isUploaded())
+	{
+		out->upload(false, false, false, false);
+	}
 
 	return out;
 }
 
-void PlanetTileServer::unload(PlanetTilePath path)
+void PlanetTileServer::unload(PlanetTilePath path, bool unload_now)
 {
 	auto it = tiles.find(path);
 	if (it != tiles.end())
 	{
 		it->second->users--;
 
-		if (it->second->users <= 0)
+		if (unload_now)
 		{
-			it->second->unload();
-
-			if (it->second->path.getDepth() >= minDepthToUnload)
+			if (it->second->users <= 0)
 			{
-				delete it->second;
-				tiles.erase(it);
+				it->second->unload();
+
+				if (it->second->path.get_depth() >= minDepthToUnload)
+				{
+					delete it->second;
+					tiles.erase(it);
+				}
 			}
 		}
+	}
+}
+
+void PlanetTileServer::unload_unused()
+{
+	std::vector<PlanetTilePath> toDelete;
+
+	for (auto const& pair : tiles)
+	{
+		if (pair.second->users <= 0)
+		{
+			if (pair.second->isUploaded())
+			{
+				pair.second->unload();
+			}
+
+			if (pair.second->path.get_depth() >= minDepthToUnload)
+			{
+				toDelete.push_back(pair.first);
+			}
+		}
+	}
+
+	for (size_t i = 0; i < toDelete.size(); i++)
+	{
+		delete tiles[toDelete[i]];
+		tiles.erase(toDelete[i]);
 	}
 }
 
@@ -59,7 +93,7 @@ double sizeAtPathDepth(size_t depth)
 	return 1.0 / pow(2, depth);
 }
 
-size_t PlanetTilePath::getDepth()
+size_t PlanetTilePath::get_depth()
 {
 	return path.size();
 }
@@ -71,6 +105,7 @@ glm::dvec2 PlanetTilePath::getMin()
 	for (size_t i = 0; i < path.size(); i++)
 	{
 		double size = sizeAtPathDepth(i + 1);
+
 		if (path[i] == QuadTreeNode::NORTH_WEST)
 		{
 			// Nothing
@@ -125,12 +160,14 @@ bool operator==(const PlanetTilePath& a, const PlanetTilePath& b)
 
 
 
-PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet)
+PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet) : path(nPath.path, nPath.side)
 {
+	this->users = 0;
+	this->verts = std::vector<float>();
+	this->indices = std::vector<uint16_t>();
+
 	// We use only position, normal and texture
 	const int FLOATS_PER_VERTEX = 8;
-
-	this->path = nPath;
 
 	verts.resize(vertCount * vertCount * FLOATS_PER_VERTEX);
 
@@ -139,12 +176,13 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 	{	
 		for (size_t ix = 0; ix < vertCount; ix++)
 		{
-			float x = (float)ix / (float)vertCount;
-			float y = (float)iy / (float)vertCount;
+			float x = (float)ix / ((float)vertCount - 1);
+			float y = (float)iy / ((float)vertCount - 1);
+			float height = 0.0f;
 
 			Vertex out;
 
-			out.pos = glm::vec3(x, y, 0.0f);
+			out.pos = glm::vec3(x, y, height);
 
 			verts[(iy * vertCount + ix) * FLOATS_PER_VERTEX + 0] = out.pos.x;
 			verts[(iy * vertCount + ix) * FLOATS_PER_VERTEX + 1] = out.pos.y;
@@ -165,7 +203,7 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 	{
 		for (size_t ix = 0; ix < vertCount; ix++)
 		{
-			if (ix < vertCount)
+			if (ix < vertCount - 1)
 			{
 				// Center
 				indices.push_back(iy * vertCount + ix);
@@ -181,8 +219,8 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 				indices.push_back(iy * vertCount + ix);
 				// Down
 				indices.push_back((iy + 1) * vertCount + ix);
-				// Left
-				indices.push_back(iy * vertCount + (ix - 1));
+				// Down Left
+				indices.push_back((iy + 1) * vertCount + (ix - 1));
 			}
 		}
 	}
@@ -222,10 +260,10 @@ void PlanetTile::upload(bool u_lowq, bool r_lowq, bool d_lowq, bool l_downq)
 	glEnableVertexAttribArray(0);
 	// normal
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1);
 	// tex
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(2);
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -243,4 +281,8 @@ void PlanetTile::unload()
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ebo);
+
+	vao = 0;
+	vbo = 0;
+	ebo = 0;
 }

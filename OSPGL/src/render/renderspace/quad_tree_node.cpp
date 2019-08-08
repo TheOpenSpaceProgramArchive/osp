@@ -163,32 +163,190 @@ void QuadTreeNode::obtain_neighbors(QuadTreeQuadrant quad)
 	{
 		neighbors[EAST] = parent->children[NORTH_EAST];
 		neighbors[SOUTH] = parent->children[SOUTH_WEST];
-		neighbors[WEST] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
-		neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_WEST);
+
+		if (parent->neighbors[WEST]->planetside != planetside)
+		{
+			if (planetside == NX || planetside == PZ)
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(SOUTH_EAST);
+			}
+			else if (planetside == NY)
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(SOUTH_WEST);
+			}
+			else
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
+			}
+		}
+		else
+		{
+			neighbors[WEST] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
+		}
+			
+		if (parent->neighbors[NORTH]->planetside != planetside)
+		{
+			if (planetside == PX || planetside == NY)
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
+			}
+			else if (planetside == PZ || planetside == PY)
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(NORTH_EAST);
+			}
+			else
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_WEST);
+			}
+		}
+		else
+		{
+			neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_WEST);
+		}
 	}
 	else if (quad == NORTH_EAST)
 	{
 		neighbors[WEST] = parent->children[NORTH_WEST];
 		neighbors[SOUTH] = parent->children[SOUTH_EAST];
-		neighbors[EAST] = parent->neighbors[EAST]->get_or_split(NORTH_WEST);
-		neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
+
+		if(parent->neighbors[EAST]->planetside != planetside)
+		{
+			if (planetside == NZ || planetside == NX)
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_WEST);
+			}
+			else if (planetside == NY)
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_EAST);
+			}
+			else
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(NORTH_WEST);
+			}
+		}
+		else
+		{
+			neighbors[EAST] = parent->neighbors[EAST]->get_or_split(NORTH_WEST);
+		}
+		
+
+		if (parent->neighbors[NORTH]->planetside != planetside)
+		{
+			if (planetside == NZ)
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(NORTH_WEST);
+			}
+			else if (planetside == NX)
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
+			}
+			else if (planetside == PX || planetside == NY)
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_WEST);
+			}
+			else
+			{
+				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
+			}
+		}
+		else
+		{
+			neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
+		}
 	}
 	else if (quad == SOUTH_WEST)
 	{
 		neighbors[NORTH] = parent->children[NORTH_WEST];
 		neighbors[EAST] = parent->children[SOUTH_EAST];
-		neighbors[WEST] = parent->neighbors[WEST]->get_or_split(SOUTH_EAST);
-		neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_WEST);
+
+		if (parent->neighbors[WEST]->planetside != planetside)
+		{
+			if (planetside == NX || planetside == PZ)
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
+			}
+			else if (planetside == PY)
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(NORTH_WEST);
+			}
+			else
+			{
+				neighbors[WEST] = parent->neighbors[WEST]->get_or_split(SOUTH_EAST);
+			}
+		}
+		else
+		{
+			neighbors[WEST] = parent->neighbors[WEST]->get_or_split(SOUTH_EAST);
+		}
+
+		if (parent->neighbors[SOUTH]->planetside != planetside)
+		{
+			if (planetside == PX || planetside == PY)
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_EAST);
+			}
+			else if (planetside == PZ)
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(SOUTH_EAST);
+			}
+			else
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_WEST);
+			}
+		}
+		else
+		{
+			neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_WEST);
+		}
+
 	}
 	else if (quad == SOUTH_EAST)
 	{
 		neighbors[NORTH] = parent->children[NORTH_EAST];
 		neighbors[WEST] = parent->children[SOUTH_WEST];
-		neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_WEST);
-		neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_EAST);
+
+		if (parent->neighbors[EAST]->planetside != planetside)
+		{
+			if (planetside == NZ || planetside == NX)
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(NORTH_WEST);
+			}
+			else if (planetside == PY)
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(NORTH_EAST);
+			}
+			else
+			{
+				neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_WEST);
+			}
+		}
+		else
+		{
+			neighbors[EAST] = parent->neighbors[EAST]->get_or_split(SOUTH_WEST);
+		}
+
+
+		if (parent->neighbors[SOUTH]->planetside != planetside)
+		{
+			if (planetside == PX || planetside == PY)
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_WEST);
+			}
+			else if (planetside == NZ)
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(SOUTH_WEST);
+			}
+			else
+			{
+				neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_EAST);
+			}
+		}
+		else
+		{
+			neighbors[SOUTH] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
+		}
+
 	}
-
-
 }
 
 
@@ -238,14 +396,21 @@ std::vector<QuadTreeNode*> QuadTreeNode::getAllLeafNodes()
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		if (children[i]->has_children())
+		if (children[i] != NULL)
 		{
-			std::vector<QuadTreeNode*> fromChild = children[i]->getAllLeafNodes();
-			out.insert(out.end(), fromChild.begin(), fromChild.end());
+			if (children[i]->has_children())
+			{
+				std::vector<QuadTreeNode*> fromChild = children[i]->getAllLeafNodes();
+				out.insert(out.end(), fromChild.begin(), fromChild.end());
+			}
+			else
+			{
+				out.push_back(children[i]);
+			}
 		}
 		else
 		{
-			out.push_back(children[i]);
+			out.push_back(this);
 		}
 	}
 
@@ -279,6 +444,7 @@ QuadTreeNode::QuadTreeNode(QuadTreeNode* n_nbor, QuadTreeNode* e_nbor, QuadTreeN
 QuadTreeNode::QuadTreeNode(QuadTreeNode* p, QuadTreeQuadrant quad) : parent(p)
 {
 	this->quad = quad;
+	this->planetside = p->planetside;
 
 	children[0] = NULL; children[1] = NULL; children[2] = NULL; children[3] = NULL;
 
@@ -340,5 +506,41 @@ void QuadTreeNode::draw_gui(int SCL, glm::dvec2 focusPoint, QuadTreeNode* onNode
 	{
 		ImVec2 target = ImVec2(focusPoint.x * SCL + min.x, focusPoint.y * SCL + min.y);
 		drawList->AddCircle(target, 2.0f, ImColor(1.0f, 0.0f, 0.0f), 12, 1.0f);
+	}
+}
+
+QuadTreeNode::QuadTreeSide QuadTreeNode::findTouchingSide(QuadTreeNode* node)
+{
+	if (neighbors[NORTH] == node)
+	{
+		return NORTH;
+	}
+	else if (neighbors[EAST] == node)
+	{
+		return EAST;
+	}
+	else if (neighbors[SOUTH] == node)
+	{
+		return SOUTH;
+	}
+	else
+	{
+		return WEST;
+	}
+}
+
+bool QuadTreeNode::touches_any_edge()
+{
+	if (depth == 0)
+	{
+		return true;
+	}
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		if (neighbors[i] != NULL && neighbors[i]->planetside != planetside)
+		{
+			return true;
+		}
 	}
 }

@@ -25,6 +25,7 @@ QuadTreeCoordinate QuadTreePlanet::project(glm::dvec3 nrm_vec)
 	return out;
 }
 
+
 void QuadTreePlanet::flatten()
 {
 	px.merge(); nx.merge();
@@ -94,41 +95,271 @@ void QuadTreePlanet::draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode
 	ImGui::End();
 }
 
-QuadTreePlanet::QuadTreePlanet() :
-	px(), py(), pz(), nx(), ny(), nz()
+
+
+
+
+glm::vec3 QuadTreePlanet::get_tile_rotation(PlanetTilePath& path)
 {
+	// Tiles look by default into the positive Z so...
+	float rot = glm::radians(90.0f);
+
+	if (path.side == PlanetTilePath::PX)
+	{
+		return glm::vec3(0.0f, rot, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NX)
+	{
+		return glm::vec3(0.0f, -rot, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::PY)
+	{
+		return glm::vec3(rot, 0.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NY)
+	{
+		return glm::vec3(-rot, 0.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(0.0f, rot * 2.0f, 0.0f);
+	}
+}
+
+glm::vec3 QuadTreePlanet::get_tile_origin(PlanetTilePath& path)
+{
+	if (path.side == PlanetTilePath::PX)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NX)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::PY)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NY)
+	{
+		return glm::vec3(-1.0f, -1.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+	else if (path.side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+}
+
+glm::vec3 QuadTreePlanet::get_tile_translation(PlanetTilePath & path)
+{
+	glm::vec2 deviation = glm::vec2((path.getMin().x - 0.5f) * 2.0f, (path.getMin().y - 0.5f) * 2.0f);
+	//deviation += path.getSize() / 2.0f;
+
+
+	if (path.side == PlanetTilePath::PX)
+	{
+		return glm::vec3(1.0f, -deviation.y, -deviation.x);
+	}
+	else if (path.side == PlanetTilePath::NX)
+	{
+		return glm::vec3(-1.0f, deviation.y, deviation.x);
+	}
+	else if (path.side == PlanetTilePath::PY)
+	{
+		return glm::vec3(deviation.y, 1.0f, deviation.x);
+	}
+	else if (path.side == PlanetTilePath::NY)
+	{
+		return glm::vec3(-deviation.y, -1.0f, deviation.x);
+	}
+	else if (path.side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(deviation.x, -deviation.y, 1.0f);
+	}
+	else if (path.side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(-deviation.x, -deviation.y, -1.0f);
+	}
+
+	return glm::vec3(0.0f, 0.0f, 0.0f);
+}
+
+glm::vec3 QuadTreePlanet::get_tile_scale(PlanetTilePath & path)
+{
+	float scale = path.getSize() * 2.0f;
+
+	if (path.side == PlanetTilePath::PX)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (path.side == PlanetTilePath::NX)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (path.side == PlanetTilePath::PY)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (path.side == PlanetTilePath::NY)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (path.side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (path.side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+}
+
+
+void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
+{
+	if (shader == NULL)
+	{
+		shader = g_shader;
+	}
+
+	shader->use();
+
+
+	shader->setmat4("view", view);
+	shader->setmat4("proj", proj);
+
+	for (auto tile : tiles)
+	{
+
+		glm::mat4 model = glm::mat4();
+	
+
+		glm::mat4 translation_mat = glm::translate(glm::mat4(), get_tile_translation(tile->path));
+		glm::mat4 scale_mat = glm::scale(glm::mat4(), get_tile_scale(tile->path));
+		glm::mat4 origin_mat = glm::translate(model, get_tile_origin(tile->path));
+		glm::mat4 rotation_mat = glm::toMat4(glm::quat(get_tile_rotation(tile->path))) * model;
+
+		// The final translation makes the origin of the tile be on the correct corner
+		model = translation_mat * rotation_mat * scale_mat * origin_mat;
+
+		float col = tile->path.getSize() * 2.0f;
+
+		shader->setmat4("model", model);
+		shader->setvec4("color", glm::vec4(col, sqrt(col), 0.0f, 1.0f));
+		glBindVertexArray(tile->vao);
+		glDrawElements(GL_TRIANGLES, tile->indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+		glBindVertexArray(0);
+
+	}
+
+
+}
+
+void QuadTreePlanet::update(float dt)
+{
+
+	for (PlanetTile* tile : tiles)
+	{
+		tile_server.unload(tile->path);
+	}
+
+	tiles.clear();
+
+	auto px_leafs = px.getAllLeafNodes();
+	auto nx_leafs = nx.getAllLeafNodes();
+	auto py_leafs = py.getAllLeafNodes();
+	auto ny_leafs = ny.getAllLeafNodes();
+	auto pz_leafs = pz.getAllLeafNodes();
+	auto nz_leafs = nz.getAllLeafNodes();
+
+	for (QuadTreeNode* leaf : px_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PX);
+		tiles.push_back(tile_server.load(path));
+	}
+	for (QuadTreeNode* leaf : nx_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NX);
+		tiles.push_back(tile_server.load(path));
+	}
+	for (QuadTreeNode* leaf : py_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PY);
+		tiles.push_back(tile_server.load(path));
+	}
+	for (QuadTreeNode* leaf : ny_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NY);
+		tiles.push_back(tile_server.load(path));
+	}
+	for (QuadTreeNode* leaf : pz_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PZ);
+		tiles.push_back(tile_server.load(path));
+	}
+	for (QuadTreeNode* leaf : nz_leafs)
+	{
+		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NZ);
+		tiles.push_back(tile_server.load(path));
+	}
+
+	tile_server.unload_unused();
+}
+
+QuadTreePlanet::QuadTreePlanet(Planet* planet, Shader* shader) :
+	px(), py(), pz(), nx(), ny(), nz(), tile_server(planet)
+{
+	this->planet = planet;
+	this->shader = shader;
+
 	// Cardinal directions have lost all meaning, keep that in mind
 	// as this is a totally arbitrary combination of neighbors that just
 	// satisfies that positive and negative sides are opposite and not connected
 	// Maybe naming neighbors with cardinal directions is not a good idea, but it works
 
+
 	px.neighbors[QuadTreeNode::NORTH] = &py;
-	px.neighbors[QuadTreeNode::EAST] = &pz;
+	px.neighbors[QuadTreeNode::EAST] = &nz;
 	px.neighbors[QuadTreeNode::SOUTH] = &ny;
-	px.neighbors[QuadTreeNode::WEST] = &nz;
+	px.neighbors[QuadTreeNode::WEST] = &pz;
 
-	nx.neighbors[QuadTreeNode::NORTH] = &pz;
-	nx.neighbors[QuadTreeNode::EAST] = &ny;
-	nx.neighbors[QuadTreeNode::SOUTH] = &nz;
-	nx.neighbors[QuadTreeNode::WEST] = &py;
+	nx.neighbors[QuadTreeNode::NORTH] = &ny;
+	nx.neighbors[QuadTreeNode::EAST] = &pz;
+	nx.neighbors[QuadTreeNode::SOUTH] = &py;
+	nx.neighbors[QuadTreeNode::WEST] = &nz;
 
-	py.neighbors[QuadTreeNode::NORTH] = &nz;
+	py.neighbors[QuadTreeNode::NORTH] = &nx;
 	py.neighbors[QuadTreeNode::SOUTH] = &px;
-	py.neighbors[QuadTreeNode::EAST] = &nx;
-	py.neighbors[QuadTreeNode::WEST] = &pz;
+	py.neighbors[QuadTreeNode::EAST] = &pz;
+	py.neighbors[QuadTreeNode::WEST] = &nz;
 
-	pz.neighbors[QuadTreeNode::EAST] = &py;
-	pz.neighbors[QuadTreeNode::WEST] = &px;
-	pz.neighbors[QuadTreeNode::SOUTH] = &nx;
-	pz.neighbors[QuadTreeNode::NORTH] = &ny;
+	pz.neighbors[QuadTreeNode::EAST] = &px;
+	pz.neighbors[QuadTreeNode::WEST] = &nx;
+	pz.neighbors[QuadTreeNode::SOUTH] = &ny;
+	pz.neighbors[QuadTreeNode::NORTH] = &py;
 
 	ny.neighbors[QuadTreeNode::NORTH] = &px;
-	ny.neighbors[QuadTreeNode::WEST] = &nx;
-	ny.neighbors[QuadTreeNode::EAST] = &nz;
-	ny.neighbors[QuadTreeNode::SOUTH] = &pz;
+	ny.neighbors[QuadTreeNode::WEST] = &nz;
+	ny.neighbors[QuadTreeNode::EAST] = &pz;
+	ny.neighbors[QuadTreeNode::SOUTH] = &nx;
 
-	nz.neighbors[QuadTreeNode::EAST] = &px;
-	nz.neighbors[QuadTreeNode::NORTH] = &nx;
-	nz.neighbors[QuadTreeNode::SOUTH] = &py;
-	nz.neighbors[QuadTreeNode::WEST] = &ny;
+	nz.neighbors[QuadTreeNode::EAST] = &nx;
+	nz.neighbors[QuadTreeNode::NORTH] = &py;
+	nz.neighbors[QuadTreeNode::SOUTH] = &ny;
+	nz.neighbors[QuadTreeNode::WEST] = &px;
+
+	px.planetside = QuadTreeNode::PX;
+	py.planetside = QuadTreeNode::PY;
+	pz.planetside = QuadTreeNode::PZ;
+	nx.planetside = QuadTreeNode::NX;
+	ny.planetside = QuadTreeNode::NY;
+	nz.planetside = QuadTreeNode::NZ;
 }

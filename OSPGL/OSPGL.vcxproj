@@ -511,6 +511,8 @@
     <None Include="res\shaders\navball\navball.vs" />
     <None Include="res\shaders\planet.fs" />
     <None Include="res\shaders\planet.vs" />
+    <None Include="res\shaders\planet_tile.fs" />
+    <None Include="res\shaders\planet_tile.vs" />
     <None Include="res\shaders\sphere.fs" />
     <None Include="res\shaders\sphere.vs" />
     <None Include="res\shaders\test.fs" />
