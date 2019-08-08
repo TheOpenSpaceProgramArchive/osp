@@ -190,7 +190,7 @@ void QuadTreeNode::obtain_neighbors(QuadTreeQuadrant quad)
 			{
 				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(SOUTH_EAST);
 			}
-			else if (planetside == PZ || planetside == PY)
+			else if (planetside == PZ)
 			{
 				neighbors[NORTH] = parent->neighbors[NORTH]->get_or_split(NORTH_EAST);
 			}
@@ -343,7 +343,7 @@ void QuadTreeNode::obtain_neighbors(QuadTreeQuadrant quad)
 		}
 		else
 		{
-			neighbors[SOUTH] = parent->neighbors[WEST]->get_or_split(NORTH_EAST);
+			neighbors[SOUTH] = parent->neighbors[SOUTH]->get_or_split(NORTH_EAST);
 		}
 
 	}

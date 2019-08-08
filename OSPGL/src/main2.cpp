@@ -160,7 +160,7 @@ int main()
 	Planet planet; planet.radius = 10.0;
 	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, d_shader);
 	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
-	QuadTreeNode* onNode = &planet_qtree.px;
+	QuadTreeNode* onNode = &planet_qtree.nz;
 
 	glm::vec2 eyePoint = glm::vec2(0.0f, 3.14 / 2.0f);
 
