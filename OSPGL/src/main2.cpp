@@ -160,7 +160,7 @@ int main()
 	Planet planet; planet.radius = 10.0;
 	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, d_shader);
 	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
-	QuadTreeNode* onNode = &planet_qtree.ny;
+	QuadTreeNode* onNode = &planet_qtree.px;
 
 	glm::vec2 eyePoint = glm::vec2(0.0f, 3.14 / 2.0f);
 
@@ -180,7 +180,7 @@ int main()
 		clock_t begin = clock();
 
 		planet_qtree.flatten();
-		auto node = onNode->get_recursive(focusPoint, 4);
+		auto node = onNode->get_recursive(focusPoint, 8);
 		planet_qtree.draw_gui_window(focusPoint, onNode);
 
 
@@ -221,7 +221,7 @@ int main()
 		planet_qtree.update(dt);
 
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(4.0f * sin(eyePoint.y) * cos(eyePoint.x), 4.0f * cos(eyePoint.y), 4.0f * sin(eyePoint.x) * sin(eyePoint.y)),
+			glm::vec3(2.0f * sin(eyePoint.y) * cos(eyePoint.x), 2.0f * cos(eyePoint.y), 2.0f * sin(eyePoint.x) * sin(eyePoint.y)),
 			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.01f, 1000.0f);
 		planet_qtree.draw(view, proj);

@@ -6,6 +6,7 @@
 #include "../../orbital/planet.h"
 #include "planet_tile_server.h"
 #include "../renderlow/shader.h"
+#include "../../util/math_util.h"
 
 struct QuadTreeCoordinate
 {
@@ -35,10 +36,7 @@ public:
 
 	std::vector<PlanetTile*> tiles;
 
-	glm::vec3 get_tile_origin(PlanetTilePath& path);
-	glm::vec3 get_tile_rotation(PlanetTilePath& path);
-	glm::vec3 get_tile_translation(PlanetTilePath& path);
-	glm::vec3 get_tile_scale(PlanetTilePath& path);
+
 
 	void flatten();
 

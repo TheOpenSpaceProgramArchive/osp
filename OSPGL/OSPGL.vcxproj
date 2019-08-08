@@ -134,6 +134,7 @@
     <ClCompile Include="src\game\ui\orbit_predictor.cpp" />
     <ClCompile Include="src\render\renderspace\quad_tree_planet.cpp" />
     <ClCompile Include="src\util\gui\multi_plot.cpp" />
+    <ClCompile Include="src\util\math_util.cpp" />
     <ClCompile Include="src\util\types\gradients.cpp" />
     <ClCompile Include="src\game\ui\orbit_view.cpp" />
     <ClCompile Include="src\render\renderlow\debug_draw.cpp" />
@@ -384,6 +385,7 @@
     <ClInclude Include="src\render\renderlow\shader.h" />
     <ClInclude Include="src\orbital\space_body.h" />
     <ClInclude Include="src\render\renderlow\transform.h" />
+    <ClInclude Include="src\util\math_util.h" />
     <ClInclude Include="src\util\types\gradients.h" />
     <ClInclude Include="src\game\ui\ui_manager.h" />
     <ClInclude Include="src\render\renderlow\texture.h" />

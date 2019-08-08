@@ -159,6 +159,142 @@ bool operator==(const PlanetTilePath& a, const PlanetTilePath& b)
 }
 
 
+glm::vec3 PlanetTilePath::get_tile_rotation()
+{
+	// Tiles look by default into the positive Z so...
+	float rot = glm::radians(90.0f);
+
+	if (side == PlanetTilePath::PX)
+	{
+		return glm::vec3(0.0f, rot, 0.0f);
+	}
+	else if (side == PlanetTilePath::NX)
+	{
+		return glm::vec3(0.0f, -rot, 0.0f);
+	}
+	else if (side == PlanetTilePath::PY)
+	{
+		return glm::vec3(rot, 0.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::NY)
+	{
+		return glm::vec3(-rot, 0.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(0.0f, rot * 2.0f, 0.0f);
+	}
+}
+
+glm::vec3 PlanetTilePath::get_tile_origin()
+{
+	if (side == PlanetTilePath::PX)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::NX)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::PY)
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::NY)
+	{
+		return glm::vec3(-1.0f, -1.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+	else if (side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(0.0f, -1.0f, 0.0f);
+	}
+}
+
+glm::vec3 PlanetTilePath::get_tile_translation(bool get_spheric)
+{
+	glm::vec2 deviation = glm::vec2((getMin().x - 0.5f) * 2.0f, (getMin().y - 0.5f) * 2.0f);
+	//deviation += path.getSize() / 2.0f;
+
+	glm::vec3 cubic;
+
+	if (side == PlanetTilePath::PX)
+	{
+		cubic = glm::vec3(1.0f, -deviation.y, -deviation.x);
+	}
+	else if (side == PlanetTilePath::NX)
+	{
+		cubic = glm::vec3(-1.0f, deviation.y, deviation.x);
+	}
+	else if (side == PlanetTilePath::PY)
+	{
+		cubic = glm::vec3(deviation.y, 1.0f, deviation.x);
+	}
+	else if (side == PlanetTilePath::NY)
+	{
+		cubic = glm::vec3(-deviation.y, -1.0f, deviation.x);
+	}
+	else if (side == PlanetTilePath::PZ)
+	{
+		cubic = glm::vec3(deviation.x, -deviation.y, 1.0f);
+	}
+	else if (side == PlanetTilePath::NZ)
+	{
+		cubic = glm::vec3(-deviation.x, -deviation.y, -1.0f);
+	}
+
+	glm::vec3 spheric = MathUtil::cube_to_sphere(cubic);
+
+	if (get_spheric)
+	{
+		return spheric;
+	}
+
+	return cubic;
+}
+
+glm::vec3 PlanetTilePath::get_tile_scale()
+{
+	float scale = getSize() * 2.0f;
+
+	if (side == PlanetTilePath::PX)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (side == PlanetTilePath::NX)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (side == PlanetTilePath::PY)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (side == PlanetTilePath::NY)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (side == PlanetTilePath::PZ)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+	else if (side == PlanetTilePath::NZ)
+	{
+		return glm::vec3(scale, scale, scale);
+	}
+}
+
+
+glm::vec3 get_real_cubic_pos(glm::vec3 vert, glm::mat4 transform)
+{
+	return transform * glm::vec4(vert, 1.0f);
+}
 
 PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet) : path(nPath.path, nPath.side)
 {
@@ -171,6 +307,20 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 
 	verts.resize(vertCount * vertCount * FLOATS_PER_VERTEX);
 
+	glm::mat4 model = glm::mat4();
+
+	glm::mat4 translation_mat = glm::translate(glm::mat4(), path.get_tile_translation(false));
+	glm::mat4 translation_mat_sph = glm::translate(glm::mat4(), path.get_tile_translation(true));
+	glm::mat4 scale_mat = glm::scale(glm::mat4(), path.get_tile_scale());
+	glm::mat4 origin_mat = glm::translate(model, path.get_tile_origin());
+	glm::mat4 rotation_mat = glm::toMat4(glm::quat(path.get_tile_rotation()));
+	model = translation_mat * rotation_mat * scale_mat * origin_mat;
+
+	glm::mat4 inverse_model = glm::inverse(model);
+
+	glm::mat4 model_spheric = translation_mat_sph * rotation_mat * scale_mat * origin_mat;
+	glm::mat4 inverse_model_spheric = glm::inverse(model_spheric);
+
 	// Generate all vertices
 	for (size_t iy = 0; iy < vertCount; iy++)
 	{	
@@ -182,7 +332,14 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 
 			Vertex out;
 
-			out.pos = glm::vec3(x, y, height);
+			glm::vec3 in_tile = glm::vec3(x, y, height);
+
+			// Get the absolute [-1, 1] position of the vertex
+			glm::vec3 world_pos_cubic = get_real_cubic_pos(in_tile, model);
+			glm::vec3 world_pos_spheric = MathUtil::cube_to_sphere(world_pos_cubic);
+
+			out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
+			out.nrm = out.pos;
 
 			verts[(iy * vertCount + ix) * FLOATS_PER_VERTEX + 0] = out.pos.x;
 			verts[(iy * vertCount + ix) * FLOATS_PER_VERTEX + 1] = out.pos.y;

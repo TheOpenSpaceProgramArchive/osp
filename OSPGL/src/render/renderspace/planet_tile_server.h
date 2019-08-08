@@ -4,7 +4,11 @@
 #include "quad_tree_node.h"
 #include "../../util/defines.h"
 #include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "../renderlow/mesh.h"
+#include "../../util/math_util.h"
 #include <vector>
 
 struct PlanetTilePath
@@ -20,6 +24,11 @@ struct PlanetTilePath
 	size_t get_depth();
 	glm::dvec2 getMin();
 	double getSize();
+
+	glm::vec3 get_tile_origin();
+	glm::vec3 get_tile_rotation();
+	glm::vec3 get_tile_translation(bool spheric = false);
+	glm::vec3 get_tile_scale();
 
 	PlanetTilePath(std::vector<QuadTreeNode::QuadTreeQuadrant> path, PlanetSide side)
 	{
@@ -70,6 +79,8 @@ class PlanetTileServer
 {
 public:
 
+	
+
 	Planet* planet;
 
 	std::unordered_map<PlanetTilePath, PlanetTile*, PlanetTilePathHasher> tiles;
@@ -86,7 +97,7 @@ public:
 
 	// Vertices in the side of each tile, smallest tiles
 	// simply get smallest heightmap samples
-	size_t verticesPerSide = 2;
+	size_t verticesPerSide = 8;
 
 	PlanetTileServer(Planet* planet);
 	~PlanetTileServer();

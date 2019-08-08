@@ -99,129 +99,6 @@ void QuadTreePlanet::draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode
 
 
 
-glm::vec3 QuadTreePlanet::get_tile_rotation(PlanetTilePath& path)
-{
-	// Tiles look by default into the positive Z so...
-	float rot = glm::radians(90.0f);
-
-	if (path.side == PlanetTilePath::PX)
-	{
-		return glm::vec3(0.0f, rot, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NX)
-	{
-		return glm::vec3(0.0f, -rot, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::PY)
-	{
-		return glm::vec3(rot, 0.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NY)
-	{
-		return glm::vec3(-rot, 0.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::PZ)
-	{
-		return glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NZ)
-	{
-		return glm::vec3(0.0f, rot * 2.0f, 0.0f);
-	}
-}
-
-glm::vec3 QuadTreePlanet::get_tile_origin(PlanetTilePath& path)
-{
-	if (path.side == PlanetTilePath::PX)
-	{
-		return glm::vec3(0.0f, -1.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NX)
-	{
-		return glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::PY)
-	{
-		return glm::vec3(0.0f, 0.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NY)
-	{
-		return glm::vec3(-1.0f, -1.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::PZ)
-	{
-		return glm::vec3(0.0f, -1.0f, 0.0f);
-	}
-	else if (path.side == PlanetTilePath::NZ)
-	{
-		return glm::vec3(0.0f, -1.0f, 0.0f);
-	}
-}
-
-glm::vec3 QuadTreePlanet::get_tile_translation(PlanetTilePath & path)
-{
-	glm::vec2 deviation = glm::vec2((path.getMin().x - 0.5f) * 2.0f, (path.getMin().y - 0.5f) * 2.0f);
-	//deviation += path.getSize() / 2.0f;
-
-
-	if (path.side == PlanetTilePath::PX)
-	{
-		return glm::vec3(1.0f, -deviation.y, -deviation.x);
-	}
-	else if (path.side == PlanetTilePath::NX)
-	{
-		return glm::vec3(-1.0f, deviation.y, deviation.x);
-	}
-	else if (path.side == PlanetTilePath::PY)
-	{
-		return glm::vec3(deviation.y, 1.0f, deviation.x);
-	}
-	else if (path.side == PlanetTilePath::NY)
-	{
-		return glm::vec3(-deviation.y, -1.0f, deviation.x);
-	}
-	else if (path.side == PlanetTilePath::PZ)
-	{
-		return glm::vec3(deviation.x, -deviation.y, 1.0f);
-	}
-	else if (path.side == PlanetTilePath::NZ)
-	{
-		return glm::vec3(-deviation.x, -deviation.y, -1.0f);
-	}
-
-	return glm::vec3(0.0f, 0.0f, 0.0f);
-}
-
-glm::vec3 QuadTreePlanet::get_tile_scale(PlanetTilePath & path)
-{
-	float scale = path.getSize() * 2.0f;
-
-	if (path.side == PlanetTilePath::PX)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-	else if (path.side == PlanetTilePath::NX)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-	else if (path.side == PlanetTilePath::PY)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-	else if (path.side == PlanetTilePath::NY)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-	else if (path.side == PlanetTilePath::PZ)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-	else if (path.side == PlanetTilePath::NZ)
-	{
-		return glm::vec3(scale, scale, scale);
-	}
-}
-
 
 void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 {
@@ -242,13 +119,15 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 		glm::mat4 model = glm::mat4();
 	
 
-		glm::mat4 translation_mat = glm::translate(glm::mat4(), get_tile_translation(tile->path));
-		glm::mat4 scale_mat = glm::scale(glm::mat4(), get_tile_scale(tile->path));
-		glm::mat4 origin_mat = glm::translate(model, get_tile_origin(tile->path));
-		glm::mat4 rotation_mat = glm::toMat4(glm::quat(get_tile_rotation(tile->path))) * model;
+		glm::mat4 translation_mat = glm::translate(glm::mat4(), tile->path.get_tile_translation(true));
+		glm::mat4 scale_mat = glm::scale(glm::mat4(), tile->path.get_tile_scale());
+		glm::mat4 origin_mat = glm::translate(model, tile->path.get_tile_origin());
+		glm::mat4 rotation_mat = glm::toMat4(glm::quat(tile->path.get_tile_rotation()));
 
 		// The final translation makes the origin of the tile be on the correct corner
 		model = translation_mat * rotation_mat * scale_mat * origin_mat;
+
+		//model = glm::mat4();
 
 		float col = tile->path.getSize() * 2.0f;
 
