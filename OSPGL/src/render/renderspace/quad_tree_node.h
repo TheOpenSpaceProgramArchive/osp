@@ -86,26 +86,28 @@ public:
 	int get_quadrant(glm::dvec2 coord);
 
 	// Gets given quadrant, splits if neccesary
-	QuadTreeNode* get_or_split(QuadTreeQuadrant quad);
+	QuadTreeNode* get_or_split(QuadTreeQuadrant quad, bool nosplit = false);
 
 	void merge_all_but(QuadTreeNode* node);
 
-	void obtain_neighbors(QuadTreeQuadrant quad);
+	void obtain_neighbors(QuadTreeQuadrant quad, bool nosplit = false);
 
 	// Draws a "widget" of the subdivided quad tree nodes
 	void draw_gui(int guiSize, glm::dvec2 focusPoint, QuadTreeNode* onNode);
 
-	QuadTreeSide findTouchingSide(QuadTreeNode* node);
+	QuadTreeSide find_touching_side(QuadTreeNode* node);
 
 	bool touches_any_edge();
 
 	// Gets the path to this quad tree node, from its parent to the node
 	// For example, a node may be {NW, NW, NE}, the first quadrant is the 
 	// root, second is parent of the parent and last is the parent
-	std::vector<QuadTreeQuadrant> getPath();
+	std::vector<QuadTreeQuadrant> get_path();
 
 	// Gets all nodes with no children, sons of this node
-	std::vector<QuadTreeNode*> getAllLeafNodes();
+	std::vector<QuadTreeNode*> get_all_leaf_nodes();
+
+	bool needs_lowq(QuadTreeSide side);
 
 	QuadTreeNode();
 	QuadTreeNode(QuadTreeNode* n_nbor, QuadTreeNode* e_nbor, QuadTreeNode* s_nbor, QuadTreeNode* w_nbor);

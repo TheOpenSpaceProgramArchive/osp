@@ -160,6 +160,7 @@
     <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dep\stb\stb_perlin.h" />
     <ClInclude Include="dep\tiny_obj_loader.h" />
     <ClInclude Include="src\orbital\planet.h" />
     <ClInclude Include="src\render\renderspace\surface_provider.h" />

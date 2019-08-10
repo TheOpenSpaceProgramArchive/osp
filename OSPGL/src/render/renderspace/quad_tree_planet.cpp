@@ -116,16 +116,8 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 	for (auto tile : tiles)
 	{
 
-		glm::mat4 model = glm::mat4();
+		glm::mat4 model = tile->path.get_model_spheric_matrix();
 	
-
-		glm::mat4 translation_mat = glm::translate(glm::mat4(), tile->path.get_tile_translation(true));
-		glm::mat4 scale_mat = glm::scale(glm::mat4(), tile->path.get_tile_scale());
-		glm::mat4 origin_mat = glm::translate(model, tile->path.get_tile_origin());
-		glm::mat4 rotation_mat = glm::toMat4(glm::quat(tile->path.get_tile_rotation()));
-
-		// The final translation makes the origin of the tile be on the correct corner
-		model = translation_mat * rotation_mat * scale_mat * origin_mat;
 
 		//model = glm::mat4();
 
@@ -137,6 +129,22 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 		glDrawElements(GL_TRIANGLES, tile->indices.size(), GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
 
+		for (size_t i = 0; i < 4; i++)
+		{
+			if (tile->needs_lower[i])
+			{
+				glBindVertexArray(tile->tolower_vao[i]);
+				glDrawElements(GL_TRIANGLES, tile->tolower[i].size(), GL_UNSIGNED_SHORT, (void*)0);
+				glBindVertexArray(0);
+			}
+			else
+			{
+				glBindVertexArray(tile->tosame_vao[i]);
+				glDrawElements(GL_TRIANGLES, tile->tosame[i].size(), GL_UNSIGNED_SHORT, (void*)0);
+				glBindVertexArray(0);
+			}
+			
+		}
 	}
 
 
@@ -152,42 +160,54 @@ void QuadTreePlanet::update(float dt)
 
 	tiles.clear();
 
-	auto px_leafs = px.getAllLeafNodes();
-	auto nx_leafs = nx.getAllLeafNodes();
-	auto py_leafs = py.getAllLeafNodes();
-	auto ny_leafs = ny.getAllLeafNodes();
-	auto pz_leafs = pz.getAllLeafNodes();
-	auto nz_leafs = nz.getAllLeafNodes();
+	auto px_leafs = px.get_all_leaf_nodes();
+	auto nx_leafs = nx.get_all_leaf_nodes();
+	auto py_leafs = py.get_all_leaf_nodes();
+	auto ny_leafs = ny.get_all_leaf_nodes();
+	auto pz_leafs = pz.get_all_leaf_nodes();
+	auto nz_leafs = nz.get_all_leaf_nodes();
 
 	for (QuadTreeNode* leaf : px_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PX);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PX);
+		tiles.push_back(tile_server.load(path, 
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 	for (QuadTreeNode* leaf : nx_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NX);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NX);
+		tiles.push_back(tile_server.load(path,
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 	for (QuadTreeNode* leaf : py_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PY);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PY);
+		tiles.push_back(tile_server.load(path,
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 	for (QuadTreeNode* leaf : ny_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NY);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NY);
+		tiles.push_back(tile_server.load(path,
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 	for (QuadTreeNode* leaf : pz_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::PZ);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PZ);
+		tiles.push_back(tile_server.load(path,
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 	for (QuadTreeNode* leaf : nz_leafs)
 	{
-		PlanetTilePath path = PlanetTilePath(leaf->getPath(), PlanetTilePath::NZ);
-		tiles.push_back(tile_server.load(path));
+		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NZ);
+		tiles.push_back(tile_server.load(path,
+			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 
 	tile_server.unload_unused();

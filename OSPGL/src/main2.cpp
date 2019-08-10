@@ -22,6 +22,7 @@
 #include "render/renderspace/quad_tree_planet.h"
 #include "render/renderspace/planet_tile_server.h"
 #include "render/renderlow/shader.h"
+#include "render/renderspace/surface_provider.h"
 
 #include <stb/stb_image.h>
 
@@ -126,8 +127,11 @@ int main()
 	Shader test = Shader("res/shaders/test.vs", "res/shaders/test.fs");
 	g_shader = &test;
 
-	Shader debugShader = Shader("res/shaders/debug.vs", "res/shaders/debug.fs");
-	d_shader = &debugShader;
+	Shader debug_shader = Shader("res/shaders/debug.vs", "res/shaders/debug.fs");
+	d_shader = &debug_shader;
+
+	Shader planet_tile_shader = Shader("res/shaders/planet_tile.vs", "res/shaders/planet_tile.fs");
+
 
 	// Uncomment for wireframe mode
 
@@ -136,6 +140,8 @@ int main()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glEnable(GL_CULL_FACE);
 
 	glPointSize(4.0f);
 
@@ -157,12 +163,15 @@ int main()
 	bool wireframe = false;
 	bool was_wireframe_down = false;
 
-	Planet planet; planet.radius = 10.0;
-	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, d_shader);
+	Planet planet; planet.radius = 10.0; planet.surface_provider = new SurfaceProvider();
+	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, &planet_tile_shader);
 	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
-	QuadTreeNode* onNode = &planet_qtree.nz;
+	QuadTreeNode* onNode = &planet_qtree.px;
 
-	glm::vec2 eyePoint = glm::vec2(0.0f, 3.14 / 2.0f);
+	glm::vec3 eyePoint = glm::vec3(0.0f, 3.14 / 2.0f, 2.0f);
+
+	int qtree_depth = 5;
+	float qtree_timer = 0.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -180,50 +189,103 @@ int main()
 		clock_t begin = clock();
 
 		planet_qtree.flatten();
-		auto node = onNode->get_recursive(focusPoint, 8);
+		auto node = onNode->get_recursive(focusPoint, qtree_depth);
 		planet_qtree.draw_gui_window(focusPoint, onNode);
 
+		float focusSpeed = 0.25f;
+		float moveSpeed = 1.0f;
+		float zoomSpeed = 0.25f;
+
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		{
+			focusSpeed = 0.05f;
+			moveSpeed = 0.05f;
+			zoomSpeed = 0.015f;
+		}
+
+
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		{
+			focusSpeed /= 4.0f;
+			moveSpeed /= 4.0f;
+			zoomSpeed /= 4.0f;
+		}
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			focusPoint.x -= 0.25f * dt;
+			focusPoint.x -= focusSpeed * dt;
 		}
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			focusPoint.x += 0.25f * dt;
+			focusPoint.x += focusSpeed * dt;
 		}
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			focusPoint.y -= 0.25f * dt;
+			focusPoint.y -= focusSpeed * dt;
 		}
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			focusPoint.y += 0.25f * dt;
+			focusPoint.y += focusSpeed * dt;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			eyePoint.y -= dt;
+			eyePoint.y -= dt * moveSpeed;
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			eyePoint.x +=  dt;
+			eyePoint.x +=  dt * moveSpeed;
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			eyePoint.y += dt;
+			eyePoint.y += dt * moveSpeed;
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			eyePoint.x -= dt;
+			eyePoint.x -= dt * moveSpeed;
+		}
+
+
+
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		{
+			eyePoint.z -= dt * zoomSpeed;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		{
+			eyePoint.z += dt * zoomSpeed;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+		{
+			qtree_timer += 2.0f * dt;
+			if (qtree_timer >= 1.0f)
+			{
+				qtree_depth++;
+				qtree_timer = 0.0f;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+		{
+			qtree_timer += 2.0f * dt;
+			if (qtree_timer >= 1.0f)
+			{
+				if (qtree_depth >= 1)
+				{
+					qtree_depth--;
+				}
+				qtree_timer = 0.0f;
+			}
 		}
 
 		planet_qtree.update(dt);
 
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(2.0f * sin(eyePoint.y) * cos(eyePoint.x), 2.0f * cos(eyePoint.y), 2.0f * sin(eyePoint.x) * sin(eyePoint.y)),
+			glm::vec3(eyePoint.z * sin(eyePoint.y) * cos(eyePoint.x), eyePoint.z * cos(eyePoint.y), eyePoint.z * sin(eyePoint.x) * sin(eyePoint.y)),
 			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.01f, 1000.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0005f, 10.0f);
 		planet_qtree.draw(view, proj);
 
 

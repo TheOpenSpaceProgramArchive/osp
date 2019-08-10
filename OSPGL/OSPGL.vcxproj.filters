@@ -815,6 +815,9 @@
     <ClInclude Include="src\util\math_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dep\stb\stb_perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl">
