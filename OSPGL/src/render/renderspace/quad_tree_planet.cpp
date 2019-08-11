@@ -113,6 +113,7 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 	shader->setmat4("view", view);
 	shader->setmat4("proj", proj);
 
+
 	for (auto tile : tiles)
 	{
 
@@ -128,6 +129,9 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 		glBindVertexArray(tile->vao);
 		glDrawElements(GL_TRIANGLES, tile->indices.size(), GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
+
+
+		//spdlog::get("OSP")->info("D: {}", tile->vao);
 
 		for (size_t i = 0; i < 4; i++)
 		{
@@ -210,7 +214,9 @@ void QuadTreePlanet::update(float dt)
 			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
 	}
 
+	// Unloading before uploading helps avoid GPU memory spikes
 	tile_server.unload_unused();
+	tile_server.upload_used();
 }
 
 QuadTreePlanet::QuadTreePlanet(Planet* planet, Shader* shader) :

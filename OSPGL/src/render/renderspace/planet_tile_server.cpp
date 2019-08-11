@@ -2,7 +2,7 @@
 #include "surface_provider.h"
 
 
-PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left)
+PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left, bool now)
 {
 	auto it = tiles.find(path);
 	PlanetTile* out;
@@ -24,10 +24,12 @@ PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_ri
 	out->needs_lower[2] = low_down;
 	out->needs_lower[3] = low_left;
 
-
-	if (!out->isUploaded())
+	if (now)
 	{
-		out->upload();
+		if (!out->isUploaded())
+		{
+			out->upload();
+		}
 	}
 
 	return out;
@@ -80,6 +82,23 @@ void PlanetTileServer::unload_unused()
 	{
 		delete tiles[toDelete[i]];
 		tiles.erase(toDelete[i]);
+	}
+}
+
+void PlanetTileServer::upload_used()
+{
+	size_t i = 0;
+
+	for (auto const& pair : tiles)
+	{
+		if (pair.second->users > 0)
+		{
+			if (!pair.second->isUploaded())
+			{
+				pair.second->upload();
+				i++;
+			}
+		}
 	}
 }
 
@@ -354,13 +373,24 @@ glm::vec3 get_real_cubic_pos(glm::vec3 vert, glm::mat4 transform)
 	return transform * glm::vec4(vert, 1.0f);
 }
 
-void PlanetTile::generate_vertex(size_t ix, size_t iy, size_t vertCount, 
-	std::vector<float>& heights, glm::mat4 model, 
-	glm::mat4 inverse_model_spheric, size_t index)
+void PlanetTile::generate_vertex(size_t ix, size_t iy, size_t vertCount, size_t vertCountHeight,
+	std::vector<float>& heights, glm::mat4 model,
+	glm::mat4 inverse_model_spheric, size_t index, std::vector<float>& target, float size)
 {
 	float x = (float)ix / ((float)vertCount - 1);
 	float y = (float)iy / ((float)vertCount - 1);
-	float height = heights[iy * vertCount + ix];
+	// We have an extra height layer
+	float height = heights[(iy + 1) * vertCountHeight + (ix + 1)];
+
+	// Obtain normals from heightmap
+	float uheight = heights[(iy + 0) * vertCountHeight + (ix + 1)];
+	float rheight = heights[(iy + 1) * vertCountHeight + (ix + 2)];
+	float dheight = heights[(iy + 2) * vertCountHeight + (ix + 1)];
+	float lheight = heights[(iy + 1) * vertCountHeight + (ix + 0)];
+
+	glm::vec3 va = glm::normalize(glm::vec3((size / vertCountHeight) * 2.0f, 0.0f, rheight - lheight));
+	glm::vec3 vb = glm::normalize(glm::vec3(0.0f, (size / vertCountHeight) * 2.0f, uheight - dheight));
+	glm::vec3 height_normal = glm::cross(va, vb);
 
 	Vertex out;
 
@@ -369,430 +399,45 @@ void PlanetTile::generate_vertex(size_t ix, size_t iy, size_t vertCount,
 	// Get the absolute [-1, 1] position of the vertex
 	glm::vec3 world_pos_cubic = get_real_cubic_pos(in_tile, model);
 	glm::vec3 world_pos_spheric = MathUtil::cube_to_sphere(world_pos_cubic);
+
+	glm::vec3 tile_normal = MathUtil::cube_to_sphere(world_pos_spheric);
+
 	world_pos_spheric += glm::normalize(world_pos_spheric) * height;
 
-	out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
-	out.nrm = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	verts[index + 0] = out.pos.x;
-	verts[index + 1] = out.pos.y;
-	verts[index + 2] = out.pos.z;
-	verts[index + 3] = out.nrm.x;
-	verts[index + 4] = out.nrm.y;
-	verts[index + 5] = out.nrm.z;
-	verts[index + 6] = out.uv.x;
-	verts[index + 7] = out.uv.y;
+
+	// https://blog.selfshadow.com/publications/blending-in-detail/
+	glm::vec2 n1xy = glm::vec2(tile_normal.x, tile_normal.y);
+	glm::vec2 n2xy = glm::vec2(height_normal.x, height_normal.y);
+
+	glm::vec3 combined_normal = glm::normalize(glm::vec3(n1xy + n2xy, tile_normal.z * height_normal.z));
+
+
+	out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
+	out.nrm = combined_normal;
+
+	target[index + 0] = out.pos.x;
+	target[index + 1] = out.pos.y;
+	target[index + 2] = out.pos.z;
+	target[index + 3] = out.nrm.x;
+	target[index + 4] = out.nrm.y;
+	target[index + 5] = out.nrm.z;
+	target[index + 6] = out.uv.x;
+	target[index + 7] = out.uv.y;
 }
 
 
-PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet) : path(nPath.path, nPath.side)
+PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet) : path(nPath.path, nPath.side), planet(planet)
 {
-	bool clockwise = false;
-
-	if (nPath.side == PlanetTilePath::PY || 
-		nPath.side == PlanetTilePath::NY || 
-		nPath.side == PlanetTilePath::NX)
-	{
-		clockwise = true;
-	}
-
 	this->users = 0;
 	this->verts = std::vector<float>();
 	this->indices = std::vector<uint16_t>();
 
-	// Used for normal generation, not for rendering
-	std::vector<uint16_t> all_indices;
-	
-	// We use only position, normal and texture
-	const int FLOATS_PER_VERTEX = 8;
+	this->vert_count = vertCount;
 
-	verts.resize(vertCount * vertCount * FLOATS_PER_VERTEX + vertCount * 4 * FLOATS_PER_VERTEX);
-
-	glm::mat4 model = nPath.get_model_matrix();
-	glm::mat4 model_spheric = nPath.get_model_spheric_matrix();
-	glm::mat4 inverse_model = glm::inverse(model);
-	glm::mat4 inverse_model_spheric = glm::inverse(model_spheric);
-
-	std::vector<float> heights = std::vector<float>();
-	heights.resize(vertCount * vertCount, 0.0f);
-
-	if (planet.surface_provider != NULL)
-	{
-		planet.surface_provider->get_heights(nPath, vertCount, heights, planet);
-	}
-
-	// Generate all vertices
-	for (size_t iy = 0; iy < vertCount; iy++)
-	{	
-		for (size_t ix = 0; ix < vertCount; ix++)
-		{
-			generate_vertex(ix, iy, vertCount, heights, model, inverse_model_spheric, (iy * vertCount + ix) * FLOATS_PER_VERTEX);
-		}
-	}
-
-	size_t end_index = vertCount * vertCount;
-	size_t hVertCount = vertCount / 2;
-
-	size_t left_corner_idx = end_index;
-	size_t right_corner_idx = end_index + hVertCount;
-
-	end_index += vertCount;
-
-	for (size_t ix = 0; ix < vertCount; ix += 2)
-	{
-		// Up and right corners
-		generate_vertex(ix, 0, vertCount, heights, model, inverse_model_spheric, (end_index + ix / 2) * FLOATS_PER_VERTEX);
-		generate_vertex(ix, vertCount - 1, vertCount, heights, model, inverse_model_spheric, (end_index + hVertCount + ix / 2) * FLOATS_PER_VERTEX);
-	}
-
-	size_t up_corner_idx = end_index;
-	size_t down_corner_idx = end_index + hVertCount;
-
-	// Generate indices for normal mesh
-	for (size_t iy = 0; iy < vertCount - 1; iy++)
-	{
-		for (size_t ix = 0; ix < vertCount; ix++)
-		{
-			bool to_render = false;
-
-			if (iy >= 1 && iy < vertCount - 1 && ix >= 1 && ix < vertCount - 1)
-			{
-				to_render = true;
-			}
-
-			if (ix < vertCount - 2)
-			{
-				if (to_render)
-				{
-					if (clockwise)
-					{
-						// Center
-						indices.push_back(iy * vertCount + ix);
-						// Right
-						indices.push_back(iy * vertCount + (ix + 1));
-					}
-					else
-					{
-						// Right
-						indices.push_back(iy * vertCount + (ix + 1));
-						// Center
-						indices.push_back(iy * vertCount + ix);
-					}
-
-					// Down
-					indices.push_back((iy + 1) * vertCount + ix);
-				}
-				
-			
-				if (clockwise)
-				{
-					// Center
-					all_indices.push_back(iy * vertCount + ix);
-					// Right
-					all_indices.push_back(iy * vertCount + (ix + 1));
-				}
-				else
-				{
-					// Right
-					all_indices.push_back(iy * vertCount + (ix + 1));
-					// Center
-					all_indices.push_back(iy * vertCount + ix);
-				}
-
-				// Down
-				all_indices.push_back((iy + 1) * vertCount + ix);
-
-			}
-
-			if (ix > 1)
-			{
-				if (to_render)
-				{
-					if (clockwise)
-					{
-						// Center
-						indices.push_back(iy * vertCount + ix);
-						// Down
-						indices.push_back((iy + 1) * vertCount + ix);
-					}
-					else
-					{
-						// Down
-						indices.push_back((iy + 1) * vertCount + ix);
-						// Center
-						indices.push_back(iy * vertCount + ix);
-					}
-
-					// Down Left
-					indices.push_back((iy + 1) * vertCount + (ix - 1));
-				}
-
-				if (clockwise)
-				{
-					// Center
-					all_indices.push_back(iy * vertCount + ix);
-					// Down
-					all_indices.push_back((iy + 1) * vertCount + ix);
-				}
-				else
-				{
-					// Down
-					all_indices.push_back((iy + 1) * vertCount + ix);
-					// Center
-					all_indices.push_back(iy * vertCount + ix);
-				}
-
-				// Down Left
-				all_indices.push_back((iy + 1) * vertCount + (ix - 1));
-			}
-		}
-	}
-
-	// Upper and lower (to same)
-	for (size_t ix = 0; ix < vertCount - 1; ix++)
-	{
-		if (clockwise)
-		{
-			tosame[0].push_back(0 * vertCount + ix + 0);
-			tosame[0].push_back(0 * vertCount + ix + 1);
-			tosame[0].push_back(1 * vertCount + ix + 0);
-
-			tosame[0].push_back(0 * vertCount + ix + 1);
-			tosame[0].push_back(1 * vertCount + ix + 1);
-			tosame[0].push_back(1 * vertCount + ix + 0);
-
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 0);
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 0);
-
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 0);
-		}
-		else
-		{
-			tosame[0].push_back(0 * vertCount + ix + 1);
-			tosame[0].push_back(0 * vertCount + ix + 0);
-			tosame[0].push_back(1 * vertCount + ix + 0);
-
-			tosame[0].push_back(1 * vertCount + ix + 1);
-			tosame[0].push_back(0 * vertCount + ix + 1);
-			tosame[0].push_back(1 * vertCount + ix + 0);
-
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 0);
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 0);
-
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tosame[2].push_back((vertCount - 1) * vertCount + ix + 0);
-		}
-	
-
-
-	}
-
-	// Left and right (to same)
-	for (size_t iy = 0; iy < vertCount - 1; iy++)
-	{
-		if (clockwise)
-		{
-			tosame[3].push_back((iy + 0) * vertCount + 0);
-			tosame[3].push_back((iy + 0) * vertCount + 1);
-			tosame[3].push_back((iy + 1) * vertCount + 0);
-
-			tosame[3].push_back((iy + 0) * vertCount + 1);
-			tosame[3].push_back((iy + 1) * vertCount + 1);
-			tosame[3].push_back((iy + 1) * vertCount + 0);
-
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 2);
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 2);
-
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 2);
-		}
-		else
-		{
-			tosame[3].push_back((iy + 0) * vertCount + 1);
-			tosame[3].push_back((iy + 0) * vertCount + 0);
-			tosame[3].push_back((iy + 1) * vertCount + 0);
-
-			tosame[3].push_back((iy + 1) * vertCount + 1);
-			tosame[3].push_back((iy + 0) * vertCount + 1);
-			tosame[3].push_back((iy + 1) * vertCount + 0);
-
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 2);
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 2);
-
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tosame[1].push_back((iy + 1) * vertCount + vertCount - 2);
-		}
-
-	}
-
-	// Upper and lower (to lower)
-	for (size_t ix = 0; ix < vertCount - 2; ix+=2)
-	{
-		if (clockwise)
-		{
-			tolower[0].push_back(0 * vertCount + ix + 0);
-			tolower[0].push_back(1 * vertCount + ix + 1);
-			tolower[0].push_back(1 * vertCount + ix + 0);
-
-			tolower[0].push_back(0 * vertCount + ix + 0);
-			tolower[0].push_back(0 * vertCount + ix + 2);
-			tolower[0].push_back(1 * vertCount + ix + 1);
-
-			tolower[0].push_back(0 * vertCount + ix + 2);
-			tolower[0].push_back(1 * vertCount + ix + 2);
-			tolower[0].push_back(1 * vertCount + ix + 1);
-
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 0);
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 0);
-
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 0);
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 2);
-
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 2);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 2);
-		}
-		else
-		{
-			tolower[0].push_back(1 * vertCount + ix + 1);
-			tolower[0].push_back(0 * vertCount + ix + 0);
-			tolower[0].push_back(1 * vertCount + ix + 0);
-
-			tolower[0].push_back(0 * vertCount + ix + 2);
-			tolower[0].push_back(0 * vertCount + ix + 0);
-			tolower[0].push_back(1 * vertCount + ix + 1);
-
-			tolower[0].push_back(1 * vertCount + ix + 2);
-			tolower[0].push_back(0 * vertCount + ix + 2);
-			tolower[0].push_back(1 * vertCount + ix + 1);
-
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 0);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 0);
-
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 0);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 2);
-
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 2);
-			tolower[2].push_back((vertCount - 2) * vertCount + ix + 1);
-			tolower[2].push_back((vertCount - 1) * vertCount + ix + 2);
-		}
-
-	}
-
-	// Left and Right (to lower)
-	for (size_t iy = 0; iy < vertCount - 2; iy+=2)
-	{
-		if (clockwise)
-		{
-			tolower[3].push_back((iy + 0) * vertCount + 0);
-			tolower[3].push_back((iy + 0) * vertCount + 1);
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-			tolower[3].push_back((iy + 2) * vertCount + 1);
-			tolower[3].push_back((iy + 2) * vertCount + 0);
-
-			tolower[3].push_back((iy + 0) * vertCount + 0);
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-			tolower[3].push_back((iy + 2) * vertCount + 0);
-
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 2);
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 2);
-
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-		}
-		else
-		{
-			tolower[3].push_back((iy + 0) * vertCount + 1);
-			tolower[3].push_back((iy + 0) * vertCount + 0);
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-
-			tolower[3].push_back((iy + 2) * vertCount + 1);
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-			tolower[3].push_back((iy + 2) * vertCount + 0);
-
-			tolower[3].push_back((iy + 1) * vertCount + 1);
-			tolower[3].push_back((iy + 0) * vertCount + 0);
-			tolower[3].push_back((iy + 2) * vertCount + 0);
-
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 2);
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 2);
-
-			tolower[1].push_back((iy + 2) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 0) * vertCount + vertCount - 1);
-			tolower[1].push_back((iy + 1) * vertCount + vertCount - 2);
-		}
-	}
-
-	// Geenerate normals 
-	for (size_t i = 0; i < all_indices.size(); i += 3)
-	{
-		generate_normal(i, all_indices, verts, FLOATS_PER_VERTEX, model_spheric);
-	}
-
-	/*for (size_t j = 0; j < 4; j++)
-	{
-		for (size_t i = 0; i < tosame[j].size(); i += 3)
-		{
-			generate_normal(i, tosame[j], verts, FLOATS_PER_VERTEX, model_spheric);
-		}
-	}*/
+	generate();
 
 	vao = 0; vbo = 0; ebo = 0;
-}
-
-
-void PlanetTile::generate_normal(size_t i, std::vector<uint16_t>& indices, std::vector<float>& verts, size_t FLOATS_PER_VERTEX,
-	glm::mat4 model_spheric)
-{
-	float* vert0 = &verts[indices[i + 0] * FLOATS_PER_VERTEX];
-	float* vert1 = &verts[indices[i + 1] * FLOATS_PER_VERTEX];
-	float* vert2 = &verts[indices[i + 2] * FLOATS_PER_VERTEX];
-
-	glm::vec3 a = glm::vec3(vert0[0], vert0[1], vert0[2]);
-	glm::vec3 b = glm::vec3(vert1[0], vert1[1], vert1[2]);
-	glm::vec3 c = glm::vec3(vert2[0], vert2[1], vert2[2]);
-	a = model_spheric * glm::vec4(a, 1.0f);
-	b = model_spheric * glm::vec4(b, 1.0f);
-	c = model_spheric * glm::vec4(c, 1.0f);
-
-	glm::vec3 an = glm::vec3(vert0[3], vert0[4], vert0[5]);
-	glm::vec3 bn = glm::vec3(vert1[3], vert1[4], vert1[5]);
-	glm::vec3 cn = glm::vec3(vert2[3], vert2[4], vert2[5]);
-
-	glm::vec3 face_normal = glm::triangleNormal(a, b, c);
-	an = glm::normalize(an + face_normal);
-	bn = glm::normalize(bn + face_normal);
-	cn = glm::normalize(cn + face_normal);
-
-	vert0[3] = an.x; vert0[4] = an.y; vert0[5] = an.z;
-	vert1[3] = bn.x; vert1[4] = bn.y; vert1[5] = bn.z;
-	vert2[3] = cn.x; vert2[4] = cn.y; vert2[5] = cn.z;
 }
 
 
@@ -824,9 +469,15 @@ void PlanetTile::upload()
 		return;
 	}
 
+
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
+	glGenVertexArrays(4, tolower_vao);
+	glGenBuffers(4, tolower_ebo);
+	glGenVertexArrays(4, tosame_vao);
+	glGenBuffers(4, tosame_ebo);
+
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -840,24 +491,20 @@ void PlanetTile::upload()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	glGenVertexArrays(4, tolower_vao);
-	glGenBuffers(4, tolower_ebo);
-	glGenVertexArrays(4, tosame_vao);
-	glGenBuffers(4, tosame_ebo);
 
 	for (size_t i = 0; i < 4; i++)
 	{
 		glBindVertexArray(tolower_vao[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tolower_ebo[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tolower[i]) * tolower[i].size(), tolower[i].data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tolower[i][0]) * tolower[i].size(), tolower[i].data(), GL_STATIC_DRAW);
 
 		do_attributes();
 
 		glBindVertexArray(tosame_vao[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tosame_ebo[i]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tosame[i]) * tosame[i].size(), tosame[i].data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tosame[i][0]) * tosame[i].size(), tosame[i].data(), GL_STATIC_DRAW);
 
 		do_attributes();
 	}
@@ -889,5 +536,357 @@ void PlanetTile::unload()
 	vao = 0;
 	vbo = 0;
 	ebo = 0;
+}
+
+void PlanetTile::generate()
+{
+	bool clockwise = false;
+
+	if (path.side == PlanetTilePath::PY ||
+		path.side == PlanetTilePath::NY ||
+		path.side == PlanetTilePath::NX)
+	{
+		clockwise = true;
+	}
+
+
+	// Used for normal generation, not for rendering
+	std::vector<uint16_t> all_indices;
+
+	// We use only position, normal and texture
+	const int FLOATS_PER_VERTEX = 8;
+
+	verts.resize(vert_count * vert_count  * FLOATS_PER_VERTEX);
+
+	glm::mat4 model = path.get_model_matrix();
+	glm::mat4 model_spheric = path.get_model_spheric_matrix();
+	glm::mat4 inverse_model = glm::inverse(model);
+	glm::mat4 inverse_model_spheric = glm::inverse(model_spheric);
+
+	std::vector<float> heights = std::vector<float>();
+	heights.resize((vert_count + 2) * (vert_count + 2), 0.0f);
+
+	if (planet.surface_provider != NULL)
+	{
+		planet.surface_provider->get_heights(path, vert_count, heights, planet);
+	}
+
+
+	size_t vertCountp1 = vert_count;
+
+	// Generate all vertices
+	for (size_t iy = 0; iy < vert_count; iy++)
+	{
+		for (size_t ix = 0; ix < vert_count; ix++)
+		{
+			size_t idx = iy * vertCountp1 + ix;
+			generate_vertex(ix, iy, vert_count, vert_count + 2, heights, model,
+				inverse_model_spheric, idx * FLOATS_PER_VERTEX, verts, path.getSize());
+		}
+	}
+
+
+	// Generate indices for normal mesh
+	for (size_t iy = 0; iy < vert_count - 1; iy++)
+	{
+		for (size_t ix = 0; ix < vert_count; ix++)
+		{
+			bool to_render = false;
+
+			if (iy >= 1 && iy < vert_count - 1 && ix >= 1 && ix < vert_count - 1)
+			{
+				to_render = true;
+			}
+
+			if (ix < vert_count - 2)
+			{
+				if (to_render)
+				{
+					if (clockwise)
+					{
+						// Center
+						indices.push_back(iy * vert_count + ix);
+						// Right
+						indices.push_back(iy * vert_count + (ix + 1));
+					}
+					else
+					{
+						// Right
+						indices.push_back(iy * vert_count + (ix + 1));
+						// Center
+						indices.push_back(iy * vert_count + ix);
+					}
+
+					// Down
+					indices.push_back((iy + 1) * vert_count + ix);
+				}
+
+
+				if (clockwise)
+				{
+					// Center
+					all_indices.push_back(iy * vertCountp1 + ix);
+					// Right
+					all_indices.push_back(iy * vertCountp1 + (ix + 1));
+				}
+				else
+				{
+					// Right
+					all_indices.push_back(iy * vertCountp1 + (ix + 1));
+					// Center
+					all_indices.push_back(iy * vertCountp1 + ix);
+				}
+
+				// Down
+				all_indices.push_back((iy + 1) * vertCountp1 + ix);
+
+			}
+
+			if (ix > 1)
+			{
+				if (to_render)
+				{
+					if (clockwise)
+					{
+						// Center
+						indices.push_back(iy * vert_count + ix);
+						// Down
+						indices.push_back((iy + 1) * vert_count + ix);
+					}
+					else
+					{
+						// Down
+						indices.push_back((iy + 1) * vert_count + ix);
+						// Center
+						indices.push_back(iy * vert_count + ix);
+					}
+
+					// Down Left
+					indices.push_back((iy + 1) * vert_count + (ix - 1));
+				}
+
+				if (clockwise)
+				{
+					// Center
+					all_indices.push_back(iy * vertCountp1 + ix);
+					// Down
+					all_indices.push_back((iy + 1) * vertCountp1 + ix);
+				}
+				else
+				{
+					// Down
+					all_indices.push_back((iy + 1) * vertCountp1 + ix);
+					// Center
+					all_indices.push_back(iy * vertCountp1 + ix);
+				}
+
+				// Down Left
+				all_indices.push_back((iy + 1) * vertCountp1 + (ix - 1));
+			}
+
+		}
+	}
+
+
+	// Upper and lower (to same)
+	for (size_t ix = 0; ix < vert_count - 1; ix++)
+	{
+		if (clockwise)
+		{
+			tosame[0].push_back(0 * vert_count + ix + 0);
+			tosame[0].push_back(0 * vert_count + ix + 1);
+			tosame[0].push_back(1 * vert_count + ix + 0);
+
+			tosame[0].push_back(0 * vert_count + ix + 1);
+			tosame[0].push_back(1 * vert_count + ix + 1);
+			tosame[0].push_back(1 * vert_count + ix + 0);
+
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 0);
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 0);
+
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 0);
+		}
+		else
+		{
+			tosame[0].push_back(0 * vert_count + ix + 1);
+			tosame[0].push_back(0 * vert_count + ix + 0);
+			tosame[0].push_back(1 * vert_count + ix + 0);
+
+			tosame[0].push_back(1 * vert_count + ix + 1);
+			tosame[0].push_back(0 * vert_count + ix + 1);
+			tosame[0].push_back(1 * vert_count + ix + 0);
+
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 0);
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 0);
+
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tosame[2].push_back((vert_count - 1) * vert_count + ix + 0);
+		}
+
+
+
+	}
+
+	// Left and right (to same)
+	for (size_t iy = 0; iy < vert_count - 1; iy++)
+	{
+		if (clockwise)
+		{
+			tosame[3].push_back((iy + 0) * vert_count + 0);
+			tosame[3].push_back((iy + 0) * vert_count + 1);
+			tosame[3].push_back((iy + 1) * vert_count + 0);
+
+			tosame[3].push_back((iy + 0) * vert_count + 1);
+			tosame[3].push_back((iy + 1) * vert_count + 1);
+			tosame[3].push_back((iy + 1) * vert_count + 0);
+
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 2);
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 2);
+
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 2);
+		}
+		else
+		{
+			tosame[3].push_back((iy + 0) * vert_count + 1);
+			tosame[3].push_back((iy + 0) * vert_count + 0);
+			tosame[3].push_back((iy + 1) * vert_count + 0);
+
+			tosame[3].push_back((iy + 1) * vert_count + 1);
+			tosame[3].push_back((iy + 0) * vert_count + 1);
+			tosame[3].push_back((iy + 1) * vert_count + 0);
+
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 2);
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 2);
+
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tosame[1].push_back((iy + 1) * vert_count + vert_count - 2);
+		}
+
+	}
+
+	// Upper and lower (to lower)
+	for (size_t ix = 0; ix < vert_count - 2; ix += 2)
+	{
+		if (clockwise)
+		{
+			tolower[0].push_back(0 * vert_count + ix + 0);
+			tolower[0].push_back(1 * vert_count + ix + 1);
+			tolower[0].push_back(1 * vert_count + ix + 0);
+
+			tolower[0].push_back(0 * vert_count + ix + 0);
+			tolower[0].push_back(0 * vert_count + ix + 2);
+			tolower[0].push_back(1 * vert_count + ix + 1);
+
+			tolower[0].push_back(0 * vert_count + ix + 2);
+			tolower[0].push_back(1 * vert_count + ix + 2);
+			tolower[0].push_back(1 * vert_count + ix + 1);
+
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 0);
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 0);
+
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 0);
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 2);
+
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 2);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 2);
+		}
+		else
+		{
+			tolower[0].push_back(1 * vert_count + ix + 1);
+			tolower[0].push_back(0 * vert_count + ix + 0);
+			tolower[0].push_back(1 * vert_count + ix + 0);
+
+			tolower[0].push_back(0 * vert_count + ix + 2);
+			tolower[0].push_back(0 * vert_count + ix + 0);
+			tolower[0].push_back(1 * vert_count + ix + 1);
+
+			tolower[0].push_back(1 * vert_count + ix + 2);
+			tolower[0].push_back(0 * vert_count + ix + 2);
+			tolower[0].push_back(1 * vert_count + ix + 1);
+
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 0);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 0);
+
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 0);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 2);
+
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 2);
+			tolower[2].push_back((vert_count - 2) * vert_count + ix + 1);
+			tolower[2].push_back((vert_count - 1) * vert_count + ix + 2);
+		}
+
+	}
+
+	// Left and Right (to lower)
+	for (size_t iy = 0; iy < vert_count - 2; iy += 2)
+	{
+		if (clockwise)
+		{
+			tolower[3].push_back((iy + 0) * vert_count + 0);
+			tolower[3].push_back((iy + 0) * vert_count + 1);
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+			tolower[3].push_back((iy + 2) * vert_count + 1);
+			tolower[3].push_back((iy + 2) * vert_count + 0);
+
+			tolower[3].push_back((iy + 0) * vert_count + 0);
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+			tolower[3].push_back((iy + 2) * vert_count + 0);
+
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 2);
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 2);
+
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+		}
+		else
+		{
+			tolower[3].push_back((iy + 0) * vert_count + 1);
+			tolower[3].push_back((iy + 0) * vert_count + 0);
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+
+			tolower[3].push_back((iy + 2) * vert_count + 1);
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+			tolower[3].push_back((iy + 2) * vert_count + 0);
+
+			tolower[3].push_back((iy + 1) * vert_count + 1);
+			tolower[3].push_back((iy + 0) * vert_count + 0);
+			tolower[3].push_back((iy + 2) * vert_count + 0);
+
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 2);
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 2);
+
+			tolower[1].push_back((iy + 2) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 0) * vert_count + vert_count - 1);
+			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+		}
+	}
 }
 

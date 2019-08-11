@@ -64,6 +64,9 @@ struct PlanetTile
 {
 	PlanetTilePath path;
 
+	size_t vert_count;
+	const Planet& planet;
+
 	std::vector<float> verts;
 	std::vector<uint16_t> indices;
 	// Up, right, down, left
@@ -85,9 +88,11 @@ struct PlanetTile
 	void upload();
 	void unload();
 
-	void generate_vertex(size_t ix, size_t iy, size_t vertCount,
+	void generate();
+
+	void generate_vertex(size_t ix, size_t iy, size_t vertCount, size_t vertCountHeight,
 		std::vector<float>& heights, glm::mat4 model,
-		glm::mat4 inverse_model_spheric, size_t index);
+		glm::mat4 inverse_model_spheric, size_t index, std::vector<float>& target, float size);
 
 	void generate_normal(size_t i, std::vector<uint16_t>& indices, std::vector<float>& verts, size_t FLOATS_PER_VERTEX,
 		glm::mat4 model_spheric);
@@ -101,17 +106,20 @@ class PlanetTileServer
 {
 public:
 
-	
+
 
 	Planet* planet;
 
 	std::unordered_map<PlanetTilePath, PlanetTile*, PlanetTilePathHasher> tiles;
 
-	PlanetTile* load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left);
+	PlanetTile* load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left, bool now = false);
 	void unload(PlanetTilePath path, bool unload_now = false);
 
 	// Unloads all unused tiles
 	void unload_unused();
+
+	// Uploads all used tiles which are not uploaded
+	void upload_used();
 
 	// Minimum depth at which tiles get unloaded, bigger tiles
 	// will be loaded even if not used
@@ -119,7 +127,7 @@ public:
 
 	// Vertices in the side of each tile, smallest tiles
 	// simply get smallest heightmap samples
-	size_t verticesPerSide = 9;
+	size_t verticesPerSide = 32 + 1;
 
 	PlanetTileServer(Planet* planet);
 	~PlanetTileServer();

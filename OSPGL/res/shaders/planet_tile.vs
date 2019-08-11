@@ -15,6 +15,7 @@ out vec3 vPos;
 void main()
 {
 	vTex = aTex;
+	//vNormal = mat3(transpose(inverse(model))) * aNrm;
 	vNormal = aNrm;
 	vPos = vec3(model * vec4(aPos, 1.0));
 	gl_Position = proj * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
