@@ -182,14 +182,15 @@ int main()
 
 
 		// render
-		glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		clock_t begin = clock();
 
 		planet_qtree.flatten();
+
 		auto node = onNode->get_recursive(focusPoint, qtree_depth);
-		planet_qtree.make_all_leafs_at_least(1);
+		planet_qtree.make_all_leafs_at_least(3);
 		planet_qtree.draw_gui_window(focusPoint, onNode);
 
 		float focusSpeed = 0.25f;
@@ -285,7 +286,7 @@ int main()
 		glm::mat4 view = glm::lookAt(
 			glm::vec3(eyePoint.z * sin(eyePoint.y) * cos(eyePoint.x), eyePoint.z * cos(eyePoint.y), eyePoint.z * sin(eyePoint.x) * sin(eyePoint.y)),
 			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.001f, 2.5f);
+		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0001f, 5.0f);
 		planet_qtree.draw(view, proj);
 
 

@@ -121,10 +121,12 @@ public:
 
 	// Minimum depth at which tiles get unloaded, bigger tiles
 	// will be loaded even if not used
-	size_t minDepthToUnload = 2;
+	size_t minDepthToUnload = 3;
 
 	// Vertices in the side of each tile, smallest tiles
 	// simply get smallest heightmap samples
+	// Small planets (or asteroids) need either more vertices
+	// or to be kept at a decent subdivision level
 	size_t verticesPerSide = 32 + 1;
 
 	PlanetTileServer(Planet* planet);

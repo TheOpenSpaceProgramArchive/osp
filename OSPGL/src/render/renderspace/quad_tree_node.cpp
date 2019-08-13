@@ -80,7 +80,7 @@ QuadTreeNode* QuadTreeNode::get_recursive(glm::dvec2 coord, size_t maxDepth)
 		QuadTreeNode* child = get_or_split(quad);
 
 		// We can merge every other node that is not child
-		merge_all_but(child);
+		//merge_all_but(child);
 
 		return child->get_recursive(coord, maxDepth);
 
@@ -421,31 +421,6 @@ std::vector<QuadTreeNode*> QuadTreeNode::get_all_leaf_nodes()
 	return out;
 }
 
-void QuadTreeNode::make_all_leafs_at_least(size_t depth)
-{
-	int count = 0;
-
-	do
-	{
-		auto leafs = get_all_leaf_nodes();
-		count = leafs.size();
-
-		for (auto leaf : leafs)
-		{
-			if (leaf->depth < depth)
-			{
-				leaf->split(true);
-			}
-			else
-			{
-				count--;
-			}
-		}
-
-
-	} while (count != 0);
-	
-}
 
 bool QuadTreeNode::needs_lowq(QuadTreeSide side)
 {

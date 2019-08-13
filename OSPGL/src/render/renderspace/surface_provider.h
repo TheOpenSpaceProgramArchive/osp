@@ -36,14 +36,14 @@ public:
 				float height = 0.0f;
 
 
-				/*height = stb_perlin_ridge_noise3(	sphere.x * 250.0f,	sphere.y * 250.0f,	sphere.z * 250.0f, 2.0f, 0.7f, 0.9f, 8) * 0.0005f + 
+				height = stb_perlin_ridge_noise3(	sphere.x * 250.0f,	sphere.y * 250.0f,	sphere.z * 250.0f, 2.0f, 0.7f, 0.9f, 8) * 0.0005f + 
 					stb_perlin_fbm_noise3(			sphere.x * 58.0f,	sphere.y * 58.0f,	sphere.z * 58.0f, 2.0f, 0.5f, 8) * 0.00002f +
-					stb_perlin_fbm_noise3(			sphere.x * 8.0f,	sphere.y * 8.0f,	sphere.z * 8.0f, 2.0f, 0.5f, 8) * 0.0005f +
-					stb_perlin_fbm_noise3(			sphere.x * 2.0f,	sphere.y * 2.0f,	sphere.z * 2.0f, 2.0f, 0.5f, 8) * 0.0005f -
-					stb_perlin_ridge_noise3(		sphere.x * 8.0f,	sphere.y * 8.0f,	sphere.z * 8.0f, 2.0f, 0.5f, 0.6f, 8) * 0.015f +
-					stb_perlin_fbm_noise3(			sphere.x * 600.0f,	sphere.y * 600.0f,	sphere.z * 600.0f, 3.0f, 0.6f, 8) * 0.000005f;*/
+					stb_perlin_fbm_noise3(			sphere.x * 3.0f,	sphere.y * 3.0f,	sphere.z * 3.0f, 2.0f, 0.5f, 8) * 0.035f +
+					stb_perlin_turbulence_noise3(	sphere.x * 8.0f,	sphere.y * 16.0f,	sphere.z * 16.0f, 2.0f, 0.5f, 8) * 0.005f -
+					stb_perlin_ridge_noise3(		sphere.x * 8.0f,	sphere.y * 8.0f,	sphere.z * 8.0f, 2.0f, 0.5f, 0.6f, 8) * 0.035f +
+					stb_perlin_fbm_noise3(			sphere.x * 600.0f,	sphere.y * 600.0f,	sphere.z * 600.0f, 3.0f, 0.6f, 8) * 0.000005f;
 
-				height = cos(sphere.x * sphere.y * sphere.z * 62.8f) * 0.1f;
+				height += cos(sphere.x * sphere.y * sphere.z * 15.8f) * 0.01f + sin(sphere.x * sphere.z * 6.5f + sphere.y * 1.6f) * 0.15f;
 
 				//height = 0.0f;
 

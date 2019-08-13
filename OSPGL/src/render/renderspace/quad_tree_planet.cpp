@@ -221,43 +221,110 @@ void QuadTreePlanet::update(float dt)
 
 void QuadTreePlanet::make_all_leafs_at_least(size_t depth, bool exclude_opposite)
 {
+	std::vector<QuadTreeNode*> targets;
+
 	if (exclude_opposite)
 	{
 		if (px.has_children())
 		{
-			px.make_all_leafs_at_least(depth);
+			targets.push_back(&px);
 		}
 		if (py.has_children())
 		{
-			py.make_all_leafs_at_least(depth);
+			targets.push_back(&py);
 		}
 		if (pz.has_children())
 		{
-			pz.make_all_leafs_at_least(depth);
+			targets.push_back(&pz);
 		}
 		if (nx.has_children())
 		{
-			nx.make_all_leafs_at_least(depth);
+			targets.push_back(&nx);
 		}
 		if (ny.has_children())
 		{
-			ny.make_all_leafs_at_least(depth);
+			targets.push_back(&ny);
 		}
 		if (nz.has_children())
 		{
-			nz.make_all_leafs_at_least(depth);
+			targets.push_back(&nz);
 		}
 	}
 	else
 	{
-		px.make_all_leafs_at_least(depth);
-		py.make_all_leafs_at_least(depth);
-		pz.make_all_leafs_at_least(depth);
-		nx.make_all_leafs_at_least(depth);
-		ny.make_all_leafs_at_least(depth);
-		nz.make_all_leafs_at_least(depth);
+		targets.push_back(&px);
+		targets.push_back(&py);
+		targets.push_back(&pz);
+		targets.push_back(&nx);
+		targets.push_back(&ny);
+		targets.push_back(&nz);
 	}
 	
+
+	// We have to do this like this to guarantee that neighbouring
+	// sides get the correct neighbour depth
+
+	std::vector<int> counts;
+	counts.resize(targets.size(), 0);
+	
+	bool any = false;
+	
+	std::vector<bool> finished;
+	finished.resize(targets.size(), false);
+
+	do
+	{
+		any = false;
+
+		for (size_t i = 0; i < targets.size(); i++)
+		{
+			if (finished[i] == false)
+			{
+				auto leafs = targets[i]->get_all_leaf_nodes();
+				counts[i] = leafs.size();
+
+				for (auto leaf : leafs)
+				{
+					if (leaf->depth == depth - 1)
+					{
+						leaf->split(false);
+					}
+					else if (leaf->depth < depth - 1)
+					{
+						leaf->split(true);
+					}
+					else
+					{
+						counts[i]--;
+					}
+				}
+
+				if (counts[i] > 0)
+				{
+					any = true;
+				}
+				else
+				{
+					finished[i] = true;
+				}
+			}
+		}
+
+	} while (any == true);
+
+
+
+	for (size_t i = 0; i < targets.size(); i++)
+	{
+		auto leafs = targets[i]->get_all_leaf_nodes();
+		for (auto leaf : leafs)
+		{
+			if (leaf->depth == depth)
+			{
+				leaf->obtain_neighbors(leaf->quad, true);
+			}
+		}
+	}
 }
 
 QuadTreePlanet::QuadTreePlanet(Planet* planet, Shader* shader) :
