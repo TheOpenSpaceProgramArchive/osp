@@ -165,11 +165,11 @@ int main()
 	Planet planet; planet.radius = 10.0; planet.surface_provider = new SurfaceProvider();
 	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, &planet_tile_shader);
 	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
-	QuadTreeNode* onNode = &planet_qtree.pz;
+	QuadTreeNode* onNode = &planet_qtree.px;
 
 	glm::vec3 eyePoint = glm::vec3(0.0f, 3.14 / 2.0f, 2.0f);
 
-	int qtree_depth = 18;
+	int qtree_depth = 0;
 	float qtree_timer = 0.0f;
 
 	while (!glfwWindowShouldClose(window))
@@ -205,9 +205,9 @@ int main()
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		{
-			focusSpeed /= 16.0f;
-			moveSpeed /= 16.0f;
-			zoomSpeed /= 16.0f;
+			focusSpeed /= 64.0f;
+			moveSpeed /= 64.0f;
+			zoomSpeed /= 64.0f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -284,7 +284,7 @@ int main()
 		glm::mat4 view = glm::lookAt(
 			glm::vec3(eyePoint.z * sin(eyePoint.y) * cos(eyePoint.x), eyePoint.z * cos(eyePoint.y), eyePoint.z * sin(eyePoint.x) * sin(eyePoint.y)),
 			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.00001f, 1.5f);
+		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.001f, 2.5f);
 		planet_qtree.draw(view, proj);
 
 

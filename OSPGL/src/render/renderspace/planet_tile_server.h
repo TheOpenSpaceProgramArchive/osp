@@ -90,9 +90,9 @@ struct PlanetTile
 
 	void generate();
 
-	void generate_vertex(size_t ix, size_t iy, size_t vertCount, size_t vertCountHeight,
-		std::vector<float>& heights, glm::mat4 model,
-		glm::mat4 inverse_model_spheric, size_t index, std::vector<float>& target, float size);
+	void generate_vertex(int ix, int iy, size_t vertCount,
+		std::vector<float>& heights, glm::mat4 model, glm::mat4 inverse_model_spheric, 
+		std::vector<Vertex>& target);
 
 	void generate_normal(size_t i, std::vector<uint16_t>& indices, std::vector<float>& verts, size_t FLOATS_PER_VERTEX,
 		glm::mat4 model_spheric);
@@ -105,8 +105,6 @@ struct PlanetTile
 class PlanetTileServer
 {
 public:
-
-
 
 	Planet* planet;
 

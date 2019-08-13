@@ -373,58 +373,6 @@ glm::vec3 get_real_cubic_pos(glm::vec3 vert, glm::mat4 transform)
 	return transform * glm::vec4(vert, 1.0f);
 }
 
-void PlanetTile::generate_vertex(size_t ix, size_t iy, size_t vertCount, size_t vertCountHeight,
-	std::vector<float>& heights, glm::mat4 model,
-	glm::mat4 inverse_model_spheric, size_t index, std::vector<float>& target, float size)
-{
-	float x = (float)ix / ((float)vertCount - 1);
-	float y = (float)iy / ((float)vertCount - 1);
-	// We have an extra height layer
-	float height = heights[(iy + 1) * vertCountHeight + (ix + 1)];
-
-	// Obtain normals from heightmap
-	float uheight = heights[(iy + 0) * vertCountHeight + (ix + 1)];
-	float rheight = heights[(iy + 1) * vertCountHeight + (ix + 2)];
-	float dheight = heights[(iy + 2) * vertCountHeight + (ix + 1)];
-	float lheight = heights[(iy + 1) * vertCountHeight + (ix + 0)];
-
-	glm::vec3 va = glm::normalize(glm::vec3((size / vertCountHeight) * 2.0f, 0.0f, rheight - lheight));
-	glm::vec3 vb = glm::normalize(glm::vec3(0.0f, (size / vertCountHeight) * 2.0f, uheight - dheight));
-	glm::vec3 height_normal = glm::cross(va, vb);
-
-	Vertex out;
-
-	glm::vec3 in_tile = glm::vec3(x, y, 0.0f);
-
-	// Get the absolute [-1, 1] position of the vertex
-	glm::vec3 world_pos_cubic = get_real_cubic_pos(in_tile, model);
-	glm::vec3 world_pos_spheric = MathUtil::cube_to_sphere(world_pos_cubic);
-
-	glm::vec3 tile_normal = MathUtil::cube_to_sphere(world_pos_spheric);
-
-	world_pos_spheric += glm::normalize(world_pos_spheric) * height;
-
-
-
-	// https://blog.selfshadow.com/publications/blending-in-detail/
-	glm::vec2 n1xy = glm::vec2(tile_normal.x, tile_normal.y);
-	glm::vec2 n2xy = glm::vec2(height_normal.x, height_normal.y);
-
-	glm::vec3 combined_normal = glm::normalize(glm::vec3(n1xy + n2xy, tile_normal.z * height_normal.z));
-
-
-	out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
-	out.nrm = combined_normal;
-
-	target[index + 0] = out.pos.x;
-	target[index + 1] = out.pos.y;
-	target[index + 2] = out.pos.z;
-	target[index + 3] = out.nrm.x;
-	target[index + 4] = out.nrm.y;
-	target[index + 5] = out.nrm.z;
-	target[index + 6] = out.uv.x;
-	target[index + 7] = out.uv.y;
-}
 
 
 PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet) : path(nPath.path, nPath.side), planet(planet)
@@ -538,6 +486,42 @@ void PlanetTile::unload()
 	ebo = 0;
 }
 
+void PlanetTile::generate_vertex(int ix, int iy, size_t vert_count,
+	std::vector<float>& heights, glm::mat4 model, glm::mat4 inverse_model_spheric,
+	std::vector<Vertex>& target)
+{
+	float x = (float)ix / ((float)vert_count - 1);
+	float y = (float)iy / ((float)vert_count - 1);
+	// We have an extra height layer
+	float height = heights[(iy + 1) * (vert_count + 2) + (ix + 1)];
+
+	Vertex out;
+
+	glm::vec3 in_tile = glm::vec3(x, y, 0.0f);
+
+	// Get the absolute [-1, 1] position of the vertex
+	glm::vec3 world_pos_cubic = get_real_cubic_pos(in_tile, model);
+	glm::vec3 world_pos_spheric = MathUtil::cube_to_sphere(world_pos_cubic);
+
+	glm::vec3 tile_normal = MathUtil::cube_to_sphere(world_pos_spheric);
+
+	world_pos_spheric += glm::normalize(world_pos_spheric) * height;
+
+
+
+	// https://blog.selfshadow.com/publications/blending-in-detail/
+	/*glm::vec2 n1xy = glm::vec2(tile_normal.x, tile_normal.y);
+	glm::vec2 n2xy = glm::vec2(height_normal.x, height_normal.y);
+
+	glm::vec3 combined_normal = glm::normalize(glm::vec3(n1xy + n2xy, tile_normal.z * height_normal.z));
+	*/
+	out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
+	out.nrm = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	target[(iy + 1) * (vert_count + 2) + (ix + 1)] = out;
+}
+
+
 void PlanetTile::generate()
 {
 	bool clockwise = false;
@@ -550,8 +534,7 @@ void PlanetTile::generate()
 	}
 
 
-	// Used for normal generation, not for rendering
-	std::vector<uint16_t> all_indices;
+
 
 	// We use only position, normal and texture
 	const int FLOATS_PER_VERTEX = 8;
@@ -568,125 +551,70 @@ void PlanetTile::generate()
 
 	if (planet.surface_provider != NULL)
 	{
-		planet.surface_provider->get_heights(path, vert_count, heights, planet);
+		planet.surface_provider->get_heights(path, vert_count, heights, planet, model_spheric, model);
 	}
 
+	size_t vert_count_p = vert_count + 2;
 
-	size_t vertCountp1 = vert_count;
+	std::vector<Vertex> vertices;
+	vertices.resize((vert_count + 2) * (vert_count + 2), Vertex());
+	// Used for normal generation, not for rendering
+	std::vector<uint16_t> all_indices;
 
 	// Generate all vertices
-	for (size_t iy = 0; iy < vert_count; iy++)
+	for (int iy = -1; iy < (int)vert_count + 1; iy++)
 	{
-		for (size_t ix = 0; ix < vert_count; ix++)
+		for (int ix = -1; ix < (int)vert_count + 1; ix++)
 		{
-			size_t idx = iy * vertCountp1 + ix;
-			generate_vertex(ix, iy, vert_count, vert_count + 2, heights, model,
-				inverse_model_spheric, idx * FLOATS_PER_VERTEX, verts, path.getSize());
+			generate_vertex(ix, iy, vert_count, heights, model, inverse_model_spheric, vertices);
 		}
 	}
 
-
-	// Generate indices for normal mesh
-	for (size_t iy = 0; iy < vert_count - 1; iy++)
+	for (int iy = -1; iy < (int)vert_count; iy++)
 	{
-		for (size_t ix = 0; ix < vert_count; ix++)
+		for (int ix = -1; ix < (int)vert_count + 1; ix++)
 		{
-			bool to_render = false;
-
-			if (iy >= 1 && iy < vert_count - 1 && ix >= 1 && ix < vert_count - 1)
+			// Vertices for normal generation
+			if (ix < (int)vert_count)
 			{
-				to_render = true;
+				all_indices.push_back((iy + 1) * vert_count_p + (ix + 1));
+				all_indices.push_back((iy + 2) * vert_count_p + (ix + 1));
+				all_indices.push_back((iy + 1) * vert_count_p + (ix + 2));
+
+				all_indices.push_back((iy + 1) * vert_count_p + (ix + 2));
+				all_indices.push_back((iy + 2) * vert_count_p + (ix + 1));
+				all_indices.push_back((iy + 2) * vert_count_p + (ix + 2));
+
 			}
 
-			if (ix < vert_count - 2)
+			// Vertices for rendering
+			if (ix >= 1 && iy >= 1 && iy < (int)vert_count - 2 && ix < (int)vert_count - 2)
 			{
-				if (to_render)
-				{
-					if (clockwise)
-					{
-						// Center
-						indices.push_back(iy * vert_count + ix);
-						// Right
-						indices.push_back(iy * vert_count + (ix + 1));
-					}
-					else
-					{
-						// Right
-						indices.push_back(iy * vert_count + (ix + 1));
-						// Center
-						indices.push_back(iy * vert_count + ix);
-					}
-
-					// Down
-					indices.push_back((iy + 1) * vert_count + ix);
-				}
-
-
 				if (clockwise)
 				{
-					// Center
-					all_indices.push_back(iy * vertCountp1 + ix);
-					// Right
-					all_indices.push_back(iy * vertCountp1 + (ix + 1));
+					indices.push_back((iy + 1) * vert_count + (ix + 0));
+					indices.push_back((iy + 0) * vert_count + (ix + 0));
+					indices.push_back((iy + 0) * vert_count + (ix + 1));
+
+					indices.push_back((iy + 1) * vert_count + (ix + 0));
+					indices.push_back((iy + 0) * vert_count + (ix + 1));
+					indices.push_back((iy + 1) * vert_count + (ix + 1));
 				}
 				else
 				{
-					// Right
-					all_indices.push_back(iy * vertCountp1 + (ix + 1));
-					// Center
-					all_indices.push_back(iy * vertCountp1 + ix);
-				}
+					indices.push_back((iy + 0) * vert_count + (ix + 0));
+					indices.push_back((iy + 1) * vert_count + (ix + 0));
+					indices.push_back((iy + 0) * vert_count + (ix + 1));
 
-				// Down
-				all_indices.push_back((iy + 1) * vertCountp1 + ix);
+					indices.push_back((iy + 0) * vert_count + (ix + 1));
+					indices.push_back((iy + 1) * vert_count + (ix + 0));
+					indices.push_back((iy + 1) * vert_count + (ix + 1));
+				}
+				
 
 			}
-
-			if (ix > 1)
-			{
-				if (to_render)
-				{
-					if (clockwise)
-					{
-						// Center
-						indices.push_back(iy * vert_count + ix);
-						// Down
-						indices.push_back((iy + 1) * vert_count + ix);
-					}
-					else
-					{
-						// Down
-						indices.push_back((iy + 1) * vert_count + ix);
-						// Center
-						indices.push_back(iy * vert_count + ix);
-					}
-
-					// Down Left
-					indices.push_back((iy + 1) * vert_count + (ix - 1));
-				}
-
-				if (clockwise)
-				{
-					// Center
-					all_indices.push_back(iy * vertCountp1 + ix);
-					// Down
-					all_indices.push_back((iy + 1) * vertCountp1 + ix);
-				}
-				else
-				{
-					// Down
-					all_indices.push_back((iy + 1) * vertCountp1 + ix);
-					// Center
-					all_indices.push_back(iy * vertCountp1 + ix);
-				}
-
-				// Down Left
-				all_indices.push_back((iy + 1) * vertCountp1 + (ix - 1));
-			}
-
 		}
 	}
-
 
 	// Upper and lower (to same)
 	for (size_t ix = 0; ix < vert_count - 1; ix++)
@@ -886,6 +814,57 @@ void PlanetTile::generate()
 			tolower[1].push_back((iy + 2) * vert_count + vert_count - 1);
 			tolower[1].push_back((iy + 0) * vert_count + vert_count - 1);
 			tolower[1].push_back((iy + 1) * vert_count + vert_count - 2);
+		}
+	}
+
+	// Generate normals
+	for (size_t i = 0; i < all_indices.size(); i+=3)
+	{
+		Vertex* v0 = &vertices[all_indices[i]];
+		Vertex* v1 = &vertices[all_indices[i + 1]];
+		Vertex* v2 = &vertices[all_indices[i + 2]];
+
+		glm::vec3 p0 = model_spheric * glm::vec4(v0->pos, 1.0f);
+		glm::vec3 p1 = model_spheric * glm::vec4(v1->pos, 1.0f);
+		glm::vec3 p2 = model_spheric * glm::vec4(v2->pos, 1.0f);
+
+		glm::vec3 face_normal;
+
+		if (clockwise)
+		{
+			face_normal = glm::triangleNormal(p1, p0, p2);
+		}
+		else
+		{
+			face_normal = glm::triangleNormal(p0, p1, p2);
+		}
+		
+
+		v0->nrm += face_normal;
+		v1->nrm += face_normal;
+		v2->nrm += face_normal;
+	}
+
+	for (size_t i = 0; i < vertices.size(); i++)
+	{
+		Vertex* v = &vertices[i];
+		v->nrm = glm::normalize(v->nrm);
+	}
+
+	for (int iy = 0; iy < (int)vert_count; iy++)
+	{
+		for (int ix = 0; ix < (int)vert_count; ix++)
+		{
+			size_t in_index = (iy + 1) * vert_count_p + (ix + 1);
+			size_t out_index = iy * vert_count + ix;
+			verts[out_index * FLOATS_PER_VERTEX + 0] = vertices[in_index].pos.x;
+			verts[out_index * FLOATS_PER_VERTEX + 1] = vertices[in_index].pos.y;
+			verts[out_index * FLOATS_PER_VERTEX + 2] = vertices[in_index].pos.z;
+			verts[out_index * FLOATS_PER_VERTEX + 3] = vertices[in_index].nrm.x;
+			verts[out_index * FLOATS_PER_VERTEX + 4] = vertices[in_index].nrm.y;
+			verts[out_index * FLOATS_PER_VERTEX + 5] = vertices[in_index].nrm.z;
+			verts[out_index * FLOATS_PER_VERTEX + 6] = vertices[in_index].uv.x;
+			verts[out_index * FLOATS_PER_VERTEX + 7] = vertices[in_index].uv.y;
 		}
 	}
 }
