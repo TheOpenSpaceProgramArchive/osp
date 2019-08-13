@@ -219,6 +219,47 @@ void QuadTreePlanet::update(float dt)
 	tile_server.upload_used();
 }
 
+void QuadTreePlanet::make_all_leafs_at_least(size_t depth, bool exclude_opposite)
+{
+	if (exclude_opposite)
+	{
+		if (px.has_children())
+		{
+			px.make_all_leafs_at_least(depth);
+		}
+		if (py.has_children())
+		{
+			py.make_all_leafs_at_least(depth);
+		}
+		if (pz.has_children())
+		{
+			pz.make_all_leafs_at_least(depth);
+		}
+		if (nx.has_children())
+		{
+			nx.make_all_leafs_at_least(depth);
+		}
+		if (ny.has_children())
+		{
+			ny.make_all_leafs_at_least(depth);
+		}
+		if (nz.has_children())
+		{
+			nz.make_all_leafs_at_least(depth);
+		}
+	}
+	else
+	{
+		px.make_all_leafs_at_least(depth);
+		py.make_all_leafs_at_least(depth);
+		pz.make_all_leafs_at_least(depth);
+		nx.make_all_leafs_at_least(depth);
+		ny.make_all_leafs_at_least(depth);
+		nz.make_all_leafs_at_least(depth);
+	}
+	
+}
+
 QuadTreePlanet::QuadTreePlanet(Planet* planet, Shader* shader) :
 	px(), py(), pz(), nx(), ny(), nz(), tile_server(planet)
 {

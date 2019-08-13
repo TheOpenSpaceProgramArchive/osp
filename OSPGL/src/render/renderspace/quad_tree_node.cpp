@@ -421,6 +421,32 @@ std::vector<QuadTreeNode*> QuadTreeNode::get_all_leaf_nodes()
 	return out;
 }
 
+void QuadTreeNode::make_all_leafs_at_least(size_t depth)
+{
+	int count = 0;
+
+	do
+	{
+		auto leafs = get_all_leaf_nodes();
+		count = leafs.size();
+
+		for (auto leaf : leafs)
+		{
+			if (leaf->depth < depth)
+			{
+				leaf->split(true);
+			}
+			else
+			{
+				count--;
+			}
+		}
+
+
+	} while (count != 0);
+	
+}
+
 bool QuadTreeNode::needs_lowq(QuadTreeSide side)
 {
 	if (neighbors[side] == NULL)

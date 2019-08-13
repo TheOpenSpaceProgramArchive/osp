@@ -19,7 +19,7 @@ public:
 	// Indexing is done via y * (verts + 1) + x
 	//
 	virtual void get_heights(PlanetTilePath& path, size_t verts, std::vector<float>& out, const Planet& planet,
-		glm::mat4 sphere_model, glm::mat4 cube_model)
+		glm::mat4 sphere_model, glm::mat4 cube_model, glm::mat4 path_model)
 	{
 		glm::dvec2 min = path.get_min();
 
@@ -31,19 +31,19 @@ public:
 				float y = (float)iy / (float)(verts - 1);
 
 				glm::vec2 side = get_side_position(min, glm::vec2(x, y), path.getSize());
-				glm::vec3 sphere = get_sphere_pos(sphere_model, glm::vec2(x, y), path);
+				glm::vec3 sphere = get_sphere_pos(sphere_model, glm::vec2(x, y), path_model);
 
 				float height = 0.0f;
 
 
-				height = stb_perlin_ridge_noise3(	sphere.x * 250.0f,	sphere.y * 250.0f,	sphere.z * 250.0f, 2.0f, 0.7f, 0.9f, 8) * 0.0005f + 
+				/*height = stb_perlin_ridge_noise3(	sphere.x * 250.0f,	sphere.y * 250.0f,	sphere.z * 250.0f, 2.0f, 0.7f, 0.9f, 8) * 0.0005f + 
 					stb_perlin_fbm_noise3(			sphere.x * 58.0f,	sphere.y * 58.0f,	sphere.z * 58.0f, 2.0f, 0.5f, 8) * 0.00002f +
 					stb_perlin_fbm_noise3(			sphere.x * 8.0f,	sphere.y * 8.0f,	sphere.z * 8.0f, 2.0f, 0.5f, 8) * 0.0005f +
 					stb_perlin_fbm_noise3(			sphere.x * 2.0f,	sphere.y * 2.0f,	sphere.z * 2.0f, 2.0f, 0.5f, 8) * 0.0005f -
 					stb_perlin_ridge_noise3(		sphere.x * 8.0f,	sphere.y * 8.0f,	sphere.z * 8.0f, 2.0f, 0.5f, 0.6f, 8) * 0.015f +
-					stb_perlin_fbm_noise3(			sphere.x * 600.0f,	sphere.y * 600.0f,	sphere.z * 600.0f, 3.0f, 0.6f, 8) * 0.000005f;
+					stb_perlin_fbm_noise3(			sphere.x * 600.0f,	sphere.y * 600.0f,	sphere.z * 600.0f, 3.0f, 0.6f, 8) * 0.000005f;*/
 
-				//height = cos(sphere.x * sphere.y * sphere.z * 62.8f) * 0.05f;
+				height = cos(sphere.x * sphere.y * sphere.z * 62.8f) * 0.1f;
 
 				//height = 0.0f;
 
@@ -60,9 +60,9 @@ public:
 	}
 
 	// Gets position in the normalized sphere
-	glm::vec3 get_sphere_pos(glm::mat4 sphere_model, glm::vec2 coord, PlanetTilePath& path)
+	glm::vec3 get_sphere_pos(glm::mat4 sphere_model, glm::vec2 coord, glm::mat4 path_model)
 	{
-		glm::vec3 world_pos_cubic = path.get_model_matrix() * glm::vec4(glm::vec3(coord, 0.0f), 1.0f);
+		glm::vec3 world_pos_cubic = path_model * glm::vec4(glm::vec3(coord, 0.0f), 1.0f);
 		glm::vec3 world_pos_spheric = MathUtil::cube_to_sphere(world_pos_cubic);
 
 		return world_pos_spheric;

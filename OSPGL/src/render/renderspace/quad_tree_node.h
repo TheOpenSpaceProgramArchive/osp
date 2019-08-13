@@ -107,6 +107,9 @@ public:
 	// Gets all nodes with no children, sons of this node
 	std::vector<QuadTreeNode*> get_all_leaf_nodes();
 
+	// Used to split all leafs under certain depth
+	void make_all_leafs_at_least(size_t depth);
+
 	bool needs_lowq(QuadTreeSide side);
 
 	QuadTreeNode();

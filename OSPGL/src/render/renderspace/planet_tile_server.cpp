@@ -551,7 +551,7 @@ void PlanetTile::generate()
 
 	if (planet.surface_provider != NULL)
 	{
-		planet.surface_provider->get_heights(path, vert_count, heights, planet, model_spheric, model);
+		planet.surface_provider->get_heights(path, vert_count, heights, planet, model_spheric, model, model);
 	}
 
 	size_t vert_count_p = vert_count + 2;

@@ -189,6 +189,7 @@ int main()
 
 		planet_qtree.flatten();
 		auto node = onNode->get_recursive(focusPoint, qtree_depth);
+		planet_qtree.make_all_leafs_at_least(1);
 		planet_qtree.draw_gui_window(focusPoint, onNode);
 
 		float focusSpeed = 0.25f;

@@ -47,5 +47,10 @@ public:
 	void draw(glm::mat4 view, glm::mat4 proj);
 	void update(float dt);
 
+	// Makes every leaf be (atleast) of given depth.
+	// It can optionally exclude the opposite side of the planet
+	// (side with depth = 0), as it's not visible under normal conditions
+	void make_all_leafs_at_least(size_t depth, bool exclude_opposite = true);
+
 	QuadTreePlanet(Planet* planet, Shader* shader = NULL);
 };
