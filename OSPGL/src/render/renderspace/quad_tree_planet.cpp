@@ -164,59 +164,51 @@ void QuadTreePlanet::update(float dt)
 
 	tiles.clear();
 
-	auto px_leafs = px.get_all_leaf_nodes();
-	auto nx_leafs = nx.get_all_leaf_nodes();
-	auto py_leafs = py.get_all_leaf_nodes();
-	auto ny_leafs = ny.get_all_leaf_nodes();
-	auto pz_leafs = pz.get_all_leaf_nodes();
-	auto nz_leafs = nz.get_all_leaf_nodes();
+	for (size_t i = 0; i < 6; i++)
+	{
+		QuadTreeNode* target;
+		PlanetTilePath::PlanetSide side;
 
-	for (QuadTreeNode* leaf : px_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PX);
-		tiles.push_back(tile_server.load(path, 
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
-	}
-	for (QuadTreeNode* leaf : nx_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NX);
-		tiles.push_back(tile_server.load(path,
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
-	}
-	for (QuadTreeNode* leaf : py_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PY);
-		tiles.push_back(tile_server.load(path,
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
-	}
-	for (QuadTreeNode* leaf : ny_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NY);
-		tiles.push_back(tile_server.load(path,
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
-	}
-	for (QuadTreeNode* leaf : pz_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::PZ);
-		tiles.push_back(tile_server.load(path,
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
-	}
-	for (QuadTreeNode* leaf : nz_leafs)
-	{
-		PlanetTilePath path = PlanetTilePath(leaf->get_path(), PlanetTilePath::NZ);
-		tiles.push_back(tile_server.load(path,
-			leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-			leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST)));
+		if (i == 0)			{ target = &px; side = PlanetTilePath::PX; }
+		else if (i == 1)	{ target = &py; side = PlanetTilePath::PY; }
+		else if (i == 2)	{ target = &pz; side = PlanetTilePath::PZ; }
+		else if (i == 3)	{ target = &px; side = PlanetTilePath::NX; }
+		else if (i == 4)	{ target = &ny; side = PlanetTilePath::NY; }
+		else 				{ target = &nz; side = PlanetTilePath::NZ; }
+
+		for (QuadTreeNode* leaf : target->get_all_leaf_nodes())
+		{
+			PlanetTilePath path = PlanetTilePath(leaf->get_path(), side);
+			PlanetTile* tile = tile_server.load(path,
+				leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
+				leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST));
+
+			if (tile == NULL)
+			{
+				QuadTreeNode* parent_leaf = leaf->parent;
+				PlanetTilePath parent_path = PlanetTilePath(parent_leaf->get_path(), side);
+				PlanetTile* parent_tile = tile_server.load(parent_path,
+					parent_leaf->needs_lowq(QuadTreeNode::NORTH), parent_leaf->needs_lowq(QuadTreeNode::EAST),
+					parent_leaf->needs_lowq(QuadTreeNode::SOUTH), parent_leaf->needs_lowq(QuadTreeNode::WEST));
+
+				auto it = std::find(tiles.begin(), tiles.end(), parent_tile);
+
+				if (it == tiles.end())
+				{
+					tiles.push_back(parent_tile);
+				}
+			}
+			else
+			{
+				tiles.push_back(tile);
+			}
+
+			
+		}
 	}
 
 	// Unloading before uploading helps avoid GPU memory spikes
-	tile_server.unload_unused();
-	tile_server.upload_used();
+	tile_server.update();
 }
 
 void QuadTreePlanet::make_all_leafs_at_least(size_t depth, bool exclude_opposite)
@@ -324,6 +316,84 @@ void QuadTreePlanet::make_all_leafs_at_least(size_t depth, bool exclude_opposite
 				leaf->obtain_neighbors(leaf->quad, true);
 			}
 		}
+	}
+}
+
+PlanetTilePath::PlanetSide QuadTreePlanet::get_planet_side(glm::vec3 f)
+{
+	float xabs = glm::abs(f.x);
+	float yabs = glm::abs(f.y);
+	float zabs = glm::abs(f.z);
+
+	if (xabs >= yabs && xabs >= zabs)
+	{
+		return f.x >= 0.0f ? PlanetTilePath::PX : PlanetTilePath::NX;
+	}
+
+	if (yabs >= xabs && yabs >= zabs)
+	{
+		return f.y >= 0.0f ? PlanetTilePath::PY : PlanetTilePath::NY;
+	}
+	
+	if (zabs >= xabs && zabs >= yabs)
+	{
+		return f.z >= 0.0f ? PlanetTilePath::PZ : PlanetTilePath::NZ;
+	}
+
+
+	return PlanetTilePath::PX;
+}
+
+glm::dvec2 QuadTreePlanet::get_planet_side_position(glm::vec3 normalized_pos, PlanetTilePath::PlanetSide side)
+{
+	glm::dvec3 cube = MathUtil::sphere_to_cube(normalized_pos);
+
+	cube += glm::dvec3(1.0f, 1.0f, 1.0f);
+	cube /= 2.0;
+
+	if (isnan(cube.x))
+	{
+		cube.x = 0.5f;
+	}
+
+	if (isnan(cube.y))
+	{
+		cube.y = 0.5f;
+	}
+
+	if (isnan(cube.z))
+	{
+		cube.z = 0.5f;
+	}
+
+	if (side != PlanetTilePath::NX && side != PlanetTilePath::PY && side != PlanetTilePath::NY)
+	{
+		cube.x = 1.0f - cube.x;
+		cube.y = 1.0f - cube.y;
+		cube.z = 1.0f - cube.z;
+	}
+	
+	if (side == PlanetTilePath::PZ)
+	{
+		cube.x = 1.0f - cube.x;
+	}
+
+	if (side == PlanetTilePath::NY)
+	{
+		cube.x = 1.0f - cube.x;
+	}
+
+	if (side == PlanetTilePath::PX || side == PlanetTilePath::NX)
+	{
+		return glm::dvec2(cube.z, cube.y);
+	}
+	else if (side == PlanetTilePath::PY || side == PlanetTilePath::NY)
+	{
+		return glm::dvec2(cube.z, cube.x);
+	}
+	else
+	{
+		return glm::dvec2(cube.x, cube.y);
 	}
 }
 

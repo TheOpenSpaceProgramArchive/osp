@@ -52,5 +52,8 @@ public:
 	// (side with depth = 0), as it's not visible under normal conditions
 	void make_all_leafs_at_least(size_t depth, bool exclude_opposite = true);
 
+	PlanetTilePath::PlanetSide get_planet_side(glm::vec3 normalized_pos);
+	glm::dvec2 get_planet_side_position(glm::vec3 normalized_pos, PlanetTilePath::PlanetSide side);
+
 	QuadTreePlanet(Planet* planet, Shader* shader = NULL);
 };

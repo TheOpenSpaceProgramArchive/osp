@@ -1,4 +1,6 @@
 #pragma once
+#include "planet_tile.h"
+
 #include <unordered_map>
 #include "../../orbital/planet.h"
 #include "quad_tree_node.h"
@@ -12,104 +14,41 @@
 #include "../../util/math_util.h"
 #include <vector>
 
-struct PlanetTilePath
+
+#define TILE_WORKER_THREADS 2
+
+struct PlanetTileWorker
 {
-	enum PlanetSide
-	{
-		PX, NX, PY, NY, PZ, NZ
-	};
-
-	std::vector<QuadTreeNode::QuadTreeQuadrant> path;
-	PlanetSide side;
-
-	size_t get_depth();
-	glm::dvec2 get_min();
-	double getSize();
-
-	glm::vec3 get_tile_postrotation();
-	glm::vec3 get_tile_origin();
-	glm::vec3 get_tile_rotation();
-	glm::vec3 get_tile_translation(bool spheric = false);
-	glm::vec3 get_tile_scale();
-	glm::vec3 get_tile_postscale();
-
-	glm::mat4 get_model_matrix();
-	glm::mat4 get_model_spheric_matrix();
-
-	PlanetTilePath(std::vector<QuadTreeNode::QuadTreeQuadrant> path, PlanetSide side)
-	{
-		this->path = path;
-		this->side = side;
-	}
-};
-
-bool operator==(const PlanetTilePath& a, const PlanetTilePath& b);
-
-struct PlanetTilePathHasher
-{
-	std::size_t operator()(const PlanetTilePath &t) const
-	{
-		std::size_t ret = 0;
-		hash_combine(ret, t.side);
-		for (size_t i = 0; i < t.path.size(); i++)
-		{
-			hash_combine(ret, t.path[i]);
-		}
-
-		return ret;
-	}
-};
-
-struct PlanetTile
-{
-	PlanetTilePath path;
-
-	size_t vert_count;
-	const Planet& planet;
-
-	std::vector<float> verts;
-	std::vector<uint16_t> indices;
-	// Up, right, down, left
-	std::vector<uint16_t> tolower[4];
-	// Up, right, down, left
-	std::vector<uint16_t> tosame[4];
-
-	int users;
-
-	GLuint vbo, vao, ebo;
-	GLuint tolower_vao[4], tolower_ebo[4];
-	GLuint tosame_vao[4], tosame_ebo[4];
-
-	// Up, right, down, left, like always
-	bool needs_lower[4];
-
-	bool isUploaded();
-	// Any combination of sides may be a lower quality (TODO)
-	void upload();
-	void unload();
-
-	void generate();
-
-	void generate_vertex(int ix, int iy, size_t vertCount,
-		std::vector<float>& heights, glm::mat4 model, glm::mat4 inverse_model_spheric, 
-		std::vector<Vertex>& target);
-
-	void generate_normal(size_t i, std::vector<uint16_t>& indices, std::vector<float>& verts, size_t FLOATS_PER_VERTEX,
-		glm::mat4 model_spheric);
-
-	PlanetTile(PlanetTilePath nPath, size_t verticesPerSide, const Planet& planet);
+	size_t id;
+	std::thread* thread;
+	bool run;
 };
 
 
 // Handles generation and caching of planetary tiles
 class PlanetTileServer
 {
+private:
+
+	bool any_being_worked;
+
 public:
+
+	// Used for CPU efficiency of threads
+	std::mutex condition_mtx;
+	std::condition_variable condition_var;
+
+	PlanetTileWorker worker_threads[TILE_WORKER_THREADS];
+
+	// Used to stop the worker threads from iterating over tiles while it's modified
+	std::mutex tiles_mtx;
 
 	Planet* planet;
 
 	std::unordered_map<PlanetTilePath, PlanetTile*, PlanetTilePathHasher> tiles;
 
+	// May return lower quality parent if it's still being loaded, in that 
+	// case all sides will be tosame
 	PlanetTile* load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left, bool now = false);
 	void unload(PlanetTilePath path, bool unload_now = false);
 
@@ -118,6 +57,10 @@ public:
 
 	// Uploads all used tiles which are not uploaded
 	void upload_used();
+
+	// Unloads unused tiles, uploads not-uploaded used tiles and
+	// checks worker threads
+	void update();
 
 	// Minimum depth at which tiles get unloaded, bigger tiles
 	// will be loaded even if not used
@@ -128,6 +71,11 @@ public:
 	// Small planets (or asteroids) need either more vertices
 	// or to be kept at a decent subdivision level
 	size_t verticesPerSide = 32 + 1;
+
+	void rebuild_all();
+
+	// Returns true if no tile is being worked on
+	bool is_built();
 
 	PlanetTileServer(Planet* planet);
 	~PlanetTileServer();

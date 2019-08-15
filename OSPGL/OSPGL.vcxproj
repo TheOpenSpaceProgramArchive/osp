@@ -122,6 +122,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dep\tiny_obj_loader.cpp" />
+    <ClCompile Include="src\render\renderlow\map.cpp" />
+    <ClCompile Include="src\render\renderspace\planet_tile.cpp" />
+    <ClCompile Include="src\render\renderspace\provider\map_surface_provider.cpp" />
+    <ClCompile Include="src\render\renderspace\provider\layered_surface_provider.cpp" />
     <ClCompile Include="src\render\renderspace\planet_tile_server.cpp" />
     <ClCompile Include="src\render\renderspace\quad_tree_node.cpp" />
     <ClCompile Include="src\main2.cpp" />
@@ -162,6 +166,11 @@
   <ItemGroup>
     <ClInclude Include="dep\stb\stb_perlin.h" />
     <ClInclude Include="dep\tiny_obj_loader.h" />
+    <ClInclude Include="src\render\renderlow\map.h" />
+    <ClInclude Include="src\render\renderspace\planet_tile.h" />
+    <ClInclude Include="src\render\renderspace\planet_tile_path.h" />
+    <ClInclude Include="src\render\renderspace\provider\map_surface_provider.h" />
+    <ClInclude Include="src\render\renderspace\provider\layered_surface_provider.h" />
     <ClInclude Include="src\orbital\planet.h" />
     <ClInclude Include="src\render\renderspace\surface_provider.h" />
     <ClInclude Include="src\render\renderspace\planet_tile_server.h" />

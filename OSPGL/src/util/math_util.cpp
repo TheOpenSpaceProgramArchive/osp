@@ -56,3 +56,12 @@ glm::vec3 MathUtil::sphere_to_cube(glm::vec3 spheric)
 		return to_cube(spheric);
 	}
 }
+
+glm::mat4 MathUtil::rotate_from_to(glm::vec3 from, glm::vec3 to)
+{
+	glm::vec3 axis = glm::normalize(glm::cross(from, to));
+	float dot = glm::dot(from, to);
+	float angle = glm::acos(dot / (from.length() * to.length()));
+
+	return glm::rotate(glm::mat4(), angle, axis);
+}

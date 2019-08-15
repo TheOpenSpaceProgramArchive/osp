@@ -163,14 +163,19 @@ int main()
 	bool was_wireframe_down = false;
 
 	Planet planet; planet.radius = 10.0; planet.surface_provider = new SurfaceProvider();
-	QuadTreePlanet planet_qtree = QuadTreePlanet(&planet, &planet_tile_shader);
-	glm::dvec2 focusPoint = glm::dvec2(0.75, 0.75);
+	QuadTreePlanet planet_qtree(&planet, &planet_tile_shader);
+	glm::dvec2 focusPoint(0.75, 0.75);
 	QuadTreeNode* onNode = &planet_qtree.px;
 
-	glm::vec3 eyePoint = glm::vec3(0.0f, 3.14 / 2.0f, 2.0f);
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec2 mouse_look = glm::vec2(-3.14f, 3.14f / 2.0f);
+	glm::vec3 position = glm::vec3(1.5f, 0.0f, 0.0f);
 
 	int qtree_depth = 0;
 	float qtree_timer = 0.0f;
+
+	glm::dvec2 old_mouse_pos = glm::dvec2(0.0, 0.0);
+	float speed = 1.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -190,18 +195,20 @@ int main()
 		planet_qtree.flatten();
 
 		auto node = onNode->get_recursive(focusPoint, qtree_depth);
-		planet_qtree.make_all_leafs_at_least(3);
+		//planet_qtree.make_all_leafs_at_least(3, false);
 		planet_qtree.draw_gui_window(focusPoint, onNode);
 
 		float focusSpeed = 0.25f;
 		float moveSpeed = 1.0f;
 		float zoomSpeed = 0.25f;
+		float speedSpeed = 0.1f;
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		{
 			focusSpeed = 0.05f;
 			moveSpeed = 0.05f;
 			zoomSpeed = 0.015f;
+			speedSpeed = 0.01f;
 		}
 
 
@@ -210,6 +217,7 @@ int main()
 			focusSpeed /= 64.0f;
 			moveSpeed /= 64.0f;
 			zoomSpeed /= 64.0f;
+			speedSpeed /= 64.0f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -229,41 +237,16 @@ int main()
 			focusPoint.y += focusSpeed * dt;
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		{
-			eyePoint.y -= dt * moveSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		{
-			eyePoint.x +=  dt * moveSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		{
-			eyePoint.y += dt * moveSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		{
-			eyePoint.x -= dt * moveSpeed;
-		}
-
-
-
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		{
-			eyePoint.z -= dt * zoomSpeed;
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-		{
-			eyePoint.z += dt * zoomSpeed;
-		}
 
 		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
 		{
 			qtree_timer += 2.0f * dt;
 			if (qtree_timer >= 1.0f)
 			{
-				qtree_depth++;
+				if (planet_qtree.tile_server.is_built())
+				{
+					qtree_depth++;
+				}
 				qtree_timer = 0.0f;
 			}
 		}
@@ -273,7 +256,7 @@ int main()
 			qtree_timer += 2.0f * dt;
 			if (qtree_timer >= 1.0f)
 			{
-				if (qtree_depth >= 1)
+				if (qtree_depth >= 1 && planet_qtree.tile_server.is_built())
 				{
 					qtree_depth--;
 				}
@@ -283,10 +266,96 @@ int main()
 
 		planet_qtree.update(dt);
 
+		glm::dvec2 new_mouse_pos;
+		glfwGetCursorPos(window, &new_mouse_pos.x, &new_mouse_pos.y);
+
+
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+			glm::dvec2 mouse_delta = new_mouse_pos - old_mouse_pos;
+			mouse_look.x += (float)mouse_delta.x * dt * 0.05f;
+			mouse_look.y += (float)mouse_delta.y * dt * 0.05f;
+			if (mouse_look.y <= 0.001f)
+			{
+				mouse_look.y = 0.001f;
+			}
+
+			if (mouse_look.y >= 3.1f)
+			{
+				mouse_look.y = 3.1f;
+			}
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		
+		old_mouse_pos = new_mouse_pos;
+
+
+		glm::vec3 look_at;
+		look_at.x = sin(mouse_look.y) * cos(mouse_look.x);
+		look_at.y = cos(mouse_look.y);
+		look_at.z = sin(mouse_look.y) * sin(mouse_look.x);
+		if (up != glm::vec3(0.0f, 1.0f, 0.0f))
+		{
+			look_at = MathUtil::rotate_from_to(glm::vec3(0.0f, 1.0f, 0.0f), up) * glm::vec4(look_at, 1.0f);
+		}
+		glm::vec3 look_at_right = glm::normalize(glm::cross(look_at, up));
+
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			position += look_at * dt * speed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			position -= look_at_right * dt * speed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			position -= look_at * dt * speed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			position += look_at_right * dt * speed;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		{
+			up = glm::normalize(position);
+		}
+
+
+		if (scroll_delta != 0)
+		{
+			speed += (float)scroll_delta * speedSpeed;
+			if (speed <= 0.0f)
+			{
+				speed = 0.001f;
+			}
+		}
+
+		ImGui::BeginMainMenuBar();
+		ImGui::Text("Speed: %f", speed);
+		ImGui::EndMainMenuBar();
+
+		glm::vec3 norm_pos = glm::normalize(position);
+		auto side = planet_qtree.get_planet_side(norm_pos);
+		glm::dvec2 pos = planet_qtree.get_planet_side_position(norm_pos, side);
+
+		focusPoint = pos;
+		if (side == PlanetTilePath::PX)			{ onNode = &planet_qtree.px; }
+		else if (side == PlanetTilePath::PY)	{ onNode = &planet_qtree.py; }
+		else if (side == PlanetTilePath::PZ)	{ onNode = &planet_qtree.pz; }
+		else if (side == PlanetTilePath::NX)	{ onNode = &planet_qtree.nx; }
+		else if (side == PlanetTilePath::NY)	{ onNode = &planet_qtree.ny; }
+		else if (side == PlanetTilePath::NZ)	{ onNode = &planet_qtree.nz; }
+
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(eyePoint.z * sin(eyePoint.y) * cos(eyePoint.x), eyePoint.z * cos(eyePoint.y), eyePoint.z * sin(eyePoint.x) * sin(eyePoint.y)),
-			glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 proj = glm::perspective(glm::radians(60.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0001f, 5.0f);
+			position, position + look_at, up);
+		glm::mat4 proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0001f, 5.0f);
 		planet_qtree.draw(view, proj);
 
 
