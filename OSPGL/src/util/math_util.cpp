@@ -63,5 +63,5 @@ glm::mat4 MathUtil::rotate_from_to(glm::vec3 from, glm::vec3 to)
 	float dot = glm::dot(from, to);
 	float angle = glm::acos(dot / (from.length() * to.length()));
 
-	return glm::rotate(glm::mat4(), angle, axis);
+	return glm::rotate(angle, axis);
 }

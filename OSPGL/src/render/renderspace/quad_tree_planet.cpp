@@ -26,6 +26,7 @@ QuadTreeCoordinate QuadTreePlanet::project(glm::dvec3 nrm_vec)
 }
 
 
+
 void QuadTreePlanet::flatten()
 {
 	px.merge(); nx.merge();
@@ -56,45 +57,6 @@ void QuadTreePlanet::update_lod(glm::dvec3 cameraPos, double distance)
 	if (!can_see(to_nz, normalized_camera)) { nz.merge(); } else { update_lod(cameraPos, distance, nz, to_nz); }
 }
 
-void QuadTreePlanet::draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode)
-{
-	const int SIZE = 200;
-
-	ImGui::Begin("QuadTreePlanet");
-
-	ImGui::Text("X (P/N)");
-
-	ImGui::BeginChild("PX", ImVec2(SIZE, SIZE));
-	px.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-	ImGui::SameLine();
-	ImGui::BeginChild("NX", ImVec2(SIZE, SIZE));
-	nx.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-
-	ImGui::Text("Y (P/N)");
-
-	ImGui::BeginChild("PY", ImVec2(SIZE, SIZE));
-	py.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-	ImGui::SameLine();
-	ImGui::BeginChild("NY", ImVec2(SIZE, SIZE));
-	ny.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-
-	ImGui::Text("Z (P/N)");
-
-	ImGui::BeginChild("PZ", ImVec2(SIZE, SIZE));
-	pz.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-	ImGui::SameLine();
-	ImGui::BeginChild("NZ", ImVec2(SIZE, SIZE));
-	nz.draw_gui(SIZE - 1, focusPoint, onNode);
-	ImGui::EndChild();
-
-	ImGui::End();
-}
-
 
 
 
@@ -116,42 +78,64 @@ void QuadTreePlanet::draw(glm::mat4 view, glm::mat4 proj)
 
 	for (auto tile : tiles)
 	{
-
-		glm::mat4 model = tile->path.get_model_spheric_matrix();
-	
-
-		//model = glm::mat4();
-
-		float col = tile->path.getSize() * 2.0f;
-
-		shader->setmat4("model", model);
-		shader->setvec4("color", glm::vec4(col, sqrt(col), 0.0f, 1.0f));
-		glBindVertexArray(tile->vao);
-		glDrawElements(GL_TRIANGLES, tile->indices.size(), GL_UNSIGNED_SHORT, (void*)0);
-		glBindVertexArray(0);
-
-
-		//spdlog::get("OSP")->info("D: {}", tile->vao);
-
-		for (size_t i = 0; i < 4; i++)
+		if (!tile->needs_upload)
 		{
-			if (tile->needs_lower[i])
+			glm::mat4 model = tile->path.get_model_spheric_matrix();
+
+
+			//model = glm::mat4();
+
+			float col = tile->path.getSize() * 2.0f;
+
+			shader->setmat4("model", model);
+			shader->setvec4("color", glm::vec4(col, sqrt(col), 0.0f, 1.0f));
+			glBindVertexArray(tile->vao);
+			glDrawElements(GL_TRIANGLES, tile->indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+			glBindVertexArray(0);
+
+
+			//spdlog::get("OSP")->info("D: {}", tile->vao);
+
+			for (size_t i = 0; i < 4; i++)
 			{
-				glBindVertexArray(tile->tolower_vao[i]);
-				glDrawElements(GL_TRIANGLES, tile->tolower[i].size(), GL_UNSIGNED_SHORT, (void*)0);
-				glBindVertexArray(0);
+				if (tile->needs_lower[i])
+				{
+					glBindVertexArray(tile->tolower_vao[i]);
+					glDrawElements(GL_TRIANGLES, tile->tolower[i].size(), GL_UNSIGNED_SHORT, (void*)0);
+					glBindVertexArray(0);
+				}
+				else
+				{
+					glBindVertexArray(tile->tosame_vao[i]);
+					glDrawElements(GL_TRIANGLES, tile->tosame[i].size(), GL_UNSIGNED_SHORT, (void*)0);
+					glBindVertexArray(0);
+				}
+
 			}
-			else
-			{
-				glBindVertexArray(tile->tosame_vao[i]);
-				glDrawElements(GL_TRIANGLES, tile->tosame[i].size(), GL_UNSIGNED_SHORT, (void*)0);
-				glBindVertexArray(0);
-			}
-			
 		}
 	}
 
 
+}
+
+
+bool QuadTreePlanet::needs_lowq_real(QuadTreeNode* node, QuadTreeNode::QuadTreeSide dir, PlanetTilePath::PlanetSide side)
+{
+	if (node == NULL)
+	{
+		return false;
+	}
+
+	if (node->needs_lowq(dir))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+		// TODO: We need a way to smooth seams a bit further, but 
+		// so far it works decently
+	}
 }
 
 void QuadTreePlanet::update(float dt)
@@ -179,21 +163,29 @@ void QuadTreePlanet::update(float dt)
 		for (QuadTreeNode* leaf : target->get_all_leaf_nodes())
 		{
 			PlanetTilePath path = PlanetTilePath(leaf->get_path(), side);
-			PlanetTile* tile = tile_server.load(path,
-				leaf->needs_lowq(QuadTreeNode::NORTH), leaf->needs_lowq(QuadTreeNode::EAST),
-				leaf->needs_lowq(QuadTreeNode::SOUTH), leaf->needs_lowq(QuadTreeNode::WEST));
+
+			bool u_lowq = needs_lowq_real(leaf, QuadTreeNode::NORTH, side);
+			bool r_lowq = needs_lowq_real(leaf, QuadTreeNode::EAST, side);
+			bool d_lowq = needs_lowq_real(leaf, QuadTreeNode::SOUTH, side);
+			bool l_lowq = needs_lowq_real(leaf, QuadTreeNode::WEST, side);
+
+			PlanetTile* tile = tile_server.load(path, u_lowq, r_lowq, d_lowq, l_lowq);
 
 			if (tile == NULL)
 			{
 				QuadTreeNode* parent_leaf = leaf->parent;
 				PlanetTilePath parent_path = PlanetTilePath(parent_leaf->get_path(), side);
-				PlanetTile* parent_tile = tile_server.load(parent_path,
-					parent_leaf->needs_lowq(QuadTreeNode::NORTH), parent_leaf->needs_lowq(QuadTreeNode::EAST),
-					parent_leaf->needs_lowq(QuadTreeNode::SOUTH), parent_leaf->needs_lowq(QuadTreeNode::WEST));
+
+				bool u_lowq = needs_lowq_real(parent_leaf, QuadTreeNode::NORTH, side);
+				bool r_lowq = needs_lowq_real(parent_leaf, QuadTreeNode::EAST, side);
+				bool d_lowq = needs_lowq_real(parent_leaf, QuadTreeNode::SOUTH, side);
+				bool l_lowq = needs_lowq_real(parent_leaf, QuadTreeNode::WEST, side);
+
+				PlanetTile* parent_tile = tile_server.load(parent_path, u_lowq, r_lowq, d_lowq, l_lowq);
 
 				auto it = std::find(tiles.begin(), tiles.end(), parent_tile);
 
-				if (it == tiles.end())
+				if (it == tiles.end() && parent_tile != NULL)
 				{
 					tiles.push_back(parent_tile);
 				}
@@ -445,4 +437,104 @@ QuadTreePlanet::QuadTreePlanet(Planet* planet, Shader* shader) :
 	nx.planetside = QuadTreeNode::NX;
 	ny.planetside = QuadTreeNode::NY;
 	nz.planetside = QuadTreeNode::NZ;
+}
+
+
+void QuadTreePlanet::draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode)
+{
+	const int SIZE = 200;
+
+	ImGui::Begin("QuadTreePlanet");
+
+	ImGui::Checkbox("Auto-Rebuild", &auto_rebuild);
+	ImGui::SameLine();
+	if (ImGui::Button("Rebuild Now"))
+	{
+		tile_server.rebuild_all();
+		was_building = true;
+	}
+
+	if (planet->surface_provider.dirty)
+	{
+		if (tile_server.being_worked_on == 0)
+		{
+			if(was_building)
+			{ 
+				planet->surface_provider.dirty = false;
+			}
+			else
+			{
+				ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Planet is not updated!");
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Rebuild") || auto_rebuild == true)
+				{
+					tile_server.rebuild_all();
+					was_building = true;
+				}
+			}
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "Planet is being built!");
+			was_building = true;
+		}
+	}
+	else
+	{
+		if (tile_server.being_worked_on == 0)
+		{
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Planet is up-to-date");
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.6f, 1.0f), "Planet is up-to-date, but generating");
+		}
+
+		was_building = false;
+		
+	}
+	
+
+	if (ImGui::CollapsingHeader("Surface Generation", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		planet->surface_provider.draw_imgui();
+	}
+
+	if (ImGui::CollapsingHeader("QuadTree sides"))
+	{
+
+		ImGui::Text("X (P/N)");
+
+		ImGui::BeginChild("PX", ImVec2(SIZE, SIZE));
+		px.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+		ImGui::SameLine();
+		ImGui::BeginChild("NX", ImVec2(SIZE, SIZE));
+		nx.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+
+		ImGui::Text("Y (P/N)");
+
+		ImGui::BeginChild("PY", ImVec2(SIZE, SIZE));
+		py.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+		ImGui::SameLine();
+		ImGui::BeginChild("NY", ImVec2(SIZE, SIZE));
+		ny.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+
+		ImGui::Text("Z (P/N)");
+
+		ImGui::BeginChild("PZ", ImVec2(SIZE, SIZE));
+		pz.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+		ImGui::SameLine();
+		ImGui::BeginChild("NZ", ImVec2(SIZE, SIZE));
+		nz.draw_gui(SIZE - 1, focusPoint, onNode);
+		ImGui::EndChild();
+
+	}
+
+
+	ImGui::End();
 }

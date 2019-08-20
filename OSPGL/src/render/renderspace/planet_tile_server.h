@@ -30,9 +30,11 @@ class PlanetTileServer
 {
 private:
 
-	bool any_being_worked;
 
 public:
+
+	int being_worked_on;
+	int not_generated;
 
 	// Used for CPU efficiency of threads
 	std::mutex condition_mtx;
@@ -52,6 +54,8 @@ public:
 	PlanetTile* load(PlanetTilePath path, bool low_up, bool low_right, bool low_down, bool low_left, bool now = false);
 	void unload(PlanetTilePath path, bool unload_now = false);
 
+	bool has_tile_geometry(PlanetTilePath path);
+
 	// Unloads all unused tiles
 	void unload_unused();
 
@@ -70,7 +74,7 @@ public:
 	// simply get smallest heightmap samples
 	// Small planets (or asteroids) need either more vertices
 	// or to be kept at a decent subdivision level
-	size_t verticesPerSide = 32 + 1;
+	size_t verticesPerSide = 42 + 1;
 
 	void rebuild_all();
 

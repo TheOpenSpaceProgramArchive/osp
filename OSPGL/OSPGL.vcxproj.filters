@@ -21,15 +21,6 @@
     <ClCompile Include="dep\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\orbital\space_body.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util\file_util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\orbital\space_system.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dep\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,40 +36,37 @@
     <ClCompile Include="dep\stb\impl_stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\orbital\newton_body.cpp">
+    <ClCompile Include="dep\tiny_obj_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\game\ui\orbit_view.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util\types\gradients.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\util\gui\multi_plot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\game\ui\orbit_predictor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\game\vessel\part.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\game\ui\ui_manager.cpp">
+    <ClCompile Include="dep\imnodes\imnodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\game\ui\navball\navball.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dep\tiny_obj_loader.cpp">
+    <ClCompile Include="src\game\ui\orbit_predictor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\main2.cpp">
+    <ClCompile Include="src\game\ui\orbit_view.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util\math_util.cpp">
+    <ClCompile Include="src\game\ui\ui_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\vessel\engine\rocket_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\vessel\part.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\orbital\newton_body.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\orbital\space_body.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\orbital\space_system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\render\renderlow\drawables\dbillboard.cpp">
@@ -120,10 +108,16 @@
     <ClCompile Include="src\render\rendernear\render_body.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\renderspace\provider\layered_surface_provider.cpp">
+    <ClCompile Include="src\render\renderspace\nodes\all_nodes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\renderspace\provider\map_surface_provider.cpp">
+    <ClCompile Include="src\render\renderspace\nodes\input_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\output_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\planet_tile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\render\renderspace\planet_tile_server.cpp">
@@ -135,7 +129,34 @@
     <ClCompile Include="src\render\renderspace\quad_tree_planet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\renderspace\planet_tile.cpp">
+    <ClCompile Include="src\render\renderspace\surface_provider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\surface_provider_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\gui\multi_plot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\types\gradients.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\file_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\math_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\constant_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\math_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\noise_spn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -695,18 +716,6 @@
     <ClInclude Include="dep\glm\vector_relational.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\orbital\space_body.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\util\file_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\util\defines.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\orbital\space_system.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dep\imgui\imgui_impl_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -734,22 +743,25 @@
     <ClInclude Include="dep\stb\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\orbital\newton_body.h">
+    <ClInclude Include="dep\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\game\ui\orbit_view.h">
+    <ClInclude Include="dep\stb\stb_perlin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\types\gradients.h">
+    <ClInclude Include="dep\imnodes\imnodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\gui\multi_plot.h">
+    <ClInclude Include="src\game\ui\navball\navball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game\ui\orbit_predictor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\game\vessel\part.h">
+    <ClInclude Include="src\game\ui\orbit_view.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\ui\ui_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game\vessel\engine\rocket_engine.h">
@@ -761,22 +773,19 @@
     <ClInclude Include="src\game\vessel\material\reaction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\game\ui\ui_manager.h">
+    <ClInclude Include="src\game\vessel\part.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\game\ui\navball\navball.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dep\tiny_obj_loader.h">
+    <ClInclude Include="src\orbital\newton_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\orbital\planet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\math_util.h">
+    <ClInclude Include="src\orbital\space_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dep\stb\stb_perlin.h">
+    <ClInclude Include="src\orbital\space_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\render\renderlow\drawables\dbillboard.h">
@@ -821,10 +830,19 @@
     <ClInclude Include="src\render\rendernear\render_body.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderspace\provider\layered_surface_provider.h">
+    <ClInclude Include="src\render\renderspace\nodes\all_nodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderspace\provider\map_surface_provider.h">
+    <ClInclude Include="src\render\renderspace\nodes\input_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\output_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\planet_tile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\planet_tile_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\render\renderspace\planet_tile_server.h">
@@ -839,10 +857,31 @@
     <ClInclude Include="src\render\renderspace\surface_provider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderspace\planet_tile.h">
+    <ClInclude Include="src\render\renderspace\surface_provider_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\renderspace\planet_tile_path.h">
+    <ClInclude Include="src\util\gui\multi_plot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\types\gradients.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\file_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\math_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\constant_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\math_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\noise_spn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

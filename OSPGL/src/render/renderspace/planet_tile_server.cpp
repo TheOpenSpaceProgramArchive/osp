@@ -7,7 +7,7 @@ PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_ri
 	// We want no thread to mess with us here, 
 	// lock for the duration of the whole function
 	std::lock_guard<std::mutex> guard(tiles_mtx);
-
+	
 	auto it = tiles.find(path);
 	PlanetTile* out;
 
@@ -19,9 +19,7 @@ PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_ri
 	{
 		if (path.get_depth() == 0)
 		{
-			PlanetTile* nTile = new PlanetTile(path, verticesPerSide, *planet, true);
-			nTile->is_generated = true;
-			nTile->is_being_generated = false;
+			PlanetTile* nTile = new PlanetTile(path, verticesPerSide, *planet);
 			tiles[path] = nTile;
 			out = nTile;
 		}
@@ -53,21 +51,42 @@ PlanetTile* PlanetTileServer::load(PlanetTilePath path, bool low_up, bool low_ri
 	else
 	{
 		// We return NULL for now, or load it instantly if parent is not available
-		PlanetTilePath parent = path; parent.path.pop_back();
-		auto it = tiles.find(parent);
-		if (it != tiles.end() && it->second->is_generated)
+		PlanetTilePath parent = path; 
+		
+		if (parent.path.size() == 0)
 		{
-			it->second->used = true;
-			condition_var.notify_one();
-			return NULL;
-		}
-		else
-		{
+			// Generate root tile now
 			out->used = true;
 			out->is_generated = true;
 			out->is_being_generated = false;
 			out->generate();
 			return out;
+		}
+		else
+		{
+			parent.path.pop_back();
+			auto it = tiles.find(parent);
+			if (it != tiles.end() && it->second->is_generated)
+			{
+				it->second->used = true;
+				condition_var.notify_one();
+				return NULL;
+			}
+			else
+			{
+				if (it == tiles.end())
+				{
+					out->used = true;
+					out->is_generated = true;
+					out->is_being_generated = false;
+					out->generate();
+					return out;
+				}
+
+				it->second->used = true;
+				condition_var.notify_one();
+				return NULL;
+			}
 		}
 	}
 
@@ -97,17 +116,31 @@ void PlanetTileServer::unload(PlanetTilePath path, bool unload_now)
 	}
 }
 
+bool PlanetTileServer::has_tile_geometry(PlanetTilePath path)
+{
+	auto it = tiles.find(path);
+	if (it != tiles.end() && it->second->is_generated)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void PlanetTileServer::unload_unused()
 {
 	std::vector<PlanetTilePath> toDelete;
 
+	tiles_mtx.lock();
+
 	for (auto const& pair : tiles)
 	{
-		if (pair.second->used == false && pair.second->is_generated)
+		if (pair.second->used == false && !pair.second->is_being_generated)
 		{
 			if (pair.second->isUploaded())
 			{
 				pair.second->unload();
+				pair.second->needs_upload = true;
 			}
 
 			if (pair.second->path.get_depth() >= minDepthToUnload)
@@ -122,6 +155,8 @@ void PlanetTileServer::unload_unused()
 		delete tiles[toDelete[i]];
 		tiles.erase(toDelete[i]);
 	}
+
+	tiles_mtx.unlock();
 }
 
 void PlanetTileServer::upload_used()
@@ -132,10 +167,17 @@ void PlanetTileServer::upload_used()
 	{
 		if (pair.second->used && pair.second->is_generated)
 		{
-			if (!pair.second->isUploaded())
+			if (pair.second->needs_upload)
 			{
+				if (pair.second->isUploaded())
+				{
+					pair.second->unload();
+				}
+
 				pair.second->upload();
 				i++;
+
+				pair.second->needs_upload = false;
 			}
 		}
 	}
@@ -143,14 +185,21 @@ void PlanetTileServer::upload_used()
 
 void PlanetTileServer::update()
 {
-	any_being_worked = false;
+	being_worked_on = 0;
+	not_generated = 0;
 
 	for (auto tile : tiles)
 	{
 		if (!tile.second->is_generated)
 		{
-			any_being_worked = true;
+			being_worked_on++;
+			not_generated++;
 		}
+	}
+
+	if (not_generated >= being_worked_on)
+	{
+		condition_var.notify_all();
 	}
 
 	unload_unused();
@@ -159,28 +208,37 @@ void PlanetTileServer::update()
 
 void PlanetTileServer::rebuild_all()
 {
-	for (auto tile : tiles)
+	// We set all tiles to regenerate
+	bool done = false;
+	while (!done)
 	{
-		bool was_uploaded = false;
+		done = true;
 
-		if (tile.second->isUploaded())
+		for (auto tile : tiles)
 		{
-			tile.second->unload();
-			was_uploaded = true;
-		}
-		
-		tile.second->generate();
+			if (tile.second->is_generated)
+			{
+				done = false;
+			}
 
-		if (was_uploaded)
-		{
-			tile.second->upload();
+			if (!tile.second->is_being_generated)
+			{
+				tile.second->is_generated = false;
+				if (tile.second->isUploaded())
+				{
+					tile.second->unload();
+				}
+			}
 		}
 	}
+
+	//condition_var.notify_all();
+	
 }
 
 bool PlanetTileServer::is_built()
 {
-	return !any_being_worked;
+	return being_worked_on == 0;
 }
 
 void tile_worker_thread_function(PlanetTileServer* server, PlanetTileWorker* we)

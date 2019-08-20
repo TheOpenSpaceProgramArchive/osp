@@ -24,6 +24,9 @@ private:
 	// coordinate of the appropiate QuadTreeNode
 	QuadTreeCoordinate project(glm::dvec3 nrm_vec);
 
+	bool auto_rebuild = true;
+	bool was_building = false;
+
 public:
 
 	Shader* shader;
@@ -36,7 +39,7 @@ public:
 
 	std::vector<PlanetTile*> tiles;
 
-
+	bool needs_lowq_real(QuadTreeNode* node, QuadTreeNode::QuadTreeSide dir, PlanetTilePath::PlanetSide side);
 
 	void flatten();
 

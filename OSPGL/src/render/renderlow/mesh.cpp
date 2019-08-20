@@ -244,13 +244,29 @@ bool Mesh::gen_buffers()
 }
 
 
+Mesh::Mesh(const Mesh& copy)
+{
+	no_destroy = true;
+	this->vao = copy.vao;
+	this->vbo = copy.vbo;
+	this->data = copy.data;
+	this->vertex_count = copy.vertex_count;
+	this->vertices = copy.vertices;
+}
+
 Mesh::Mesh()
 {
+	vao = 0;
+	no_destroy = false;
 }
 
 
 Mesh::~Mesh()
 {
-	destroy();
+	if (!no_destroy)
+	{
+		destroy();
+	}
+	
 }
 

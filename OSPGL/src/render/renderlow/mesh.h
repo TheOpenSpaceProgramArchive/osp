@@ -31,6 +31,9 @@ class Mesh
 {
 private:
 
+	// Used to stop the destructor of a copied mesh from deleting
+	// the GPU data
+	bool no_destroy;
 
 	// Data used internally
 	std::vector<float> data;
@@ -60,6 +63,7 @@ public:
 
 	void load_from_obj(std::string path);
 
+	Mesh(const Mesh& copy);
 	Mesh();
 	~Mesh();
 };

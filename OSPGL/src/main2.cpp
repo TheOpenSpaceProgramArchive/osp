@@ -1,6 +1,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <imnodes/imnodes.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -23,6 +24,7 @@
 #include "render/renderspace/planet_tile_server.h"
 #include "render/renderlow/shader.h"
 #include "render/renderspace/surface_provider.h"
+#include "render/renderlow/drawables/dmodel.h"
 
 #include <stb/stb_image.h>
 
@@ -30,8 +32,8 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // settings
-const unsigned int SCR_WIDTH = 1366;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 900;
 
 
 namespace spd = spdlog;
@@ -121,6 +123,7 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	// Setup style
 	ImGui::StyleColorsDark();
+	imnodes::Initialize();
 
 
 	Shader test = Shader("res/shaders/test.vs", "res/shaders/test.fs");
@@ -131,6 +134,14 @@ int main()
 
 	Shader planet_tile_shader = Shader("res/shaders/planet_tile.vs", "res/shaders/planet_tile.fs");
 
+	//Shader atmosphere_shader = Shader("res/shaders/planet/atmosphere.vs", "res/shaders/planet/atmosphere.fs");
+
+	//Mesh sphere_mesh = Mesh();
+	//sphere_mesh.load_from_obj("res/model/icosphere.obj");
+	//sphere_mesh.build_array();
+	//sphere_mesh.upload();
+	//DModel atmosphere = DModel(sphere_mesh, &atmosphere_shader);
+	//atmosphere.tform.scl = glm::vec3(1.015f, 1.015f, 1.015f);
 
 	// Uncomment for wireframe mode
 
@@ -162,14 +173,15 @@ int main()
 	bool wireframe = false;
 	bool was_wireframe_down = false;
 
-	Planet planet; planet.radius = 10.0; planet.surface_provider = new SurfaceProvider();
+	Planet planet; planet.radius = 6378000.0f;
+	planet.radius = 10.0f;
 	QuadTreePlanet planet_qtree(&planet, &planet_tile_shader);
 	glm::dvec2 focusPoint(0.75, 0.75);
 	QuadTreeNode* onNode = &planet_qtree.px;
 
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec2 mouse_look = glm::vec2(-3.14f, 3.14f / 2.0f);
-	glm::vec3 position = glm::vec3(1.5f, 0.0f, 0.0f);
+	glm::vec3 position = glm::vec3(1.8f, 0.0f, -1.0f);
 
 	int qtree_depth = 0;
 	float qtree_timer = 0.0f;
@@ -256,7 +268,7 @@ int main()
 			qtree_timer += 2.0f * dt;
 			if (qtree_timer >= 1.0f)
 			{
-				if (qtree_depth >= 1 && planet_qtree.tile_server.is_built())
+				if (qtree_depth >= 1)
 				{
 					qtree_depth--;
 				}
@@ -301,7 +313,7 @@ int main()
 		look_at.z = sin(mouse_look.y) * sin(mouse_look.x);
 		if (up != glm::vec3(0.0f, 1.0f, 0.0f))
 		{
-			look_at = MathUtil::rotate_from_to(glm::vec3(0.0f, 1.0f, 0.0f), up) * glm::vec4(look_at, 1.0f);
+			look_at = glm::normalize(MathUtil::rotate_from_to(glm::vec3(0.0f, 1.0f, 0.0f), up) * glm::vec4(look_at, 1.0f));
 		}
 		glm::vec3 look_at_right = glm::normalize(glm::cross(look_at, up));
 
@@ -355,9 +367,24 @@ int main()
 
 		glm::mat4 view = glm::lookAt(
 			position, position + look_at, up);
-		glm::mat4 proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0001f, 5.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.00001f, 2.0f);
 		planet_qtree.draw(view, proj);
 
+		// Draw atmosphere, we need to adjust culling
+		// and enable additive blending
+	
+		//if (glm::length(position) <= glm::abs(atmosphere.tform.scl.x))
+		//{
+		//	glCullFace(GL_FRONT);
+		//}
+		
+		//atmosphere_shader.setvec3("camPosition", position);
+
+		//glBlendFunc(GL_ONE, GL_ONE);	//< Additive blending
+		//atmosphere.draw(view, proj);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	//< Normal blending
+
+		// glCulLFace(GL_BACK);
 
 		// Finish
 		ImGui::Render();

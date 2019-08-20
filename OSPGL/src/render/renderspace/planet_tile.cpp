@@ -266,13 +266,21 @@ glm::vec3 get_real_cubic_pos(glm::vec3 vert, glm::mat4 transform)
 
 
 
-PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& planet, bool gen_now) : path(nPath.path, nPath.side), planet(planet)
+PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, Planet& planet, bool gen_now) : path(nPath.path, nPath.side), planet(planet)
 {
 	this->used = false;
 	this->verts = std::vector<float>();
 	this->indices = std::vector<uint16_t>();
 
+	for (size_t i = 0; i < 4; i++)
+	{
+		tosame[i] = std::vector<uint16_t>();
+		tolower[i] = std::vector<uint16_t>();
+	}
+
 	this->vert_count = vertCount;
+
+	vao = 0; vbo = 0; ebo = 0;
 
 	if (gen_now)
 	{
@@ -287,7 +295,6 @@ PlanetTile::PlanetTile(PlanetTilePath nPath, size_t vertCount, const Planet& pla
 	}
 
 
-	vao = 0; vbo = 0; ebo = 0;
 }
 
 
@@ -395,7 +402,7 @@ void PlanetTile::unload()
 
 void PlanetTile::generate_vertex(int ix, int iy, size_t vert_count,
 	std::vector<float>& heights, glm::mat4 model, glm::mat4 inverse_model_spheric,
-	std::vector<Vertex>& target)
+	std::vector<Vertex>& target, float planet_radius)
 {
 	float x = (float)ix / ((float)vert_count - 1);
 	float y = (float)iy / ((float)vert_count - 1);
@@ -412,7 +419,9 @@ void PlanetTile::generate_vertex(int ix, int iy, size_t vert_count,
 
 	glm::vec3 tile_normal = MathUtil::cube_to_sphere(world_pos_spheric);
 
-	world_pos_spheric += glm::normalize(world_pos_spheric) * height;
+	// 1.0 is planet radius, so scale height
+	float real_height = height / planet_radius;
+	world_pos_spheric += glm::normalize(world_pos_spheric) * real_height;
 
 	out.pos = inverse_model_spheric * glm::vec4(world_pos_spheric, 1.0f);
 	out.nrm = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -456,10 +465,9 @@ void PlanetTile::generate()
 	std::vector<float> heights = std::vector<float>();
 	heights.resize((vert_count + 2) * (vert_count + 2), 0.0f);
 
-	if (planet.surface_provider != NULL)
-	{
-		planet.surface_provider->get_heights(path, vert_count, heights, planet, model_spheric, model, model);
-	}
+	planet.surface_provider.mtx.lock();
+	planet.surface_provider.get_heights(path, vert_count, heights, model_spheric, model, model, planet.radius);
+	planet.surface_provider.mtx.unlock();
 
 	size_t vert_count_p = vert_count + 2;
 
@@ -473,7 +481,7 @@ void PlanetTile::generate()
 	{
 		for (int ix = -1; ix < (int)vert_count + 1; ix++)
 		{
-			generate_vertex(ix, iy, vert_count, heights, model, inverse_model_spheric, vertices);
+			generate_vertex(ix, iy, vert_count, heights, model, inverse_model_spheric, vertices, planet.radius);
 		}
 	}
 
@@ -774,5 +782,7 @@ void PlanetTile::generate()
 			verts[out_index * FLOATS_PER_VERTEX + 7] = vertices[in_index].uv.y;
 		}
 	}
+
+	needs_upload = true;
 }
 
