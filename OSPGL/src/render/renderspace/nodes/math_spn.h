@@ -1,10 +1,15 @@
 #pragma once
 #include "../surface_provider_node.h"
+#include <glm/glm.hpp>
 
 // idname = Math
 class MathSPN : public SurfaceProviderNode
 {
 public:
+
+	bool show_warning;
+
+	SurfaceProvider* surf;
 
 	enum MathOperation
 	{
@@ -20,8 +25,11 @@ public:
 
 	MathOperation operation;
 
-	float val_a;
-	float val_b;
+	glm::vec3 val_a;
+	glm::vec3 val_b;
+
+	ValueType valtype_a = ValueType::V1;
+	ValueType valtype_b = ValueType::V1;
 
 	static constexpr int INPUT_A = 0;
 	static constexpr int INPUT_B = 1;

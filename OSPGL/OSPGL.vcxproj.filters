@@ -159,6 +159,12 @@
     <ClCompile Include="src\render\renderspace\nodes\noise_spn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\pack_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\renderspace\nodes\unpack_spn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\glad\glad.h">
@@ -882,6 +888,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\render\renderspace\nodes\noise_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\pack_spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\renderspace\nodes\unpack_spn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

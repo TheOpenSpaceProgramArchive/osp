@@ -6,11 +6,24 @@
 
 class SurfaceProvider;
 
+enum ValueType
+{
+	V1,	// length * 1	floats
+	V2,	// length * 2	floats
+	V3,	// length * 3	floats
+	ANY, // The node handles conversion to the other types
+
+	END_MARKER,
+};
+
 struct SurfaceProviderAttribute
 {
+
+
 	bool is_input;
 	int id;
 	std::string name;
+	ValueType val_type;
 	std::vector<float> values;
 	int owner_id;
 
@@ -41,6 +54,27 @@ struct SurfaceProviderAttribute
 			spdlog::get("OSP")->error("Tried to remove a link, but could not find it!");
 		}
 	}
+
+	static std::string valtype_to_str(ValueType val)
+	{
+		if (val == V1)
+		{
+			return "v1";
+		}
+		else if (val == V2)
+		{
+			return "v2";
+		}
+		else if (val == V3)
+		{
+			return "v3";
+		}
+		else
+		{
+			return "undef";
+		}
+	}
+
 };
 
 class SurfaceProviderNode
@@ -70,4 +104,8 @@ public:
 	// down to the inputs, until all values are satisfied
 	// Returns true if all was satisfied
 	bool propagate(SurfaceProvider* surf, size_t length);
+
+
+	// Utility functions
+	ValueType pick_val_type(ValueType current, bool* set_dirty);
 };

@@ -21,7 +21,6 @@ private:
 	bool complete = false;
 
 	int selected_id = -1;
-	int last_frame_selected_id = -1;
 
 public:
 
@@ -65,7 +64,7 @@ public:
 	// Draw ImGui widgets for editing
 	void draw_imgui();
 
-	SurfaceProviderAttribute* create_attribute(std::string name, int owner_id, bool input);
+	SurfaceProviderAttribute* create_attribute(std::string name, int owner_id, bool input, ValueType val_type);
 
 	SurfaceProvider();
 	

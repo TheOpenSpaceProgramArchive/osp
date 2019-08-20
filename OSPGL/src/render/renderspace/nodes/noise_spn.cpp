@@ -38,17 +38,7 @@ bool NoiseSPN::do_imgui(int id)
 	if (id == INPUT_X)
 	{
 		ImGui::SameLine();
-		needs_dirty |= ImGui::InputFloat("Scale", &x_scale);
-	}
-	else if (id == INPUT_Y)
-	{
-		ImGui::SameLine();
-		needs_dirty |= ImGui::InputFloat("Scale", &y_scale);
-	}
-	else if (id == INPUT_Z)
-	{
-		ImGui::SameLine();
-		needs_dirty |= ImGui::InputFloat("Scale", &z_scale);
+		needs_dirty |= ImGui::InputFloat("Scale", &in_scale);
 	}
 	else if (id == INPUT_LACUNARITY)
 	{
@@ -211,9 +201,9 @@ void NoiseSPN::process(size_t length)
 
 	for (size_t i = 0; i < length; i++)
 	{
-		float x = in_attribute[INPUT_X]->values[i] * x_scale;
-		float y = in_attribute[INPUT_Y]->values[i] * y_scale;
-		float z = in_attribute[INPUT_Z]->values[i] * z_scale;
+		float x = in_attribute[INPUT_X]->values[i * 3 + 0] * in_scale;
+		float y = in_attribute[INPUT_X]->values[i * 3 + 1] * in_scale;
+		float z = in_attribute[INPUT_X]->values[i * 3 + 2] * in_scale;
 		float lacunarity = in_attribute[INPUT_LACUNARITY]->values[i];
 		float gain = in_attribute[INPUT_GAIN]->values[i];
 		float offset = in_attribute[INPUT_OFFSET]->values[i];
@@ -243,18 +233,14 @@ void NoiseSPN::process(size_t length)
 
 void NoiseSPN::create(SurfaceProvider* surf)
 {
-	in_attribute[INPUT_X] = surf->create_attribute("X", id, true);
-	in_attribute[INPUT_Y] = surf->create_attribute("Y", id, true);
-	in_attribute[INPUT_Z] = surf->create_attribute("Z", id, true);
-	in_attribute[INPUT_LACUNARITY] = surf->create_attribute("Lacunarity", id, true);
-	in_attribute[INPUT_GAIN] = surf->create_attribute("Gain", id, true);
-	in_attribute[INPUT_OFFSET] = surf->create_attribute("Offset", id, true);
+	in_attribute[INPUT_X] = surf->create_attribute("Position", id, true, V3);
+	in_attribute[INPUT_LACUNARITY] = surf->create_attribute("Lacunarity", id, true, V1);
+	in_attribute[INPUT_GAIN] = surf->create_attribute("Gain", id, true, V1);
+	in_attribute[INPUT_OFFSET] = surf->create_attribute("Offset", id, true, V1);
 
-	out_attribute[OUTPUT] = surf->create_attribute("Out", id, false);
+	out_attribute[OUTPUT] = surf->create_attribute("Out", id, false, V1);
 
-	x_scale = 1.0f;
-	y_scale = 1.0f;
-	z_scale = 1.0f;
+	in_scale = 1.0f;
 
 	val_offset = 1.0f;
 	val_lacunarity = 2.0f;

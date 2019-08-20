@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\render\renderspace\nodes\pack_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\noise_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\math_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\constant_spn.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="src\render\renderlow\map.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\all_nodes.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\output_spn.cpp" />
+    <ClCompile Include="src\render\renderspace\nodes\unpack_spn.cpp" />
     <ClCompile Include="src\render\renderspace\planet_tile.cpp" />
     <ClCompile Include="src\render\renderspace\planet_tile_server.cpp" />
     <ClCompile Include="src\render\renderspace\quad_tree_node.cpp" />
@@ -173,6 +175,7 @@
     <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\render\renderspace\nodes\pack_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\noise_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\math_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\constant_spn.h" />
@@ -183,6 +186,7 @@
     <ClInclude Include="src\render\renderlow\map.h" />
     <ClInclude Include="src\render\renderspace\nodes\all_nodes.h" />
     <ClInclude Include="src\render\renderspace\nodes\output_spn.h" />
+    <ClInclude Include="src\render\renderspace\nodes\unpack_spn.h" />
     <ClInclude Include="src\render\renderspace\surface_provider_node.h" />
     <ClInclude Include="src\render\renderspace\planet_tile.h" />
     <ClInclude Include="src\render\renderspace\planet_tile_path.h" />

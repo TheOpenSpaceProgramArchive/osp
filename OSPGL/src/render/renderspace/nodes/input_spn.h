@@ -6,10 +6,8 @@ class InputSPN : public SurfaceProviderNode
 {
 public:
 
-	static constexpr int SPHERE_X	= 0;
-	static constexpr int SPHERE_Y	= 1;
-	static constexpr int SPHERE_Z	= 2;
-	static constexpr int RADIUS		= 3;
+	static constexpr int SPHERE_POS = 0;
+	static constexpr int RADIUS		= 1;
 
 
 	virtual std::string get_name() override;

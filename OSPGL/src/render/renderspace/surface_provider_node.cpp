@@ -20,6 +20,12 @@ bool SurfaceProviderNode::propagate(SurfaceProvider* surf, size_t length)
 		SurfaceProviderAttribute* attr = surf->attributes[input.second->links[0]];
 		SurfaceProviderNode* owner = surf->nodes[attr->owner_id];
 
+		if (attr->val_type != input.second->val_type && input.second->val_type != ANY)
+		{
+			// Type mismatch
+			return false;
+		}
+
 		bool ret = owner->propagate(surf, length);
 		if (ret == false)
 		{
@@ -33,4 +39,27 @@ bool SurfaceProviderNode::propagate(SurfaceProvider* surf, size_t length)
 	process(length);
 
 	return true;
+}
+
+ValueType SurfaceProviderNode::pick_val_type(ValueType current, bool * set_dirty)
+{
+	ValueType selected = current;
+
+	std::string current_str = SurfaceProviderAttribute::valtype_to_str(current);
+	if (ImGui::BeginCombo("#", current_str.c_str()))
+	{
+		for (int i = 0; i < ValueType::ANY; i++)
+		{
+			std::string label = SurfaceProviderAttribute::valtype_to_str(ValueType(i));
+			if (ImGui::Selectable(label.c_str()))
+			{
+				selected = ValueType(i);
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	*set_dirty |= selected != current;
+
+	return selected;
 }

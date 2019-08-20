@@ -17,8 +17,14 @@ std::vector<std::string> get_all_idnames()
 	// math_spn.h
 	out.push_back("Math");
 
-	//noise_spn.h
+	// noise_spn.h
 	out.push_back("Noise");
+
+	// pack_spn.h
+	out.push_back("Pack");
+
+	// unpack_spn.h
+	out.push_back("Unpack");
 
 	return out;
 }
@@ -46,6 +52,14 @@ SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider*
 	else if (idname == "Noise")
 	{
 		out = new NoiseSPN();
+	}
+	else if(idname == "Pack")
+	{
+		out = new PackSPN();
+	}
+	else if (idname == "Unpack")
+	{
+		out = new UnpackSPN();
 	}
 	else
 	{

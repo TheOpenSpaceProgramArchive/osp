@@ -692,17 +692,21 @@ namespace imnodes
 				}
 			}
 
+			ImU32 link_color = link.color_style.base;
+
 			ColorStyle style = ColorStyle_Link;
 			if (g.link_selected == link_idx)
 			{
 				style = ColorStyle_LinkSelected;
+				link_color = link.color_style.selected;
 			}
 			else if (is_hovered)
 			{
 				style = ColorStyle_LinkHovered;
+				link_color = link.color_style.hovered;
 			}
 
-			const ImU32 link_color = g.style.colors[style];
+			
 
 			editor.grid_draw_list->AddBezierCurve(
 				link_renderable.p0,

@@ -13,5 +13,5 @@ void OutputSPN::process(size_t length)
 
 void OutputSPN::create(SurfaceProvider* surf)
 {
-	in_attribute[HEIGHT] = surf->create_attribute("Height", id, true);
+	in_attribute[HEIGHT] = surf->create_attribute("Height", id, true, V1);
 }

@@ -20,19 +20,15 @@ public:
 	NoiseType noise_type;
 
 	static constexpr int INPUT_X			= 0;
-	static constexpr int INPUT_Y			= 1;
-	static constexpr int INPUT_Z			= 2;
-	static constexpr int INPUT_LACUNARITY	= 3;
-	static constexpr int INPUT_GAIN			= 4;
-	static constexpr int INPUT_OFFSET		= 5;
-	static constexpr int OUTPUT				= 7;
+	static constexpr int INPUT_LACUNARITY	= 1;
+	static constexpr int INPUT_GAIN			= 2;
+	static constexpr int INPUT_OFFSET		= 3;
+	static constexpr int OUTPUT				= 4;
 
 	float val_lacunarity;
 	float val_gain;
 	float val_offset;
-	float x_scale;
-	float y_scale;
-	float z_scale;
+	float in_scale;
 	float out_scale;
 	int octaves;
 	int seed;
