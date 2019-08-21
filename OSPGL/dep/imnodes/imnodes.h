@@ -78,6 +78,8 @@ namespace imnodes
 	// Set the node's title
 	void Name(const char* name);
 
+	void Clear();
+
 	// Attributes are ImGui UI elements embedded within the node. Attributes have
 	// circular pins rendered next to them. Links are created between pins.
 	//

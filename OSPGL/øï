@@ -1,0 +1,9 @@
+{
+    "imnodes": "[editor]\npanning=0,0\n\n[node.1]\norigin=512,128\n\n[node.2]\norigin=32,128\n",
+    "links": [],
+    "nodes": [
+        null,
+        null,
+        null
+    ]
+}

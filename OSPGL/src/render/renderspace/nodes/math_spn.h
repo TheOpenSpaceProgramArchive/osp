@@ -27,6 +27,22 @@ public:
 		END_MARKER
 	};
 
+
+	NLOHMANN_JSON_SERIALIZE_ENUM(MathOperation,
+		{
+		{ADD, "add"},
+		{SUBSTRACT, "substract"},
+		{MULTIPLY, "multiply"},
+		{DIVIDE, "divide"},
+		{MODULO, "modulo"},
+		{POWER, "power"},
+		{MAX, "max"},
+		{MIN, "min"},
+		{ABS, "abs"},
+		{SIGN, "sign"},
+		});
+
+
 	MathOperation operation;
 
 	glm::vec3 val_a;
@@ -43,4 +59,8 @@ public:
 	virtual std::string get_name() override;
 	virtual void process(size_t length) override;
 	virtual void create(SurfaceProvider * surf) override;
+
+
+	virtual nlohmann::json serialize() override;
+	virtual void deserialize(nlohmann::json j) override;
 };

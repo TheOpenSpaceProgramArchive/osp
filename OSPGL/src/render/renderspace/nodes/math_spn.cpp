@@ -56,7 +56,7 @@ bool MathSPN::do_imgui(int id)
 	glm::vec3 old_a = val_a;
 	glm::vec3 old_b = val_b;
 
-	ImGui::PushItemWidth(180.0f);
+	ImGui::PushItemWidth(150.0f);
 
 	bool set_dirty = false;
 
@@ -66,7 +66,10 @@ bool MathSPN::do_imgui(int id)
 		if (in_attribute[INPUT_A]->links.size() == 0)
 		{
 			ImGui::SameLine();
+
+			ImGui::PushItemWidth(60.0f);
 			valtype_a = pick_val_type(valtype_a, &set_dirty);
+			ImGui::PopItemWidth();
 
 			in_attribute[INPUT_A]->has_values = true;
 			if (valtype_a == V1)
@@ -93,7 +96,10 @@ bool MathSPN::do_imgui(int id)
 		if (in_attribute[INPUT_B]->links.size() == 0)
 		{
 			ImGui::SameLine();
+
+			ImGui::PushItemWidth(60.0f);
 			valtype_b = pick_val_type(valtype_b, &set_dirty);
+			ImGui::PopItemWidth();
 
 			in_attribute[INPUT_B]->has_values = true;
 			if (valtype_b == V1)
@@ -391,3 +397,41 @@ void MathSPN::create(SurfaceProvider* surf)
 	val_a = glm::vec3(0.0f, 0.0f, 0.0f);
 	val_b = glm::vec3(0.0f, 0.0f, 0.0f);
 }
+
+using namespace nlohmann;
+
+json MathSPN::serialize()
+{
+	json out;
+
+	out["a"]["x"] = val_a.x;
+	out["a"]["y"] = val_a.y;
+	out["a"]["z"] = val_a.z;
+	out["a"]["val_type"] = valtype_a;
+
+	out["b"]["x"] = val_b.x;
+	out["b"]["y"] = val_b.y;
+	out["b"]["z"] = val_b.z;
+	out["b"]["val_type"] = valtype_b;
+
+	out["op"] = operation;
+
+
+	return out;
+}
+
+void MathSPN::deserialize(json j)
+{
+	val_a.x = j["a"]["x"];
+	val_a.y = j["a"]["y"];
+	val_a.z = j["a"]["z"];
+	valtype_a = j["a"]["val_type"];
+
+	val_b.x = j["b"]["x"];
+	val_b.y = j["b"]["y"];
+	val_b.z = j["b"]["z"];
+	valtype_b = j["b"]["val_type"];
+
+	operation = j["op"];
+}
+

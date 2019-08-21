@@ -70,4 +70,28 @@ void ConstantSPN::create(SurfaceProvider* surf)
 	out_attribute[NUMBER] = surf->create_attribute("Value", id, false, ANY);
 }
 
+using namespace nlohmann;
+
+json ConstantSPN::serialize()
+{
+	json out;
+
+	out["x"] = val.x;
+	out["y"] = val.y;
+	out["z"] = val.z;
+
+	out["val_type"] = val_type;
+
+	return out;
+}
+
+void ConstantSPN::deserialize(json j)
+{
+	val.x = j["x"];
+	val.y = j["y"];
+	val.z = j["z"];
+
+	val_type = j["val_type"];
+}
+
 

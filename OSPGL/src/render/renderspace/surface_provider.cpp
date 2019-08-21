@@ -7,58 +7,153 @@ void SurfaceProvider::draw_imgui()
 {
 	bool preview_clicked = false;
 
-	if (ImGui::BeginPopupModal("New Node", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	ImGui::Columns(3);
+
+	if (ImGui::Button("New"))
 	{
-		std::string node_type_str = "Select Node Type";
-		if (selected_node_type != "")
+		if (unsaved_changes)
 		{
-			node_type_str = selected_node_type;
+			ImGui::OpenPopup("Confirm Action ##new");
 		}
-
-		if (ImGui::BeginCombo("", node_type_str.c_str()))
+		else
 		{
-			std::vector<std::string> types = get_all_idnames();
-			for (const std::string& type : types)
-			{
-				if (ImGui::Selectable(type.c_str()))
-				{
-					selected_node_type = type;
-				}
-			}
-
-			ImGui::EndCombo();
+			clear();
 		}
+	}
 
-	
+	if (ImGui::BeginPopupModal("Confirm Action ##new", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Creating a new graph will delete any unsaved changes, are you sure?");
 		if (ImGui::Button("Cancel"))
 		{
 			ImGui::CloseCurrentPopup();
-			selected_node_type = "";
 		}
+
 		ImGui::SameLine();
-		if (ImGui::Button("Add"))
+
+		if (ImGui::Button("Confirm"))
 		{
+			clear();
 			ImGui::CloseCurrentPopup();
-			if (selected_node_type != "")
-			{
-				SurfaceProviderNode* new_node = create_new_node(selected_node_type, this);
-				nodes[new_node->id] = new_node;
-				selected_node_type = "";
-			}
 		}
 
 		ImGui::EndPopup();
 	}
 
-	ImGui::Columns(2);
+	ImGui::SameLine();
 
-	if (ImGui::Button("Create New"))
+	if (ImGui::Button("Load"))
 	{
-		ImGui::OpenPopup("New Node");
+		ImGui::OpenPopup("Load File");
+		selected_file = "";
+	}
+
+	if (ImGui::BeginPopupModal("Load File", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		if (unsaved_changes)
+		{
+			ImGui::TextColored(ImVec4(1.0, 0.5, 0.5, 1.0), "Unsaved Changes!");
+		}
+
+		ImGui::Text("Select a file to load (from res/surfaces)");
+
+		std::vector<std::string> files = FileUtil::get_all_files("res/surfaces/", true);
+
+		if (ImGui::BeginCombo("", selected_file.c_str()))
+		{
+			for (size_t i = 0; i < files.size(); i++)
+			{
+				if (ImGui::Selectable(files[i].c_str()))
+				{
+					selected_file = files[i];
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		if (ImGui::Button("Cancel"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Confirm"))
+		{
+
+			std::string file = FileUtil::load_file(selected_file);
+			if (file != "")
+			{
+				json as_json = json::parse(file);
+
+				clear();
+
+				save_path = selected_file;
+				deserialize(as_json);
+			}
+			
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
 	}
 
 	ImGui::SameLine();
 
+	if (ImGui::Button("Save"))
+	{
+		if (save_path == "")
+		{
+			ImGui::OpenPopup("Save As");
+		}
+		else
+		{
+			save();
+		}
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Save As"))
+	{
+		ImGui::OpenPopup("Save As");
+	}
+
+	if (ImGui::BeginPopupModal("Save As", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Path: ");
+
+		ImGui::Text("res/surfaces/");
+		ImGui::SameLine();
+		ImGui::InputText("", path_buf, 512);
+		ImGui::SameLine();
+		ImGui::Text(".json");
+
+		if (ImGui::Button("Cancel"))
+		{
+			strcpy(path_buf, "");
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Confirm"))
+		{
+			std::string str = std::string(path_buf);
+			save_path = "res/surfaces/" + str + ".json";
+
+			save();
+
+			strcpy(path_buf, "");
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+	ImGui::NextColumn();
 
 	if (complete)
 	{
@@ -80,6 +175,7 @@ void SurfaceProvider::draw_imgui()
 
 	ImGui::Columns(1);
 
+	//mtx.lock();
 	imnodes::BeginNodeEditor();
 
 	for (auto node : nodes)
@@ -155,6 +251,43 @@ void SurfaceProvider::draw_imgui()
 		imnodes::PopColorStyle();
 	}
 
+	if (!ImGui::IsAnyItemHovered() && ImGui::IsMouseHoveringWindow() &&
+		ImGui::IsMouseClicked(1))
+	{
+		ImGui::OpenPopup("Right Click Menu");
+	}
+
+	if (ImGui::BeginPopup("Right Click Menu"))
+	{
+		ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
+
+		std::string node_type_str = "Select Node Type";
+		if (selected_node_type != "")
+		{
+			node_type_str = selected_node_type;
+		}
+
+		std::vector<std::string> types = get_all_idnames();
+		for (const std::string& type : types)
+		{
+			if (ImGui::MenuItem(type.c_str()))
+			{
+				selected_node_type = type;
+			}
+		}
+
+		if (selected_node_type != "")
+		{
+			SurfaceProviderNode* new_node = create_new_node(selected_node_type, this);
+			nodes[new_node->id] = new_node;
+			selected_node_type = "";
+
+			imnodes::SetNodePos(new_node->id, click_pos);
+		}
+
+		ImGui::EndPopup();
+	}
+
 	imnodes::EndNodeEditor();
 
 	int start_attr, end_attr;
@@ -194,8 +327,6 @@ void SurfaceProvider::draw_imgui()
 
 			dirty = true;
 		}
-
-		
 	}
 
 	int link_index;
@@ -303,6 +434,7 @@ void SurfaceProvider::draw_imgui()
 				nodes.erase(selected_id);
 				delete node;
 
+				dirty = true;
 			}
 		}
 	}
@@ -320,6 +452,160 @@ void SurfaceProvider::draw_imgui()
 		}
 	}
 
+	if (dirty)
+	{
+		unsaved_changes = true;
+	}
+
+	//mtx.unlock();
+}
+
+json SurfaceProvider::serialize(bool save_imnodes)
+{
+	mtx.lock();
+	
+	json j;
+
+	for (auto node : nodes)
+	{
+		if (node.second != NULL && node.second->id > 16)
+		{
+			json imnode_data;
+
+			std::string id = std::to_string(node.first);
+
+			j["nodes"][id]["type"] = node.second->get_name();
+			j["nodes"][id]["data"] = node.second->serialize();
+		}
+	}
+
+	j["links"] = json::array();
+
+	for (auto link : links)
+	{
+		json jlink;
+		
+		SurfaceProviderAttribute* a = attributes[link.first];
+		SurfaceProviderAttribute* b = attributes[link.second];
+
+		SurfaceProviderNode* a_owner = nodes[a->owner_id];
+		SurfaceProviderNode* b_owner = nodes[b->owner_id];
+
+		int a_index = a_owner->find_attribute(a);
+		int b_index = b_owner->find_attribute(b);
+
+		jlink["a"]["n"] = a_owner->id;
+		jlink["b"]["n"] = b_owner->id;
+		jlink["a"]["i"] = a_index;
+		jlink["b"]["i"] = b_index;
+
+		j["links"].push_back(jlink);
+
+	}
+
+	if (save_imnodes)
+	{
+		size_t size;
+		const char* data = imnodes::SaveCurrentEditorStateToMemory(&size);
+
+		j["imnodes"] = std::string(data);
+	}
+	else
+	{
+		j["imnodes"] = "";
+	}
+
+	return j;
+
+	mtx.unlock();
+}
+
+void SurfaceProvider::deserialize(json j, bool load_imnodes)
+{
+	try
+	{
+		mtx.lock();
+
+
+		int max_id = -1;
+		for (auto jnode : j["nodes"].items())
+		{
+			int index = std::stoi(jnode.key());
+			std::string type = jnode.value()["type"];
+			if (index > max_id)
+			{
+				max_id = index;
+			}
+
+			nodes[index] = create_new_node(type, this, index);
+		}
+
+		// Creates nodes, so they create their attributes
+		for (auto node : nodes)
+		{
+			if (node.second != NULL)
+			{
+				node.second->create(this);
+			}
+		}
+
+		// Give nodes their data
+		for (auto node : nodes)
+		{
+			if (node.second != NULL)
+			{
+				json j_data = j["nodes"][std::to_string(node.first)]["data"];
+				node.second->deserialize(j_data);
+			}
+		}
+
+		// Read links
+		for (auto link : j["links"])
+		{
+			int start_node_idx = link["a"]["n"];
+			int start_attr_idx = link["a"]["i"];
+			int end_node_idx = link["b"]["n"];
+			int end_attr_idx = link["b"]["i"];
+
+			SurfaceProviderNode* a_node = nodes[start_node_idx];
+			SurfaceProviderNode* b_node = nodes[end_node_idx];
+
+			SurfaceProviderAttribute* a_attr = a_node->find_attribute_by_id(start_attr_idx);
+			SurfaceProviderAttribute* b_attr = b_node->find_attribute_by_id(end_attr_idx);
+
+			links.push_back(std::make_pair(a_attr->id, b_attr->id));
+
+			// Actually add the link to the attributes
+			a_attr->links.push_back(b_attr->id);
+			b_attr->links.push_back(a_attr->id);
+		}
+
+		imnodes::Clear();
+
+		// Read imnodes data
+		if (load_imnodes)
+		{
+			std::string imnodes = j["imnodes"];
+			imnodes::LoadCurrentEditorStateFromMemory(imnodes.c_str(), imnodes.size());
+		}
+
+		dirty = true;
+
+		mtx.unlock();
+	}
+	catch (std::system_error err)
+	{
+		spdlog::get("OSP")->error(err.what());
+	}
+}
+
+void SurfaceProvider::save()
+{
+	json serialized = serialize();
+
+	std::string serialized_str = serialized.dump(4);
+
+	FileUtil::write_file(save_path, serialized_str);
 }
 
 SurfaceProviderAttribute* SurfaceProvider::create_attribute(std::string name, int owner_id, bool input, ValueType val_type)
@@ -337,9 +623,50 @@ SurfaceProviderAttribute* SurfaceProvider::create_attribute(std::string name, in
 	return attr;
 }
 
-SurfaceProvider::SurfaceProvider()
+SurfaceProvider::SurfaceProvider() : mtx()
+{	
+
+	strcpy(path_buf, "");
+
+	clear();
+
+	dirty = false;
+}
+
+int SurfaceProvider::get_id()
 {
+	node_id++;
+	return node_id;
+}
+
+void SurfaceProvider::clear()
+{
+	for (auto node : nodes)
+	{
+		if (node.second != NULL)
+		{
+			delete node.second;
+		}
+	}
+
+	nodes.clear();
+
+	for (auto attr : attributes)
+	{
+		if (attr.second != NULL)
+		{
+			delete attr.second;
+		}
+	}
+
+	attributes.clear();
+
+	links.clear();
+
+	dirty = true;
+
 	selected_node_type = "";
+	unsaved_changes = false;
 	// IDs lower or equal to 16 are reserved
 	node_id = 16;
 
@@ -356,12 +683,9 @@ SurfaceProvider::SurfaceProvider()
 	imnodes::SetNodePos(INPUT_ID, ImVec2(32, 128));
 
 	auto_preview = false;
-}
 
-int SurfaceProvider::get_id()
-{
-	node_id++;
-	return node_id;
+	save_path = "";
+
 }
 
 void SurfaceProvider::do_preview(PreviewSPN* node, float radius)

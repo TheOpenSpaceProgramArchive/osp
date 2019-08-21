@@ -8,7 +8,9 @@
 #include <unordered_map>
 #include "surface_provider_node.h"
 #include "nodes/all_nodes.h"
+#include <json.hpp>
 
+using namespace nlohmann;
 
 // A surface provider allows stacking many surface layers and combining their outputs and inputs arbitrarly
 class SurfaceProvider
@@ -27,11 +29,17 @@ private:
 
 	float planetRadius;
 
+	std::string selected_file;
+	std::string save_path;
+
+	bool unsaved_changes;
+	char path_buf[512];
+
 public:
 
-	// TODO: Maybe create a copy for each thread? 
+	// TODO: Maybe create a of surface provider copy for each thread? 
 	// Could be a decent optimization
-	std::mutex mtx;
+	std::recursive_mutex mtx;
 
 	bool dirty = false;
 
@@ -71,12 +79,17 @@ public:
 	// Draw ImGui widgets for editing
 	void draw_imgui();
 
-	void serialize();
+	json serialize(bool save_imnodes = true);
+	void deserialize(json j, bool load_imnodes = true);
+
+	void save();
 
 	SurfaceProviderAttribute* create_attribute(std::string name, int owner_id, bool input, ValueType val_type);
 
 	SurfaceProvider();
 	
 	int get_id();
+
+	void clear();
 
 };

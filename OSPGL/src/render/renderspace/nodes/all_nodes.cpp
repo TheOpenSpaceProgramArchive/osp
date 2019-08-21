@@ -32,7 +32,7 @@ std::vector<std::string> get_all_idnames()
 	return out;
 }
 
-SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider* provider)
+SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider* provider, int index_override)
 {
 	SurfaceProviderNode* out;
 
@@ -75,8 +75,17 @@ SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider*
 
 	if (out != NULL)
 	{
-		out->id = provider->get_id();
-		out->create(provider);
+		if (index_override >= 0)
+		{
+			out->id = index_override;
+			// Don't create
+		}
+		else
+		{
+			out->id = provider->get_id();
+			out->create(provider);
+		}
+		
 	}
 
 	return out;

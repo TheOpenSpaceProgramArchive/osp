@@ -17,6 +17,16 @@ public:
 		END_MARKER
 	};
 
+	NLOHMANN_JSON_SERIALIZE_ENUM(NoiseType,
+		{
+		{PERLIN, "perlin"},
+		{PERLIN_SEED, "perlin_seed"},
+		{RIDGE, "ridge"},
+		{FBM, "fbm"},
+		{TURBULENCE, "turbulence"},
+		});
+
+
 	NoiseType noise_type;
 
 	static constexpr int INPUT_X			= 0;
@@ -39,4 +49,7 @@ public:
 	virtual std::string get_name() override;
 	virtual void process(size_t length) override;
 	virtual void create(SurfaceProvider * surf) override;
+
+	virtual nlohmann::json serialize() override;
+	virtual void deserialize(nlohmann::json j) override;
 };

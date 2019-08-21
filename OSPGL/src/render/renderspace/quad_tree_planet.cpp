@@ -456,43 +456,39 @@ void QuadTreePlanet::draw_gui_window(glm::dvec2 focusPoint, QuadTreeNode* onNode
 
 	if (planet->surface_provider.dirty)
 	{
-		if (tile_server.being_worked_on == 0)
+		if (auto_rebuild || tile_server.being_worked_on > 0)
 		{
-			if(was_building)
-			{ 
-				planet->surface_provider.dirty = false;
-			}
-			else
-			{
-				ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Planet is not updated!");
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Rebuild") || auto_rebuild == true)
-				{
-					tile_server.rebuild_all();
-					was_building = true;
-				}
-			}
+			tile_server.rebuild_all();
+			planet->surface_provider.dirty = false;
+		}
+
+	}
+
+	if(tile_server.being_worked_on > 0)
+	{
+		if (planet->surface_provider.dirty)
+		{
+			ImGui::TextColored(ImVec4(0.8f, 0.7f, 1.0f, 1.0f), "Planet is being built!");
 		}
 		else
 		{
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "Planet is being built!");
-			was_building = true;
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "Planet is up-to-date, but is being built!");
 		}
+		
 	}
 	else
 	{
-		if (tile_server.being_worked_on == 0)
+		if (planet->surface_provider.dirty)
 		{
-			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Planet is up-to-date");
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Planet is out-of-date");
 		}
 		else
 		{
-			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.6f, 1.0f), "Planet is up-to-date, but generating");
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Planet is up-to-date");
 		}
-
-		was_building = false;
 		
 	}
+		
 	
 
 	if (ImGui::CollapsingHeader("Surface Generation", ImGuiTreeNodeFlags_DefaultOpen))

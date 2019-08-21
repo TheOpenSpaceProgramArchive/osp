@@ -259,4 +259,46 @@ void NoiseSPN::create(SurfaceProvider* surf)
 
 }
 
+using namespace nlohmann;
+
+json NoiseSPN::serialize()
+{
+	json out;
+
+	out["lacunarity"] = val_lacunarity;
+	out["gain"] = val_gain;
+	out["offset"] = val_offset;
+	out["in_scale"] = in_scale;
+	out["out_scale"] = out_scale;
+	out["octaves"] = octaves;
+	out["seed"] = seed;
+	out["wrap_pow"]["0"] = wrap_pow[0];
+	out["wrap_pow"]["1"] = wrap_pow[1];
+	out["wrap_pow"]["2"] = wrap_pow[2];
+	out["wrap"]["0"] = wrap[0];
+	out["wrap"]["1"] = wrap[1];
+	out["wrap"]["2"] = wrap[2];
+	out["noise_type"] = noise_type;
+
+	return out;
+}
+
+void NoiseSPN::deserialize(json j)
+{
+	val_lacunarity = j["lacunarity"];
+	val_gain = j["gain"];
+	val_offset = j["offset"];
+	in_scale = j["in_scale"];
+	out_scale = j["out_scale"];
+	octaves = j["octaves"];
+	seed = j["seed"];
+	wrap_pow[0] = j["wrap_pow"]["0"];
+	wrap_pow[1] = j["wrap_pow"]["1"];
+	wrap_pow[2] = j["wrap_pow"]["2"];
+	wrap[0] = j["wrap"]["0"];
+	wrap[1] = j["wrap"]["1"];
+	wrap[2] = j["wrap"]["2"];
+	noise_type = j["noise_type"];
+}
+
 

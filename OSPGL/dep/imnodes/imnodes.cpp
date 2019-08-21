@@ -1101,6 +1101,15 @@ namespace imnodes
 		node_current.attribute_rects.push_back(get_item_rect());
 	}
 
+	void Clear()
+	{
+		EditorContext& editor = editor_context_get();
+		editor.nodes.pool.clear();
+		editor.nodes.id_map.Clear();
+		editor.nodes.in_use.clear();
+		editor.nodes.free_list.clear();
+	}
+
 	void Link(int id, const int start_attr, const int end_attr)
 	{
 		assert(g.current_scope == Scope_Editor);

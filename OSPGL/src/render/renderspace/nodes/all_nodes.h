@@ -13,4 +13,5 @@ class SurfaceProvider;
 
 std::vector<std::string> get_all_idnames();
 
-SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider* provider);
+// If index override is >= 0 then the node won't have create called, and will be assigned said id
+SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider* provider, int index_override = -1);

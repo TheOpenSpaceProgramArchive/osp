@@ -17,4 +17,7 @@ public:
 	virtual std::string get_name() override;
 	virtual void process(size_t length) override;
 	virtual void create(SurfaceProvider * surf) override;
+
+	virtual nlohmann::json serialize() override;
+	virtual void deserialize(nlohmann::json j) override;
 };

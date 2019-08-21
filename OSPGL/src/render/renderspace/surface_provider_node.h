@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
+#include <json.hpp>
 
 class SurfaceProvider;
 
@@ -15,6 +16,14 @@ enum ValueType
 
 	END_MARKER,
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ValueType,
+	{
+	{V1, "v1"},
+	{V2, "v2"},
+	{V3, "v3"},
+	{ANY, "any"},
+	});
 
 struct SurfaceProviderAttribute
 {
@@ -105,6 +114,17 @@ public:
 	// Returns true if all was satisfied
 	bool propagate(SurfaceProvider* surf, size_t length);
 
+	// Returns the index, or -1 if not found
+	int find_attribute(SurfaceProviderAttribute* attr);
+
+	// Returns the attribute, NULL if not found
+	SurfaceProviderAttribute* find_attribute_by_id(int id);
+
+
+	virtual nlohmann::json serialize() { return nlohmann::json(); }
+
+	// Called always AFTER create
+	virtual void deserialize(nlohmann::json j) { return; }
 
 	// Utility functions
 	ValueType pick_val_type(ValueType current, bool* set_dirty);
