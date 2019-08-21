@@ -6,6 +6,7 @@
 #include "noise_spn.h"
 #include "pack_spn.h"
 #include "unpack_spn.h"
+#include "preview_spn.h"
 #include <vector>
 
 class SurfaceProvider;

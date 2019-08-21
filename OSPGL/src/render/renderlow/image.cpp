@@ -52,6 +52,12 @@ Pixel Image::get_pixel(size_t x, size_t y)
 	return pixels[i];
 }
 
+void Image::set_pixel(size_t x, size_t y, Pixel color)
+{
+	size_t i = y * width + x;
+	pixels[i] = color;
+}
+
 Image::Image()
 {
 }

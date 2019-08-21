@@ -26,6 +26,8 @@ public:
 	// Real coordinates
 	Pixel get_pixel(size_t x, size_t y);
 
+	void set_pixel(size_t x, size_t y, Pixel color);
+
 	Image();
 	~Image();
 };

@@ -7,6 +7,7 @@
 #include "planet_tile_path.h"
 #include <unordered_map>
 #include "surface_provider_node.h"
+#include "nodes/all_nodes.h"
 
 
 // A surface provider allows stacking many surface layers and combining their outputs and inputs arbitrarly
@@ -21,6 +22,10 @@ private:
 	bool complete = false;
 
 	int selected_id = -1;
+
+	bool auto_preview;
+
+	float planetRadius;
 
 public:
 
@@ -38,6 +43,8 @@ public:
 	std::unordered_map<int, SurfaceProviderAttribute*> attributes;
 
 	std::vector<std::pair<int, int>> links;
+
+	void do_preview(PreviewSPN* node, float radius);
 
 	// You should return an array containing (verts + 1)x(verts + 1) floats, indicating height in meters
 	// from "sea level"

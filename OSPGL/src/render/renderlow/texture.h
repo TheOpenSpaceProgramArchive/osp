@@ -5,6 +5,7 @@
 #include <stb/stb_image.h>
 #include "../../util/defines.h"
 #include <glm/glm.hpp>
+#include "image.h"
 
 class Texture
 {
@@ -17,8 +18,13 @@ public:
 
 	glm::ivec2 get_size();
 
+	bool is_uploaded();
+	void unload();
+
+	Texture();
 	Texture(GLuint tex);
 	Texture(std::string path);
+	Texture(const Image& img);
 	~Texture();
 };
 

@@ -29,6 +29,22 @@ std::string op_to_str(MathSPN::MathOperation operation)
 	{
 		str = "A ^ B";
 	}
+	else if (operation == MathSPN::MAX)
+	{
+		str = "max(A, B)";
+	}
+	else if (operation == MathSPN::MIN)
+	{
+		str = "min(A, B)";
+	}
+	else if (operation == MathSPN::ABS)
+	{
+		str = "abs(A)";
+	}
+	else if (operation == MathSPN::SIGN)
+	{
+		str = "sign(A)";
+	}
 
 	return str;
 }
@@ -192,6 +208,50 @@ void operate(float* o, float a, float b, MathSPN::MathOperation operation)
 	{
 		*o = pow(a, b);
 	}
+	else if (operation == MathSPN::MAX)
+	{
+		*o = glm::max(a, b);
+	}
+	else if (operation == MathSPN::MIN)
+	{
+		*o = glm::min(a, b);
+	}
+	else if (operation == MathSPN::ABS)
+	{
+		*o = glm::abs(a);
+	}
+	else if (operation == MathSPN::SIGN)
+	{
+		*o = glm::sign(a);
+	}
+}
+
+void fill_arr(SurfaceProviderAttribute* a, size_t length, glm::vec3 val)
+{
+	if (a->val_type == V1)
+	{
+		for (size_t i = 0; i < length; i++)
+		{
+			a->values[i] = val.x;
+		}
+	}
+	else if (a->val_type == V2)
+	{
+		for (size_t i = 0; i < length; i++)
+		{
+			a->values[i * 2 + 0] = val.x;
+			a->values[i * 2 + 1] = val.y;
+		}
+	}
+	else
+	{
+		for (size_t i = 0; i < length; i++)
+		{
+			a->values[i * 3 + 0] = val.x;
+			a->values[i * 3 + 1] = val.y;
+			a->values[i * 3 + 2] = val.z;
+		}
+	}
 }
 
 void MathSPN::process(size_t length)
@@ -245,6 +305,16 @@ void MathSPN::process(size_t length)
 		{
 			max_vals = 3;
 		}
+	}
+
+	if (a->has_values)
+	{
+		fill_arr(a, length, val_a);
+	}
+
+	if (b->has_values)
+	{
+		fill_arr(b, length, val_b);
 	}
 
 	o->values.resize(length * max_vals);

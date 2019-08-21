@@ -65,3 +65,56 @@ glm::mat4 MathUtil::rotate_from_to(glm::vec3 from, glm::vec3 to)
 
 	return glm::rotate(angle, axis);
 }
+
+glm::vec3 MathUtil::spherical_to_euclidean(glm::vec3 spherical)
+{
+	return spherical_to_euclidean(spherical.x, spherical.y, spherical.z);
+}
+
+glm::vec3 MathUtil::spherical_to_euclidean(float azimuth, float inclination, float radius)
+{
+	glm::vec3 out;
+
+	out.x = sin(inclination) * cos(azimuth);
+	out.y = cos(inclination);
+	out.z = sin(inclination) * sin(azimuth);
+
+	return radius * out;
+}
+
+glm::vec3 MathUtil::euclidean_to_spherical(glm::vec3 eu)
+{
+	glm::vec3 out;
+
+	out.z = glm::sqrt(eu.x * eu.x + eu.y * eu.y + eu.z * eu.z);
+	out.x = glm::atan(eu.z / eu.x);
+	out.y = glm::acos(eu.y / out.z);
+
+	return out;
+}
+
+glm::vec3 MathUtil::spherical_to_euclidean_r1(glm::vec2 spherical)
+{
+	return spherical_to_euclidean_r1(spherical.x, spherical.y);
+}
+
+glm::vec3 MathUtil::spherical_to_euclidean_r1(float azimuth, float inclination)
+{
+	glm::vec3 out;
+
+	out.x = sin(inclination) * cos(azimuth);
+	out.y = cos(inclination);
+	out.z = sin(inclination) * sin(azimuth);
+
+	return out;
+}
+
+glm::vec2 MathUtil::euclidean_to_spherical_r1(glm::vec3 eu)
+{
+	glm::vec3 out;
+
+	out.x = glm::atan(eu.z / eu.x);
+	out.y = glm::acos(eu.y);
+
+	return out;
+}

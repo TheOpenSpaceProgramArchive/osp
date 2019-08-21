@@ -26,6 +26,9 @@ std::vector<std::string> get_all_idnames()
 	// unpack_spn.h
 	out.push_back("Unpack");
 
+	// preview_spn.h
+	out.push_back("Preview");
+
 	return out;
 }
 
@@ -60,6 +63,10 @@ SurfaceProviderNode* create_new_node(const std::string& idname, SurfaceProvider*
 	else if (idname == "Unpack")
 	{
 		out = new UnpackSPN();
+	}
+	else if (idname == "Preview")
+	{
+		out = new PreviewSPN();
 	}
 	else
 	{

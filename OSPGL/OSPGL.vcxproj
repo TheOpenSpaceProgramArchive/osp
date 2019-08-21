@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\render\renderspace\nodes\preview_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\pack_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\noise_spn.cpp" />
     <ClCompile Include="src\render\renderspace\nodes\math_spn.cpp" />
@@ -175,6 +176,7 @@
     <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\render\renderspace\nodes\preview_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\pack_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\noise_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\math_spn.h" />

@@ -5,6 +5,8 @@
 
 void SurfaceProvider::draw_imgui()
 {
+	bool preview_clicked = false;
+
 	if (ImGui::BeginPopupModal("New Node", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		std::string node_type_str = "Select Node Type";
@@ -48,14 +50,15 @@ void SurfaceProvider::draw_imgui()
 		ImGui::EndPopup();
 	}
 
+	ImGui::Columns(2);
+
 	if (ImGui::Button("Create New"))
 	{
 		ImGui::OpenPopup("New Node");
 	}
 
 	ImGui::SameLine();
-	
-	ImGui::SameLine();
+
 
 	if (complete)
 	{
@@ -66,6 +69,16 @@ void SurfaceProvider::draw_imgui()
 		ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Nodes not satisfied");
 	}
 
+	ImGui::NextColumn();
+
+	if (ImGui::Button("Run Previews"))
+	{
+		preview_clicked = true;
+	}
+	ImGui::SameLine();
+	ImGui::Checkbox("Auto-Preview", &auto_preview);
+
+	ImGui::Columns(1);
 
 	imnodes::BeginNodeEditor();
 
@@ -203,8 +216,9 @@ void SurfaceProvider::draw_imgui()
 
 
 
-	int node_id;
-	if (imnodes::IsNodeSelected(&node_id))
+	int node_id = -1;
+	int hover_id = -1;
+	if (imnodes::IsNodeSelected(&node_id) && imnodes::IsNodeHovered(&hover_id) && hover_id == node_id)
 	{
 		selected_id = node_id;
 	}
@@ -216,81 +230,95 @@ void SurfaceProvider::draw_imgui()
 	if (ImGui::IsMouseDown(1) && selected_id > 16)
 	{
 		SurfaceProviderNode* node = nodes[selected_id];
-
-		for (auto it = links.begin(); it != links.end();)
-		{
-			bool found = false;
-
-			for (auto inlet : node->in_attribute)
-			{
-				if (it->first == inlet.second->id || it->second == inlet.second->id)
-				{
-					found = true;
-					break;
-				}
-			}
-
-			for (auto outlet : node->out_attribute)
-			{
-				if (it->first == outlet.second->id || it->second == outlet.second->id)
-				{
-					found = true;
-					break;
-				}
-			}
-
-			if (found)
-			{
-				it = links.erase(it);
-			}
-			else
-			{
-				it++;
-			}
-		}
-
-
 		if (node != NULL)
 		{
-
-			// Remove links TO this node
-			for (auto in_attribute : node->in_attribute)
+			for (auto it = links.begin(); it != links.end();)
 			{
-				if (in_attribute.second->links.size() == 1)
+				bool found = false;
+
+				for (auto inlet : node->in_attribute)
 				{
-					SurfaceProviderAttribute* other = attributes[in_attribute.second->links[0]];
-					int index = -1;
-					for (int i = 0; i < other->links.size(); i++)
+					if (it->first == inlet.second->id || it->second == inlet.second->id)
 					{
-						if (other->links[i] == in_attribute.second->id)
-						{
-							index = i;
-							break;
-						}
+						found = true;
+						break;
 					}
-
-					other->links.erase(other->links.begin() + index);
 				}
-			}
 
-			// Remove links FROM this node
-			for (auto out_attribute : node->out_attribute)
-			{
-				for (size_t i = 0; i < out_attribute.second->links.size(); i++)
+				for (auto outlet : node->out_attribute)
 				{
-					int link_id = out_attribute.second->links[i];
-					SurfaceProviderAttribute* other = attributes[link_id];
-					other->links.clear();
+					if (it->first == outlet.second->id || it->second == outlet.second->id)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (found)
+				{
+					it = links.erase(it);
+				}
+				else
+				{
+					it++;
 				}
 			}
 
-			SurfaceProviderNode* node = nodes[selected_id];
-			nodes.erase(selected_id);
-			delete node;
 
+			if (node != NULL)
+			{
+
+				// Remove links TO this node
+				for (auto in_attribute : node->in_attribute)
+				{
+					if (in_attribute.second->links.size() == 1)
+					{
+						SurfaceProviderAttribute* other = attributes[in_attribute.second->links[0]];
+						int index = -1;
+						for (int i = 0; i < other->links.size(); i++)
+						{
+							if (other->links[i] == in_attribute.second->id)
+							{
+								index = i;
+								break;
+							}
+						}
+
+						other->links.erase(other->links.begin() + index);
+					}
+				}
+
+				// Remove links FROM this node
+				for (auto out_attribute : node->out_attribute)
+				{
+					for (size_t i = 0; i < out_attribute.second->links.size(); i++)
+					{
+						int link_id = out_attribute.second->links[i];
+						SurfaceProviderAttribute* other = attributes[link_id];
+						other->links.clear();
+					}
+				}
+
+				SurfaceProviderNode* node = nodes[selected_id];
+				nodes.erase(selected_id);
+				delete node;
+
+			}
 		}
 	}
 
+	if (dirty && auto_preview || preview_clicked)
+	{
+		// Find all preview nodes and run preview on them
+		for (auto node : nodes)
+		{
+			PreviewSPN* as_preview = dynamic_cast<PreviewSPN*>(node.second);
+			if (as_preview != NULL)
+			{
+				do_preview(as_preview, planetRadius);
+			}
+		}
+	}
 
 }
 
@@ -326,6 +354,8 @@ SurfaceProvider::SurfaceProvider()
 
 	imnodes::SetNodePos(OUTPUT_ID, ImVec2(512, 128));
 	imnodes::SetNodePos(INPUT_ID, ImVec2(32, 128));
+
+	auto_preview = false;
 }
 
 int SurfaceProvider::get_id()
@@ -334,9 +364,69 @@ int SurfaceProvider::get_id()
 	return node_id;
 }
 
-void SurfaceProvider::get_heights(PlanetTilePath & path, size_t verts, std::vector<float>& out, 
+void SurfaceProvider::do_preview(PreviewSPN* node, float radius)
+{
+
+	float y_step = glm::pi<float>() / (float)node->pixels_height;
+	float x_step = glm::two_pi<float>() / (float)node->pixels_width;
+
+	std::vector<float> sphere_val;
+	std::vector<float> radius_val;
+	std::vector<glm::vec3> positions;
+
+
+	// Generate a whole sphere
+	size_t y = 0;
+	size_t x = 0;
+	size_t width = node->pixels_width;
+	size_t height = node->pixels_height;
+
+	sphere_val.resize(width * height * 3);
+	radius_val.resize(width * height);
+	positions.resize(width * height);
+
+
+	for (float inclination = 0.0f; inclination < glm::pi<float>(); inclination += y_step)
+	{
+		for (float azimuth = 0.0f; azimuth < glm::two_pi<float>(); azimuth += x_step)
+		{
+			glm::vec3 euclidean = MathUtil::spherical_to_euclidean_r1(azimuth, inclination);
+
+			sphere_val[(y * width + x) * 3 + 0] = euclidean.x;
+			sphere_val[(y * width + x) * 3 + 1] = euclidean.y;
+			sphere_val[(y * width + x) * 3 + 2] = euclidean.z;
+			radius_val[y * width + x] = radius;
+			positions[y * width + x] = euclidean;
+
+			x++;
+		}
+		x = 0;
+		y++;
+	}
+
+	InputSPN* input = (InputSPN*)nodes[INPUT_ID];
+	input->out_attribute[InputSPN::SPHERE_POS]->values = sphere_val;
+	input->out_attribute[InputSPN::RADIUS]->values = radius_val;
+
+	bool ret = node->propagate(this, node->pixels_width * node->pixels_height);
+
+	if (ret == true)
+	{
+		complete = true;
+		node->notify_preview_done(positions);
+	}
+	else
+	{
+		complete = false;
+	}
+
+}
+
+void SurfaceProvider::get_heights(PlanetTilePath & path, size_t verts, std::vector<float>& out,
 	glm::mat4 sphere_model, glm::mat4 cube_model, glm::mat4 path_model, float planetRadius)
 {
+	this->planetRadius = planetRadius;
+
 	glm::dvec2 min = path.get_min();
 
 	// Generate all basic arrays

@@ -19,7 +19,11 @@ public:
 		DIVIDE,			// R = A / B
 		MODULO,			// R = A % B
 		POWER,			// R = A ^ B	
-
+		MAX,			// R = max(A, B)
+		MIN,			// R = min(A, B)
+		ABS,			// R = abs(A) (B is ignored)
+		SIGN,			// R = sign(A) (B is ignored)
+			
 		END_MARKER
 	};
 
