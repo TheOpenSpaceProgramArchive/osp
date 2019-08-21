@@ -902,6 +902,9 @@
     <ClInclude Include="src\render\renderspace\nodes\preview_spn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dep\json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="dep\glm\detail\func_common.inl">

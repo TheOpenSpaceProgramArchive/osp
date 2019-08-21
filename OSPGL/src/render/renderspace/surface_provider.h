@@ -71,6 +71,8 @@ public:
 	// Draw ImGui widgets for editing
 	void draw_imgui();
 
+	void serialize();
+
 	SurfaceProviderAttribute* create_attribute(std::string name, int owner_id, bool input, ValueType val_type);
 
 	SurfaceProvider();

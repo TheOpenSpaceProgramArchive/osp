@@ -176,6 +176,7 @@
     <ClCompile Include="src\render\renderlow\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dep\json.hpp" />
     <ClInclude Include="src\render\renderspace\nodes\preview_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\pack_spn.h" />
     <ClInclude Include="src\render\renderspace\nodes\noise_spn.h" />
